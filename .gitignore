@@ -1,0 +1,5 @@
+.idea/
+*.pyc
+*.lock
+*.sqlite3
+tmp/
