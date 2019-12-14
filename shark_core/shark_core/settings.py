@@ -55,7 +55,7 @@ ROOT_URLCONF = 'shark_core.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['/home/qwizi/Projekty/python/shark_core_project/shark_core/templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -119,3 +119,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+AUTH_USER_MODEL = 'accounts.Account'
+
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = '500adrian2@gmail.com'
+EMAIL_HOST_PASSWORD = '3BFfR7dT@y@0MmGR'
+EMAIL_PORT = 587

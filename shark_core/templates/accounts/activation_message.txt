@@ -1,0 +1,7 @@
+Hello {{ username }}!
+
+To confirm your registration, visit the following link:
+
+http://localhost:8000{% url 'accounts:activate' aid token %}
+
+Welcome to SharkCore!
