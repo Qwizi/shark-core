@@ -1,5 +1,10 @@
 from django.urls import path, re_path
-from .views import AccountSingUpView, AccountActivateView
+from .views import (
+    AccountSingUpView,
+    AccountActivateView,
+    AccountLogInView,
+    AccountSignOutView
+)
 
 app_name = 'accounts'
 
@@ -10,4 +15,6 @@ urlpatterns = [
             r'(?P<token>[0-9A-Za-z]{1,13}'
             r'-[0-9A-Za-z]{1,20})/$',
             AccountActivateView.as_view(), name='activate'),
+    path('sign-in/', AccountLogInView.as_view(), name='sign-in'),
+    path('sign-out/', AccountSignOutView.as_view(), name='sign-out')
 ]
