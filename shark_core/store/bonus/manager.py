@@ -1,6 +1,7 @@
 from django.conf import settings
 import importlib
 
+
 class BonusManager(object):
     __bonus_list = None
 
@@ -13,10 +14,10 @@ class BonusManager(object):
         return bonus_list
 
     def get_bonus_list(self):
-        return [bonus for bonus in self.__bonus_list]
+        return self.__bonus_list
 
     def get_bonus_classes(self):
-        module = importlib.import_module('store')
+        module = importlib.import_module('store.bonuses')
         bonus_instance_list = []
 
         for bonus in self.__bonus_list:

@@ -1,11 +1,11 @@
 from django.db import models
-from .bonuses import bonus_manager
+from .bonus import bonus_manager
+import json
 
 
-class Bonus(models.Model):
+class BonusModule(models.Model):
     BONUS_CHOICES = bonus_manager.get_bonus_choices()
 
-    name = models.CharField(max_length=64, blank=False)
     tag = models.CharField(
         max_length=32,
         choices=BONUS_CHOICES,
@@ -15,4 +15,31 @@ class Bonus(models.Model):
     )
 
     def __str__(self):
-        return '{} - {}'.format(self.name, self.get_tag_display())
+        return '{}'.format(self.tag)
+
+
+class Bonus(models.Model):
+    name = models.CharField(max_length=64, blank=False, unique=True)
+    description = models.TextField(blank=True)
+    options = models.TextField(blank=True)
+    price = models.DecimalField(decimal_places=2, max_digits=10, null=True)
+    is_active = models.BooleanField(default=True)
+    module = models.ForeignKey(BonusModule, on_delete=models.CASCADE, null=True)
+
+    def set_options(self, options):
+        self.options = json.dump(options)
+
+    def get_options(self):
+        return json.loads(self.options)
+
+    def get_module_tag(self):
+        return self.module.tag
+
+    def activate(self):
+        self.is_active = True
+
+    def deactivate(self):
+        self.is_active = False
+
+    def __str__(self):
+        return '{} - Module ({})'.format(self.name, self.get_module_tag())

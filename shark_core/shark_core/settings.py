@@ -36,7 +36,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'accounts',
-    'store'
+    'store',
+    'djmoney'
 ]
 
 MIDDLEWARE = [
@@ -128,5 +129,6 @@ EMAIL_HOST_PASSWORD = '3BFfR7dT@y@0MmGR'
 EMAIL_PORT = 587
 
 BONUSES = [
-    'PremiumBonus'
+    'PremiumAccountBonus'
+    # 'PremiumBonus'
 ]
