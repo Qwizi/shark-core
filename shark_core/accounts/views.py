@@ -3,6 +3,7 @@ from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_text
 from django.contrib.auth.tokens import default_token_generator
 from django.views import View
+from django.views.generic import TemplateView
 from django.contrib.auth import (
     get_user_model,
     authenticate,
