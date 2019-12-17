@@ -1,4 +1,7 @@
 from django.db import models
+
+from djmoney.models.fields import MoneyField
+
 from .bonus import bonus_manager
 import json
 
@@ -22,12 +25,12 @@ class Bonus(models.Model):
     name = models.CharField(max_length=64, blank=False, unique=True)
     description = models.TextField(blank=True)
     options = models.TextField(blank=True)
-    price = models.DecimalField(decimal_places=2, max_digits=10, null=True)
+    price = MoneyField(max_digits=14, decimal_places=2, default_currency='PLN', default=0)
     is_active = models.BooleanField(default=True)
     module = models.ForeignKey(BonusModule, on_delete=models.CASCADE, null=True)
 
     def set_options(self, options):
-        self.options = json.dump(options)
+        self.options = json.dumps(options)
 
     def get_options(self):
         return json.loads(self.options)

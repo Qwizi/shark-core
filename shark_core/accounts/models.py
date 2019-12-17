@@ -1,9 +1,10 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import AbstractUser, Group
+from django.db.models.signals import post_save
+
 from djmoney.models.fields import MoneyField
 from djmoney.money import Money
-from django.db.models.signals import post_save
 
 
 class Account(AbstractUser):
@@ -27,15 +28,23 @@ class Account(AbstractUser):
 
 class Wallet(models.Model):
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
-    money = MoneyField(max_digits=14, decimal_places=2, default_currency='USD', default=0)
+    money = MoneyField(max_digits=14, decimal_places=2, default_currency='PLN', default=0)
+
+    def __str__(self):
+        return 'Account {} - {}'.format(self.account.username, self.money)
 
     def add_money(self, money):
-        money = Money(money, 'USD')
-        self.money += money
+
+        if isinstance(money, Money):
+            self.money += money
+        else:
+            raise TypeError('A money must be Money instance')
 
     def remove_money(self, money):
-        money = Money(money, 'USD')
-        self.money -= money
+        if isinstance(money, Money):
+            self.money -= money
+        else:
+            raise TypeError('A money must be Money instance')
 
 
 def create_account_wallet(sender, **kwargs):
