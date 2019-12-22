@@ -18,6 +18,11 @@ class SignUpForm(UserCreationForm):
         model = get_user_model()
         fields = ('username', 'email', 'password1', 'password2')
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for visible in self.visible_fields():
+            visible.field.widget.attrs['class'] = 'form-control'
+
     def save(self, commit=True):
         account_instance = super().save(commit=False)
         account_instance.is_active = False
@@ -49,4 +54,8 @@ class SignUpForm(UserCreationForm):
 
 
 class SignInForm(AuthenticationForm):
-    pass
+
+    def __init__(self, request=None, *args, **kwargs):
+        super(SignInForm, self).__init__(*args, **kwargs)
+        for visible in self.visible_fields():
+            visible.field.widget.attrs['class'] = 'form-control'

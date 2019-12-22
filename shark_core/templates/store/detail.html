@@ -1,0 +1,36 @@
+{% load djmoney %}
+    {% money_localize account.wallet_set.get.money %}
+{{ bonus }}
+{{ bonus.description }}
+<ul>
+    {% for desc in desc_list %}
+    <li>{{ desc }}</li>
+    {% endfor %}
+</ul>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form }}
+    <button type="submit" id="buy-btn">Kup</button>
+</form>
+
+<script>
+    var wallet = "{{account.wallet_set.get}}"
+    var wallet_money = "{% money_localize account.wallet_set.get.money %}"
+    var bonus_price = "{% money_localize bonus.price %}"
+    var split_wallet_money = wallet_money.split('zł')
+    var split_bonus_price = bonus_price.split('zł')
+    const submit_btn = document.getElementById('buy-btn')
+
+    if (split_wallet_money < split_bonus_price) {
+        submit_btn.setAttribute('disabled', 1)
+        console.log('Brak hajsu')
+    } else {
+        submit_btn.setAttribute('disabled', 0)
+    }
+
+    console.log(wallet_money)
+    console.log(bonus_price)
+    console.log(split_wallet_money[0])
+    console.log(split_bonus_price[0])
+</script>
