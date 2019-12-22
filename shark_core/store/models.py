@@ -1,8 +1,8 @@
 from django.db import models
+from django.conf import settings
 
 from djmoney.models.fields import MoneyField
-
-from .bonus import bonus_manager
+from .bonuses import bonus_manager
 import json
 
 
@@ -29,11 +29,23 @@ class Bonus(models.Model):
     is_active = models.BooleanField(default=True)
     module = models.ForeignKey(BonusModule, on_delete=models.CASCADE, null=True)
 
+    @staticmethod
+    def __is_json(data):
+        try:
+            dict_data = json.loads(data)
+        except ValueError:
+            return False
+        return True
+
     def set_options(self, options):
-        self.options = json.dumps(options)
+        if self.__is_json(options) is False:
+            raise ValueError('Invalid json format')
+
+        self.options = options
 
     def get_options(self):
-        return json.loads(self.options)
+        options = json.loads(self.options)
+        return options
 
     def get_module_tag(self):
         return self.module.tag
@@ -44,5 +56,26 @@ class Bonus(models.Model):
     def deactivate(self):
         self.is_active = False
 
+    def get_split_description(self):
+        desc_list = self.description.split('**')
+        desc_list.pop(0)
+
+        return desc_list
+
     def __str__(self):
         return '{} - Module ({})'.format(self.name, self.get_module_tag())
+
+
+class Log(models.Model):
+    LOG_STATUS = (
+        (1, "Success"),
+        (0, 'Failed')
+    )
+
+    bonus = models.ForeignKey(Bonus, on_delete=models.CASCADE)
+    account = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    date = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=16, choices=LOG_STATUS, default=1)
+
+    def __str__(self):
+        return '{} - {} - {}'.format(self.bonus.name, self.account.username, self.status)

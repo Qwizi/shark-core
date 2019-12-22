@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load djmoney %}
+{% block body %}
+<div class="row">
+    <div class="col-md-12 container-padding">
+        {% money_localize account.wallet_set.get.money %}
+        {% for bonus in bonuses %}
+        <ul class="text-light">
+            <li> {{ bonus.name }} </li>
+            <li> {{ bonus.description }} </li>
+            <li> {% money_localize bonus.price %} </li>
+            <li> Dni: {{ bonus.get_options.days }} </li>
+            <li><a href="{% url 'store:detail' bonus_id=bonus.id%}">Wybieram</a></li>
+        </ul>
+        {% endfor %}
+    </div>
+</div>
+{% endblock body %}
