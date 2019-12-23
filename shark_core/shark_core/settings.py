@@ -38,7 +38,9 @@ INSTALLED_APPS = [
     'accounts',
     'store',
     'mainpage',
-    'djmoney'
+    'djmoney',
+    'rest_framework',
+    'api'
 ]
 
 MIDDLEWARE = [
@@ -128,6 +130,11 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = '500adrian2@gmail.com'
 EMAIL_HOST_PASSWORD = '3BFfR7dT@y@0MmGR'
 EMAIL_PORT = 587
+
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10
+}
 
 BONUSES = [
     'PremiumAccountBonus'
