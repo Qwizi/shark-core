@@ -6,7 +6,15 @@ from .bonuses import bonus_manager
 import json
 
 
-class BonusModule(models.Model):
+class Category(models.Model):
+    name = models.CharField(max_length=64, unique=True)
+    tag = models.CharField(max_length=32, unique=True, null=True)
+
+    def __str__(self):
+        return '{}'.format(self.name)
+
+
+class Module(models.Model):
     BONUS_CHOICES = bonus_manager.get_bonus_choices()
 
     tag = models.CharField(
@@ -27,7 +35,8 @@ class Bonus(models.Model):
     options = models.TextField(blank=True)
     price = MoneyField(max_digits=14, decimal_places=2, default_currency='PLN', default=0)
     is_active = models.BooleanField(default=True)
-    module = models.ForeignKey(BonusModule, on_delete=models.CASCADE, null=True)
+    module = models.ForeignKey(Module, on_delete=models.CASCADE, null=True)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True)
 
     @staticmethod
     def __is_json(data):

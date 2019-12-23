@@ -1,9 +1,10 @@
 from django.shortcuts import render, reverse, redirect
 from django.views import View
 from .mixins import MyLoginRequiredMixin
-from django.http import HttpResponseRedirect
+from django.core import serializers
+import json
 
-from .models import Bonus, Log as LogModel
+from .models import Bonus, Category, Log as LogModel
 from .forms import StoreBonusFinalizeForm
 from .bonuses import bonus_manager
 
@@ -12,11 +13,7 @@ class StoreBonusesView(MyLoginRequiredMixin, View):
     template_name = 'store/index.html'
 
     def get(self, request):
-        bonuses = Bonus.objects.all()
-        return render(request, self.template_name, {
-            'account': request.user,
-            'bonuses': bonuses
-        })
+        return render(request, self.template_name)
 
 
 class StoreBonusDetailView(MyLoginRequiredMixin, View):

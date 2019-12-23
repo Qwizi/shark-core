@@ -21,7 +21,10 @@
         }
 
         .container-padding {
-            padding-top: 30px;
+            margin-top: 30px;
+            background: #3a3a3a;
+            padding: 30px;
+            height: 70vh
         }
 
         .sign-in-card {
@@ -49,7 +52,7 @@
         <div class="collapse navbar-collapse" id="navBarSupportedContent">
             <ul class="navbar-nav mr-auto">
                 <li class="nav-item">
-                    <a href="#" class="nav-link">Sklep</a>
+                    <a href="{% url 'store:index' %}" class="nav-link">Sklep</a>
                 </li>
             </ul>
             <div class="my-2 my-lg-0">
@@ -93,15 +96,23 @@
             </div>
         </div>
     </nav>
+    <main>
+        <div class="container-fluid">
+            <nav aria-label="breadcrumb">
+            <ol class="breadcrumb bonus-card">
+                <li class="breadcrumb-item active text-light" aria-current="page">Sklep</li>
+            </ol>
+            </nav>
+            {% block body %}
+            {% endblock body %}
+        </div>
+    </main>
+    
+    <footer class="footer mt-auto py-5 text-center">
     <div class="container">
-        <nav aria-label="breadcrumb">
-        <ol class="breadcrumb bonus-card">
-            <li class="breadcrumb-item active text-light" aria-current="page">Sklep</li>
-        </ol>
-        </nav>
-        {% block body %}
-        {% endblock body %}
+        <span class="text-muted">&copy; SharkCore 2019-2020</span>
     </div>
+    </footer>
     <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
         integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous">
     </script>
