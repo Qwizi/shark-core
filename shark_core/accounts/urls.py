@@ -3,12 +3,14 @@ from .views import (
     AccountSingUpView,
     AccountActivateView,
     AccountLogInView,
-    AccountSignOutView
+    AccountSignOutView,
+    AccountIndexView
 )
 
 app_name = 'accounts'
 
 urlpatterns = [
+    path('', AccountIndexView.as_view(), name='index'),
     path('sign-up/', AccountSingUpView.as_view(), name='sign-up'),
     re_path(r'^activate/'
             r'(?P<aidb64>[0-9A-Za-z_\-]+)/'

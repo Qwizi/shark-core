@@ -92,3 +92,10 @@ class AccountSignOutView(View):
     def get(self, request):
         logout(request)
         return redirect('/account/')
+
+
+class AccountIndexView(View):
+    template_name = 'accounts/index.html'
+
+    def get(self, request):
+        return render(request, self.template_name)
