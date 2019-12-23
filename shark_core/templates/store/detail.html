@@ -1,36 +1,65 @@
+{% extends 'base.html' %}
 {% load djmoney %}
-    {% money_localize account.wallet_set.get.money %}
-{{ bonus }}
-{{ bonus.description }}
-<ul>
-    {% for desc in desc_list %}
-    <li>{{ desc }}</li>
-    {% endfor %}
-</ul>
+{% money_localize account.wallet_set.get.money %}
 
-<form method="post">
-    {% csrf_token %}
-    {{ form }}
-    <button type="submit" id="buy-btn">Kup</button>
-</form>
 
+{% block body %}
+<div class="container-padding">
+    <div class="d-flex flex-row">
+        <div class="p-2 flex-fill">
+            <div class="card bonus-card h-100">
+                <div class="card-header sign-in-card">
+                    <h5>{{ bonus.name }}</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% for desc in bonus.get_split_description %}
+                        <li class="list-group-item bonus-card">{{ desc }}</li>
+                        {% endfor %}
+                    </ul>
+                    <form method="post" id="bonus-finalize-form">
+                        {% csrf_token %}
+
+                        {{ form }}
+                    </form>
+                    <div class="card-footer">
+                        <div class="d-flex flex-row justify-content-end">
+
+                            <div class="p-1 flex-fill">
+                                <h1><span class="badge badge-secondary">{% money_localize bonus.price %}</span></h1>
+                                </h1>
+                            </div>
+                            <div class="p-1 flex-fill">
+
+                                <button id="bonus-finalize-form-btn" data-toggle="tooltip" data-placement="top"
+                                    title="Nie posiadasz odpowiednich srodkow"
+                                    class="btn btn-success btn-lg btn-block">Kupuje</button>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <script>
-    var wallet = "{{account.wallet_set.get}}"
-    var wallet_money = "{% money_localize account.wallet_set.get.money %}"
-    var bonus_price = "{% money_localize bonus.price %}"
-    var split_wallet_money = wallet_money.split('zł')
-    var split_bonus_price = bonus_price.split('zł')
-    const submit_btn = document.getElementById('buy-btn')
+    let wallet = "{{account.wallet_set.get}}"
+    let walletMoney = "{% money_localize account.wallet_set.get.money %}"
+    let bonusPrice = "{% money_localize bonus.price %}"
+    let splitWalleyMoney = walletMoney.split('zł')
+    let splitBonusPrice = bonusPrice.split('zł')
+    const bonusFinalizeFormBtn = document.getElementById('bonus-finalize-form-btn')
+    const bonusFinalizeForm = document.getElementById('bonus-finalize-form')
 
-    if (split_wallet_money < split_bonus_price) {
-        submit_btn.setAttribute('disabled', 1)
-        console.log('Brak hajsu')
+    if (splitWalleyMoney < splitBonusPrice) {
+        bonusFinalizeFormBtn.setAttribute('disabled', 1)
     } else {
-        submit_btn.setAttribute('disabled', 0)
+        bonusFinalizeFormBtn.removeAttribute('disabled')
     }
 
-    console.log(wallet_money)
-    console.log(bonus_price)
-    console.log(split_wallet_money[0])
-    console.log(split_bonus_price[0])
+    bonusFinalizeFormBtn.addEventListener('click', () => {
+        bonusFinalizeForm.submit()
+    })
 </script>
+{% endblock body %}

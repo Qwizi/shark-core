@@ -7,10 +7,10 @@
         </div>
     </div>
     <div class="d-flex flex-row justify-content-center">
-        <div class="p-2">
-            <div class="card sign-in-card" style="max-width: 700px;">
+        <div class="w-50 p-1">
+            <div class="card sign-in-card">
                 <div class="card-body">
-                    <form method="post">
+                    <form method="post" id="sign-in-form">
                         {% csrf_token %}
 
                         {% if form.non_field_errors %}
@@ -52,11 +52,23 @@
                             <label for="{{ form.password.id_for_label }}">Password: </label>
                             {{ form.password }}
                         </div>
-                        <button type="submit" class="btn btn-success">Zaloguj</button>
+                        <button type="submit" class="btn btn-success" id="sign-in-btn">Sign in</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
+<script>
+    const signInForm = document.getElementById('sign-in-form')
+    const signInBtn = document.getElementById('sign-in-btn')
+
+    signInForm.addEventListener('submit', (e) => {
+        signInBtn.setAttribute('disabled', 1)
+
+        setTimeout(() => {
+            signInBtn.removeAttribute('disabled')
+        }, 1000)
+    })
+</script>
 {% endblock body %}

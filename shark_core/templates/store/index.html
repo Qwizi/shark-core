@@ -1,17 +1,37 @@
 {% extends 'base.html' %}
 {% load djmoney %}
 {% block body %}
-<div class="row">
-    <div class="col-md-12 container-padding">
-        {% money_localize account.wallet_set.get.money %}
+<div class="container-padding">
+    <div class="d-flex flex-row">
+
         {% for bonus in bonuses %}
-        <ul class="text-light">
-            <li> {{ bonus.name }} </li>
-            <li> {{ bonus.description }} </li>
-            <li> {% money_localize bonus.price %} </li>
-            <li> Dni: {{ bonus.get_options.days }} </li>
-            <li><a href="{% url 'store:detail' bonus_id=bonus.id%}">Wybieram</a></li>
-        </ul>
+        <div class="p-2 flex-fill">
+            <div class="card bonus-card h-100">
+                <div class="card-header sign-in-card">
+                    <h5>{{ bonus.name }}</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% for desc in bonus.get_split_description %}
+                        <li class="list-group-item bonus-card">{{ desc }}</li>
+                        {% endfor %}
+                    </ul>
+                    <div class="card-footer">
+                        <div class="d-flex flex-row justify-content-end">
+
+                            <div class="p-1 flex-fill">
+                                <h1><span class="badge badge-secondary">{% money_localize bonus.price %}</span></h1>
+                                </h1>
+                            </div>
+                            <div class="p-1 flex-fill "><a href="{% url 'store:detail' bonus_id=bonus.id %}"
+                                    class="btn btn-success btn-lg btn-block">Wybieram</a></div>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
         {% endfor %}
     </div>
 </div>
