@@ -1,0 +1,24 @@
+body {
+  background: #363636;
+  margin: 0;
+  color: #ffff;
+}
+
+.navbar-bg {
+  background: #6665d2;
+}
+
+.container-padding {
+  margin-top: 30px;
+  background: #3a3a3a;
+  padding: 30px;
+  height: 70vh
+}
+
+.sign-in-card {
+  background: #7289da;
+}
+
+.bonus-card {
+  background: #3a3a3a;
+}
