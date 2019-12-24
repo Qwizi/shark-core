@@ -8,6 +8,7 @@ verify_ssl = true
 [packages]
 django = "*"
 django-money = "*"
+djangorestframework = "*"
 
 [requires]
 python_version = "3.8"

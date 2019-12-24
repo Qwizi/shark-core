@@ -16,6 +16,13 @@
                 <h5>Wybierz kategorie</h5>>
             </div>
         </div>
+        <div id="detail-model" class="modal fade bd-example-modal-xl" tabindex="-1" role="dialog" aria-labelledby="myExtraLargeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+            ...
+            </div>
+        </div>
+        </div>
 {% endblock body %}
 {% block js %}
         <script>
@@ -93,6 +100,18 @@
                         bonuses_html += '<div class="d-flex flex-row">'
                         if (bonuses[0].length > 0) {
                             bonuses[0].forEach((bonus_item, bonus_index) => {
+                                let list_bonuses, list_bonus_description
+                                list_bonuses = bonus_item.description.split('**')
+                                list_bonus_description = list_bonuses.splice(0, 1)
+                                let list_bonuses_html = ''
+
+                                list_bonuses_html += '<ul>'
+
+                                list_bonuses.forEach((item, index) => {
+                                    list_bonuses_html += `<li>${item}</li>`
+                                })
+                                list_bonuses_html += '</ul>'
+                                console.log(list_bonus_description)
                                 bonuses_html += `
                                     <div class="p-2 w-50">
                                         <div class="card bonus-card h-100">
@@ -100,7 +119,26 @@
                                                 ${bonus_item.name}
                                             </div>
                                             <div class="card-body">
-                                                ${bonus_item.description}
+                                                ${list_bonus_description}
+                                                ${list_bonuses_html}
+                                                <div class="card-footer">
+                                                    <div class="d-flex flex-row">
+                                                        <div class="p-1 flex-grow-1">
+                                                            <h2>
+                                                            <span class="badge bg-secondary">${bonus_item.price} zł</span>
+                                                            </h2>
+                                                        </div>
+                                                        <div class="p-1">
+                                                            <a 
+                                                                href="#"
+                                                                class="btn btn-success btn-lg modal-btn"
+                                                                id="model-btn-${bonus_item.id}"
+                                                            >
+                                                            Wybieram
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -112,8 +150,10 @@
                         bonuses_html += '</div>'
                         $(`#v-pills-tabContent #${split_category_id} .bonuses`).html(bonuses_html)
                     })
-
                 })
+            })
+            $('.modal-btn').on('click', function () {
+                console.log('Klikniety')
             })
         </script>
 {% endblock js %}
