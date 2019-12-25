@@ -6,7 +6,7 @@ from rest_framework_simplejwt.views import (
 app_name = 'api'
 
 urlpatterns = [
-    path('token/', TokenObtainPairView.as_view(), name='token_optain_pair'),
-    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('auth/token/', TokenObtainPairView.as_view(), name='token_optain_pair'),
+    path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('store/', include('store.api_urls'))
 ]
