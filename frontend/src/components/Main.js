@@ -1,24 +1,76 @@
 import React from 'react';
-import {Switch, Route } from 'react-router-dom';
-import Home from '../views/Home';
-import SignIn from '../views/SignIn';
-import Shop from '../views/Shop';
+import { Switch, Route, Redirect } from 'react-router-dom';
+import {
+    Home,
+    SignIn,
+    Shop,
+    NoMatch
+} from '../views/';
 
-export default class Main extends React.Component
+function GuestRoute({ children, ...rest}) {
+    return (
+        <Route
+          {...rest}
+          render={({ location }) =>
+              !rest.isLogged ? (
+              children
+            ) : (
+              <Redirect
+                to={{
+                  pathname: "/",
+                  state: { from: location }
+                }}
+              />
+            )
+          }
+        />
+      );
+}
+
+
+function PrivateRoute({ children, ...rest }) {
+
+    return (
+      <Route
+        {...rest}
+        render={({ location }) =>
+            rest.isLogged ? (
+            children
+          ) : (
+            <Redirect
+              to={{
+                pathname: "/sign-in/",
+                state: { from: location }
+              }}
+            />
+          )
+        }
+      />
+    );
+  }
+
+class Main extends React.Component
 {
     render() {
         return (
             <main>
                 <Switch>
-                    <Route 
-                        exact 
-                        path='/' 
-                        render={(props) => (<Home {...this.props} />)}
-                    />
-                    <Route path='/sign-in/' component={SignIn}/>
-                    <Route path='/shop/' component={Shop}/>
+                    <Route exact path='/'>
+                        <Home />
+                    </Route>
+                    <GuestRoute path='/sign-in/' {...this.props}>
+                        <SignIn {...this.props} />
+                    </GuestRoute>
+                    <PrivateRoute pathname="/shop/" {...this.props}>
+                        <Shop />
+                    </PrivateRoute>
+                    <Route>
+                        <NoMatch />
+                    </Route>
                 </Switch>
             </main>
         );
     }
 }
+
+export default Main
