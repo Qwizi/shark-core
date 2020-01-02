@@ -13,6 +13,7 @@ djangorestframework-simplejwt = "*"
 django-cors-headers = "*"
 djoser = "*"
 steam = "*"
+shark-core-premium-account-bonus = {editable = true,path = "./premium_account_bonus"}
 
 [requires]
 python_version = "3.8"
