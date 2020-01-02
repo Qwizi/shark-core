@@ -2,8 +2,11 @@ from django.db import models
 from django.conf import settings
 
 from djmoney.models.fields import MoneyField
-from .bonuses import bonus_manager
+from .bonus_base import bonus_manager
+
 import json
+import string
+import random
 
 
 class Category(models.Model):
@@ -72,7 +75,7 @@ class Bonus(models.Model):
         return desc_list
 
     def __str__(self):
-        return '{} - Module ({})'.format(self.name, self.get_module_tag())
+        return '{} | {} | {}'.format(self.name, self.get_module_tag(), self.category)
 
 
 class Log(models.Model):
@@ -87,4 +90,31 @@ class Log(models.Model):
     status = models.CharField(max_length=16, choices=LOG_STATUS, default=1)
 
     def __str__(self):
-        return '{} - {} - {}'.format(self.bonus.name, self.account.username, self.status)
+        return '{} | {} | {}'.format(self.bonus.name, self.account.username, self.status)
+
+
+class Checkout(models.Model):
+    number = models.CharField(max_length=8, unique=True)
+    secret = models.CharField(max_length=16, unique=True)
+    account = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    bonus = models.ForeignKey(Bonus, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return '{} | {} | {} | {}'.format(self.number, self.secret, self.account.username, self.bonus.name)
+
+    @staticmethod
+    def __randomize(length=4, uppercase=False):
+        if uppercase:
+            return ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(length))
+        else:
+            return ''.join(random.SystemRandom().choice(string.ascii_lowercase + string.digits) for _ in range(length))
+
+    def create_number(self):
+        return self.__randomize(length=8, uppercase=True)
+
+    def create_secret(self):
+        return self.__randomize(length=16, uppercase=False)
+
+    def save(self, *args, **kwargs):
+        self.secret = self.create_secret()
+        super(Checkout, self).save(*args, **kwargs)
