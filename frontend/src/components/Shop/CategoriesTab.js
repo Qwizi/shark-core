@@ -6,15 +6,23 @@ import BonusCategoriesTab from './BonusCategoriesTab';
 class CategoriesTab extends React.Component
 {
     render() {
+
+        const { 
+            categories, 
+            handleEnterTab, 
+            handleBonus,
+            bonuses
+        } = this.props
+
         return (
-            this.props.categories.map((category) =>
+            categories.map((category) =>
                 <Tab.Pane
                     key={category.pk} 
                     eventKey={category.name}
-                    onEnter={(e) => this.props.handleEnterTab(category.pk)}
+                    onEnter={(e) => handleEnterTab(category.pk)}
                 >
                     <Row>
-                        <BonusCategoriesTab bonuses={this.props.bonuses} handleBonus={this.props.handleBonus}/>
+                        <BonusCategoriesTab bonuses={bonuses} handleBonus={handleBonus}/>
                     </Row>
                 </Tab.Pane>
             )

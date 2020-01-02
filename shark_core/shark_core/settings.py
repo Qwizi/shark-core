@@ -35,13 +35,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'rest_framework.authtoken',
+    'djmoney',
+    'corsheaders',
+    'djoser',
     'accounts',
     'store',
-    'mainpage',
-    'djmoney',
-    'rest_framework',
     'api',
-    'corsheaders'
+    'servers'
 ]
 
 MIDDLEWARE = [
@@ -137,6 +139,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
     'DEFAULT_AUTHENTICATION_CLASSES': (
+            'rest_framework.authentication.TokenAuthentication',
             'rest_framework_simplejwt.authentication.JWTAuthentication',
         )
 }
@@ -147,3 +150,9 @@ BONUSES = [
 ]
 
 CORS_ORIGIN_ALLOW_ALL = True
+
+DJOSER = {
+    'SERIALIZERS': {
+        'current_user': 'accounts.serializers.AccountSerializer',
+    },
+}

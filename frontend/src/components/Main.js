@@ -3,6 +3,7 @@ import { Switch, Route, Redirect } from 'react-router-dom';
 import {
     Home,
     SignIn,
+    SignUp,
     Shop,
     NoMatch
 } from '../views/';
@@ -12,7 +13,7 @@ function GuestRoute({ children, ...rest}) {
         <Route
           {...rest}
           render={({ location }) =>
-              !rest.isLogged ? (
+              !rest.user.logged ? (
               children
             ) : (
               <Redirect
@@ -34,7 +35,7 @@ function PrivateRoute({ children, ...rest }) {
       <Route
         {...rest}
         render={({ location }) =>
-            rest.isLogged ? (
+            rest.user.logged ? (
             children
           ) : (
             <Redirect
@@ -56,15 +57,18 @@ class Main extends React.Component
             <main>
                 <Switch>
                     <Route exact path='/'>
-                        <Home />
+                        <Home {...this.props} />
                     </Route>
                     <GuestRoute path='/sign-in/' {...this.props}>
                         <SignIn {...this.props} />
                     </GuestRoute>
+                    <GuestRoute path='/sign-up/' {...this.props}>
+                      <SignUp {...this.props} />
+                    </GuestRoute>
                     <PrivateRoute pathname="/shop/" {...this.props}>
-                        <Shop />
+                        <Shop {...this.props} />
                     </PrivateRoute>
-                    <Route>
+                    <Route {...this.props}>
                         <NoMatch />
                     </Route>
                 </Switch>

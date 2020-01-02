@@ -1,13 +1,10 @@
-from django.urls import path
+from rest_framework import routers
+from .views import CategoryViewSet, BonusViewSet
 
-from .views import (
-    StoreBonusesView,
-    StoreBonusDetailView,
-)
+router = routers.DefaultRouter()
+router.register(r'categories', CategoryViewSet)
+router.register(r'bonuses', BonusViewSet, basename='bonuses')
 
 app_name = 'store'
 
-urlpatterns = [
-    path('', StoreBonusesView.as_view(), name='index'),
-    path('bonus-<int:bonus_id>/', StoreBonusDetailView.as_view(), name='detail'),
-]
+urlpatterns = router.urls

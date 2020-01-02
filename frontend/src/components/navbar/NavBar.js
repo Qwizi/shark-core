@@ -2,9 +2,16 @@ import React from 'react';
 import { Navbar, Nav } from 'react-bootstrap';
 import { NavLink } from 'react-router-dom';
 
-export default class NavBar extends React.Component
+import GuestNav from './GuestNav';
+
+class NavBar extends React.Component
 {
+   
     render() {
+
+        const { logOutUser } = this.props
+        const { logged } = this.props.user
+
         return (
             <Navbar className="navbar-bg" variant="dark" expand="lg">
                 <Navbar.Brand>
@@ -16,12 +23,11 @@ export default class NavBar extends React.Component
                     <NavLink exact to="/" className="nav-link">Home</NavLink>
                     <NavLink exact to="/shop/" className="nav-link">Shop</NavLink>
                 </Nav>
-                <Nav>
-                    <NavLink exact to="/sign-in/" className="nav-link">Sign in</NavLink>
-                    <NavLink exact to="/sign-up/" className="nav-link">Sign up</NavLink>
-                </Nav>
+                <GuestNav logged={logged} logOutUser={logOutUser} />
             </Navbar.Collapse>
             </Navbar>
         );
     }
 }
+
+export default NavBar
