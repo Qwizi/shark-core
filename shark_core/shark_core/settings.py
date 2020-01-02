@@ -145,14 +145,9 @@ REST_FRAMEWORK = {
         )
 }
 
-BONUSES = [
-    'PremiumAccountBonus'
-    # 'PremiumBonus'
-]
-
 SHARK_CORE = {
-    'BONUSES': (
-        'premium_account.bonuses.PremiumAccountBonus'
+    'STORE_BONUSES': (
+        'premium_account.bonuses.PremiumAccountBonus',
     )
 }
 

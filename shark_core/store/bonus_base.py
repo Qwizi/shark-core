@@ -12,20 +12,63 @@ class BonusManager(object):
 
     @staticmethod
     def __get_bonus_list_from_settings():
-        bonus_list = settings.BONUSES
+        bonus_list = settings.SHARK_CORE['STORE_BONUSES']
         return bonus_list
 
     def get_bonus_list(self):
         return self.__bonus_list
 
     def get_bonus_classes(self):
-        module = importlib.import_module('store.bonuses')
         bonus_instance_list = []
+        for m in self.__bonus_list:
+            """
+            Zamiana stringa na liste.
+            ['nazwa_aplikacji','bonuses', 'NazwaBonusu']
+            Przykład:
+            ['premium_account', 'bonuses', 'PremiumAccountBonus']
+            """
+            module_split = m.split('.')
 
-        for bonus in self.__bonus_list:
-            name = getattr(module, bonus)
-            bonus_instance_list.append(name)
+            """
+            Usuwamy ostatnia pozycje z tablicy. (Klase bonusu)
+            Tablica wyglada teraz tak
+            ['premium_account', 'bonuses']
+            """
+            module_split.pop(-1)
 
+            """
+            Przekszalcamy tablice w stringa
+            Wyglada teraz tak
+            'premium_account.bonuses'
+            """
+            module_join = '.'.join(module_split)
+
+            """
+            Importujemy modul
+            """
+            module = importlib.import_module(module_join)
+
+            """
+            Ponownie zamieniamy liste na stringa z ustawien i pobieramy nazwe klasy bonusu
+            Wyglada teraz tak
+            PremiumAcccountBonus
+            """
+            class_name = m.split('.')[-1]
+
+            """
+            Pobieramy klase
+            """
+            bonus_class = getattr(module, class_name)
+
+            """
+            Dodajemy klase do listy
+            """
+            bonus_instance_list.append(bonus_class)
+
+            """
+            from store.bonus_base import bonus_manager
+            bonus_manager.get_bonus_classes()
+            """
         return bonus_instance_list
 
     def get_bonus(self, tag):
