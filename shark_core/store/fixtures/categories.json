@@ -1,0 +1,18 @@
+[
+  {
+    "model": "store.Category",
+    "pk": 1,
+    "fields": {
+      "name": "Premium Account",
+      "tag": "premium_account"
+    }
+  },
+  {
+    "model": "store.Category",
+    "pk": 2,
+    "fields": {
+      "name": "Server Credits",
+      "tag": "server_credits"
+    }
+  }
+]

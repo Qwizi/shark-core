@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Bonus, Category
+from .models import Bonus, Category, Checkout
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -12,3 +12,9 @@ class BonusSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bonus
         fields = '__all__'
+
+
+class StoreCheckoutSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Checkout
+        fields = ['number', 'account', 'bonus']

@@ -43,7 +43,8 @@ INSTALLED_APPS = [
     'accounts',
     'store',
     'api',
-    'servers'
+    'servers',
+    'premium_account'
 ]
 
 MIDDLEWARE = [
@@ -148,6 +149,12 @@ BONUSES = [
     'PremiumAccountBonus'
     # 'PremiumBonus'
 ]
+
+SHARK_CORE = {
+    'BONUSES': (
+        'premium_account.bonuses.PremiumAccountBonus'
+    )
+}
 
 CORS_ORIGIN_ALLOW_ALL = True
 
