@@ -4,8 +4,9 @@ import Nav from 'react-bootstrap/Nav';
 class Categories extends React.Component
 {
     render() {
+        const { categories } = this.props
         return (
-            this.props.categories.map((category) =>
+            categories.map((category) =>
                 <Nav.Item key={category.pk}>
                     <Nav.Link eventKey={category.name}>
                         {category.name}

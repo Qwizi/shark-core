@@ -4,14 +4,17 @@ import { Card, Row, Col, Button, Badge } from 'react-bootstrap';
 class BonusCard extends React.Component
 {
     render() {
+
+        const { name, description, price } = this.props.bonus
+        
         return (
             <Card className="h-100">
                 <Card.Header className="sign-in-card">
-                    {this.props.bonus.name}
+                    {name}
                 </Card.Header>
                 <Card.Body className="bonus-card">
                     <Card.Text>
-                        {this.props.bonus.description}
+                        {description}
                     </Card.Text>
                 </Card.Body>
                 <Card.Footer className="bonus-card">
@@ -19,7 +22,7 @@ class BonusCard extends React.Component
                         <Col md={6} lg={8}>
                             <h1>
                                 <Badge variant="secondary">
-                                    {this.props.bonus.price}zł
+                                    {price} zł
                                 </Badge>
                             </h1>
                         </Col>

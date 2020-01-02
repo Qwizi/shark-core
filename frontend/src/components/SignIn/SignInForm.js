@@ -1,7 +1,6 @@
 import React from 'react';
 import { Redirect } from 'react-router-dom';
 import { Form, Button } from 'react-bootstrap';
-import axios from 'axios';
 
 class SignInForm extends React.Component
 {
@@ -27,24 +26,17 @@ class SignInForm extends React.Component
         this.setState({password: e.target.value})
     }
 
-    handleFormSubmit(e) {
+    async handleFormSubmit(e) {
         e.preventDefault()
-        const data = {
-            'username': this.state.username,
-            'password': this.state.password
-        }
-        axios.post('http://localhost:8000/api/auth/token/', data)
-            .then(res => {
-                const data = res.data;
-                localStorage.setItem('access_token', data.access)
-                this.props.loginUser()
-                console.log(localStorage.getItem('access_token'))
-            })
+        const { username, password } = this.state
+
+        await this.props.loginUser(username, password)
         this.setState({fireRedirect: true})
+
+        return Promise.resolve({username: username, password: password})
     }
 
     handleLogOut(e) {
-        localStorage.removeItem('access_token')
         this.props.logOutUser()
     }
 

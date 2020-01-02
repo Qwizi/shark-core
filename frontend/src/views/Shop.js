@@ -1,7 +1,12 @@
 import React from 'react';
-import axios from 'axios';
 import { Row, Col, Tab, Nav } from 'react-bootstrap';
 import { CategoriesTab, Categories } from '../components/Shop/'
+import api from '../api';
+
+const API_URLS = {
+    CATEGORIES: '/store/categories/',
+    BONUSES: '/store/bonuses/'
+}
 
 export default class Shop extends React.Component
 {
@@ -14,21 +19,29 @@ export default class Shop extends React.Component
         this.handleOnCategoryEnterTab = this.handleOnCategoryEnterTab.bind(this)
     }
 
-    componentDidMount() {
-        axios.get(`http://localhost:8000/api/store/categories/`)
-        .then(res => {
-            const categories = res.data;
-            this.setState({categories: categories.results})
-        })
+    async getCategories() {
+        const response = await api.get(API_URLS.CATEGORIES)
+        const categories = response.data.results
+
+        return Promise.resolve(categories)
     }
 
-    handleOnCategoryEnterTab(category_pk) {
+    async getBonuses(category_pk) {
+        const response = await api.get(API_URLS.BONUSES+`?category=${category_pk}`)
+        const bonuses = response.data.results
+
+        return Promise.resolve(bonuses)
+    } 
+
+    async componentDidMount() {
+        const categories = await this.getCategories()
+        this.setState({categories: categories})
+    }
+
+    async handleOnCategoryEnterTab(category_pk) {
         category_pk = Number(category_pk)
-        axios.get(`http://localhost:8000/api/store/bonuses/?category=${category_pk}`)
-        .then(res => {
-            const bonuses = res.data;
-            this.setState({bonuses: bonuses.results})
-        })
+        const bonuses = await this.getBonuses(category_pk)
+        this.setState({bonuses: bonuses})
     }
 
     render() {
