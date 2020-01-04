@@ -7,5 +7,6 @@ urlpatterns = [
     path('token/refresh/', refresh_jwt_token),
     path('accounts/', include('accounts.urls')),
     path('store/', include('store.urls')),
-    path('servers/', include('servers.urls'))
+    path('servers/', include('servers.urls')),
+    path('forum/', include('forum.urls'))
 ]
