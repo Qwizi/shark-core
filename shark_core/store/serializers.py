@@ -15,10 +15,10 @@ class BonusSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class StoreCheckoutSerializer(serializers.ModelSerializer):
+class StoreOfferSerializer(serializers.ModelSerializer):
     wallet_type = serializers.ChoiceField(choices=Wallet.WalletTypes.choices)
 
     class Meta:
         model = Offer
-        fields = ['number', 'wallet_type', 'account', 'bonus']
+        fields = ['number', 'wallet_type', 'bonus']
         read_only_fields = ('number',)

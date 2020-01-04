@@ -9,11 +9,11 @@ verify_ssl = true
 django = "*"
 django-money = "*"
 djangorestframework = "*"
-djangorestframework-simplejwt = "*"
 django-cors-headers = "*"
 djoser = "*"
 steam = "*"
-shark-core-premium-account-bonus = {editable = true,path = "./premium_account_bonus"}
+pip = "*"
+django-jwt-auth = "*"
 
 [requires]
 python_version = "3.8"

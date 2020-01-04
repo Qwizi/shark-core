@@ -17,7 +17,7 @@ class Account(AbstractUser):
         verbose_name_plural = _('accounts')
 
     def __str__(self):
-        return '{} - {} (Active -> {})'.format(self.username, self.email, self.is_activated())
+        return '{} | {} | {}'.format(self.username, self.email, self.is_activated())
 
     def activate(self):
         self.is_active = True
@@ -33,11 +33,11 @@ class Account(AbstractUser):
 
 
 class Wallet(models.Model):
-
     class WalletTypes(models.IntegerChoices):
         PRIMARY = 1
         SECONDARY = 2
         OTHER = 3
+
     wtype = models.CharField(max_length=64, choices=WalletTypes.choices, default=WalletTypes.choices[0][0], null=True)
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     money = MoneyField(max_digits=14, decimal_places=2, default_currency='PLN', default=0)
@@ -45,7 +45,7 @@ class Wallet(models.Model):
     bonus_max = models.IntegerField(default=25)
 
     def __str__(self):
-        return 'Account {} - {}'.format(self.account.username, self.money)
+        return '{} | {}'.format(self.account.username, self.money)
 
     def add_money(self, money):
 
@@ -65,12 +65,18 @@ class Wallet(models.Model):
             self.bonus_percent += 1
 
 
-def create_account_wallet(sender, **kwargs):
+def on_create_account(sender, **kwargs):
     if kwargs['created']:
+        users_group, created = Group.objects.get_or_create(pk=3)
+        account = kwargs['instance']
+        account.display_group = users_group
+        account.groups.add(users_group)
+        account.save()
+
         Wallet.objects.bulk_create([
-            Wallet(type=1, account=kwargs['instance']),
-            Wallet(type=2, account=kwargs['instance'])
+            Wallet(wtype=1, account=account),
+            Wallet(wtype=2, account=account)
         ])
 
 
-post_save.connect(create_account_wallet, sender=Account)
+post_save.connect(on_create_account, sender=Account)

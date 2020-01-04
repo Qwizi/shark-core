@@ -1,11 +1,15 @@
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.response import Response
+from rest_framework import status
+
 from .serializers import AccountSerializer
 from .models import Account
 
 
 class AccountViewSet(viewsets.ModelViewSet):
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (AllowAny, )
     serializer_class = AccountSerializer
 
     def get_queryset(self):
@@ -21,3 +25,9 @@ class AccountViewSet(viewsets.ModelViewSet):
             queryset = Account.objects.filter(is_staff=is_staff)
 
         return queryset
+
+    @action(detail=False, methods=['get'], permission_classes=(IsAuthenticated,))
+    def me(self, request):
+        account = request.user
+        serializer = self.serializer_class(account)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
