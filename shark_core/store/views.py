@@ -1,6 +1,7 @@
 from rest_framework import viewsets, views
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.conf import settings
 
 from .models import (
@@ -10,17 +11,19 @@ from .models import (
 from .serializers import (
     CategorySerializer,
     BonusSerializer,
-    StoreCheckoutSerializer
+    StoreOfferSerializer
 )
 from .base_bonus import bonus_manager
 
 
 class StoreCategoryViewSet(viewsets.ModelViewSet):
+    permission_classes = (AllowAny, )
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
 
 class StoreBonusViewSet(viewsets.ModelViewSet):
+    permission_classes = (AllowAny,)
     serializer_class = BonusSerializer
 
     def get_queryset(self):
@@ -36,7 +39,8 @@ class StoreBonusViewSet(viewsets.ModelViewSet):
 
 
 class StoreOfferView(views.APIView):
-    serializer_class = StoreCheckoutSerializer
+    permission_classes = (IsAuthenticated, )
+    serializer_class = StoreOfferSerializer
 
     @staticmethod
     def __check_account_wallet(wallet, price):
@@ -78,7 +82,7 @@ class StoreOfferView(views.APIView):
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
-            account = serializer.validated_data.get('account', None)
+            account = self.request.user
             bonus = serializer.validated_data.get('bonus', None)
             wallet_type = serializer.validated_data.get('wallet_type', None)
 
@@ -123,7 +127,7 @@ class StoreOfferView(views.APIView):
 
             self.__update_account_wallet(**wallet_data)
 
-            serializer.save()
+            serializer.save(account=account)
 
             return Response(data={
                 'number': serializer.data['number']
