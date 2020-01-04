@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'store',
     'api',
     'servers',
+    'forum',
     'premium_account'
 ]
 
