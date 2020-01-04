@@ -2,7 +2,7 @@ from django.db import models
 from django.conf import settings
 
 from djmoney.models.fields import MoneyField
-from .bonus_base import bonus_manager
+from .base_bonus import bonus_manager
 
 import json
 import string
@@ -93,14 +93,14 @@ class Log(models.Model):
         return '{} | {} | {}'.format(self.bonus.name, self.account.username, self.status)
 
 
-class Checkout(models.Model):
+class Offer(models.Model):
     number = models.CharField(max_length=8, unique=True)
-    secret = models.CharField(max_length=16, unique=True)
     account = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     bonus = models.ForeignKey(Bonus, on_delete=models.CASCADE)
+    wallet_type = models.IntegerField(default=1)
 
     def __str__(self):
-        return '{} | {} | {} | {}'.format(self.number, self.secret, self.account.username, self.bonus.name)
+        return '{} | {} | {} '.format(self.number, self.account.username, self.bonus.name)
 
     @staticmethod
     def __randomize(length=4, uppercase=False):
@@ -112,9 +112,6 @@ class Checkout(models.Model):
     def create_number(self):
         return self.__randomize(length=8, uppercase=True)
 
-    def create_secret(self):
-        return self.__randomize(length=16, uppercase=False)
-
     def save(self, *args, **kwargs):
-        self.secret = self.create_secret()
-        super(Checkout, self).save(*args, **kwargs)
+        self.number = self.create_number()
+        super(Offer, self).save(*args, **kwargs)

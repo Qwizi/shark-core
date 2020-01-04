@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Bonus, Category, Checkout
+from .models import Bonus, Category, Offer
+from accounts.models import Wallet
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -15,6 +16,9 @@ class BonusSerializer(serializers.ModelSerializer):
 
 
 class StoreCheckoutSerializer(serializers.ModelSerializer):
+    wallet_type = serializers.ChoiceField(choices=Wallet.WalletTypes.choices)
+
     class Meta:
-        model = Checkout
-        fields = ['number', 'account', 'bonus']
+        model = Offer
+        fields = ['number', 'wallet_type', 'account', 'bonus']
+        read_only_fields = ('number',)
