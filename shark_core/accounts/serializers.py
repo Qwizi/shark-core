@@ -9,7 +9,7 @@ class AccountSerializer(UserSerializer):
     class Meta:
         model = Account
         fields = [
-            'pk',
+            'id',
             'username',
             'email',
             'display_group',

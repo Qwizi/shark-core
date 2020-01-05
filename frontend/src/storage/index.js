@@ -1,1 +1,0 @@
-export { default as UserStorage } from './UserStorage'

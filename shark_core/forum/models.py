@@ -19,8 +19,7 @@ class Thread(models.Model):
     content = models.TextField()
     categories = models.ManyToManyField(Category)
     author = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='author')
-    last_poster = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='last_poster')
-    likes = models.IntegerField()
+    last_poster = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='last_poster', null=True)
     status = models.IntegerField(choices=ThreadStatusChoices.choices, default=ThreadStatusChoices.OPENED)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now_add=True)
@@ -33,7 +32,6 @@ class Post(models.Model):
     thread = models.ForeignKey(Thread, on_delete=models.CASCADE)
     author = models.ForeignKey(Account, on_delete=models.CASCADE)
     content = models.TextField()
-    likes = models.IntegerField()
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now_add=True)
 
