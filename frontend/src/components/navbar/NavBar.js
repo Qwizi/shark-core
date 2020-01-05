@@ -22,6 +22,7 @@ class NavBar extends React.Component
                 <Nav className="mr-auto">
                     <NavLink exact to="/" className="nav-link">Home</NavLink>
                     <NavLink exact to="/shop/" className="nav-link">Shop</NavLink>
+                    <NavLink exact to="/forum/" className="nav-link">Forum</NavLink>
                 </Nav>
                 <GuestNav logged={logged} logOutUser={logOutUser} />
             </Navbar.Collapse>

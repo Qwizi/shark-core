@@ -5,8 +5,9 @@ import {
     SignIn,
     SignUp,
     Shop,
+    Forum,
     NoMatch
-} from '../views/';
+} from '../views';
 
 function GuestRoute({ children, ...rest}) {
     return (
@@ -58,6 +59,9 @@ class Main extends React.Component
                 <Switch>
                     <Route exact path='/'>
                         <Home {...this.props} />
+                    </Route>
+                    <Route path='/forum/'>
+                        <Forum {...this.props} />
                     </Route>
                     <GuestRoute path='/sign-in/' {...this.props}>
                         <SignIn {...this.props} />

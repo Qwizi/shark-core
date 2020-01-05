@@ -6,8 +6,8 @@ import { BrowserRouter as Router } from 'react-router-dom'
 import api from '../api';
 
 const API_URLS = {
-  USER: '/auth/users/me/',
-  LOGIN: '/auth/token/login/',
+  USER: '/accounts/me/',
+  LOGIN: '/token/auth/',
   LOGOUT: '/auth/token/logout/'
 }
 
@@ -25,19 +25,21 @@ class App extends React.Component
         is_active: null,
         is_staff: null,
         date_joined: null
-      }
+      },
+      page_name: 'Home'
     }
 
     this.loginUser = this.loginUser.bind(this)
     this.logOutUser = this.logOutUser.bind(this)
     this.getUserData = this.getUserData.bind(this)
+    this.setPageName = this.setPageName.bind(this)
   }
 
   async getUserData() {
     const auth_token = localStorage.getItem('auth_token')
     const payload = {
       headers: {
-        Authorization: `Token ${auth_token}`
+        Authorization: `Bearer ${auth_token}`
       }
     }
     const response = await api.get(API_URLS.USER, payload)
@@ -62,8 +64,8 @@ class App extends React.Component
       password: password
     }
     const response = await api.post(API_URLS.LOGIN, data)
-    const { auth_token } = response.data;
-    return Promise.resolve(auth_token)
+    const { token } = response.data;
+    return Promise.resolve(token)
   }
 
   async removeAuthToken() {
@@ -77,13 +79,15 @@ class App extends React.Component
   }
 
   async loginUser(username, password) {
-    this.getAuthToken(username, password).then(auth_token => {
-      localStorage.setItem('auth_token', auth_token)
+    this.getAuthToken(username, password).then(token => {
+
+      localStorage.setItem('auth_token', token)
+      
       this.getUserData().then(user => {
         const user_data = {logged: true, ...user}
         this.setState({user: user_data})
         const data = {
-          auth_token: auth_token,
+          auth_token: token,
           user: user_data
         }
         return Promise.resolve(data)
@@ -93,9 +97,13 @@ class App extends React.Component
 
   logOutUser() {
     const auth_token = localStorage.getItem('auth_token')
-    this.removeAuthToken(auth_token).then(data => {
-      localStorage.removeItem('auth_token')
-      this.setState({user: {}})
+    localStorage.removeItem('auth_token')
+    this.setState({user: {}})
+  }
+
+  setPageName(page_name) {
+    this.setState({
+        page_name: page_name
     })
   }
 
@@ -110,6 +118,8 @@ class App extends React.Component
           loginUser={this.loginUser}
           logOutUser={this.logOutUser}
           user={this.state.user}
+          setPageName={this.setPageName}
+          page_name={this.state.page_name}
         />
       </Router>
     );
