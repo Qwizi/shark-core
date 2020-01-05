@@ -21,6 +21,7 @@ class Thread(models.Model):
     author = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='author')
     last_poster = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='last_poster', null=True)
     status = models.IntegerField(choices=ThreadStatusChoices.choices, default=ThreadStatusChoices.OPENED)
+    pinned = models.BooleanField(default=False)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now_add=True)
 

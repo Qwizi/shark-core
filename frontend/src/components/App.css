@@ -28,6 +28,14 @@ body {
   border-top: 1px solid rgb(45, 50, 58);
 }
 
+.bonus-card-pinned {
+  margin-bottom: 10px;
+  border-top: 0;
+  border-right: 0;
+  border-left: 0;
+  border-bottom: 1px solid #fa9703;
+}
+
 .bonus-card {
   margin-bottom: 10px;
   border-bottom: 1px solid #4e54c8;

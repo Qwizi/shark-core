@@ -9,6 +9,45 @@ import {
     Card
 } from 'react-bootstrap';
 import api from '../api';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faStar } from '@fortawesome/free-solid-svg-icons';
+
+class PinnedThreads extends React.Component
+{
+    constructor(props) {
+        super(props)
+
+        this.state = {
+            pinned_threads: []
+        }
+    }
+
+    componentDidMount() {
+        api.get('/forum/threads/?pinned')
+            .then(response => {
+                const threads = response.data.results
+                this.setState({
+                    pinned_threads: threads
+                })
+                console.log(threads)
+            })
+    }
+
+    render() {
+        const { pinned_threads } = this.state
+        return (
+            pinned_threads.map((thread) =>
+                <Col md={{span: 6}}>
+                    <Card key={thread.id} className="bonus-card-pinned">
+                        <Card.Header className="bonus-card-bg">
+                            {thread.title}
+                        </Card.Header>
+                    </Card>
+                </Col> 
+            )
+        )
+    }
+}
 
 class Threads extends React.Component
 {
@@ -107,17 +146,33 @@ class Forum extends React.Component
         return (
             <div>
                 <Row>
-                    <Col md={{ span: 3, offset: 1 }}><Button varian="success" block>Dodaj wątek</Button></Col>
-                </Row>
-                <Row>
-                    <Col md={{ span: 3, offset: 1 }}>Kategorie:</Col>
-                    <Col md={{ span: 7, offset: 1 }}></Col>
+                    <Col md={{ span: 3, offset: 1 }}><Button variant="primary" block>Dodaj wątek</Button></Col>
+                    <Col md={7}>
+                        <Row>
+                            <Col md={{span: 6, offset: 1}}>
+                                <p>Przypięte tematy <FontAwesomeIcon icon={faStar} /></p>
+                            </Col>
+                        </Row>
+                        <Row>
+                            <Col md={{ offset: 1 }}>
+                                <Row>
+                                    <PinnedThreads />
+                                </Row>
+                            </Col>
+                        </Row>
+                    </Col>
                 </Row>
                 <Row>
                     <Col md={{ span: 3, offset: 1 }}>
+                        <p>Kategorie</p>
                         <Categories />
                     </Col>
                     <Col md={7}>
+                        <Row>
+                            <Col md={{ offset: 1 }}>
+                            <p>Najnowsze tematy </p>
+                            </Col>
+                        </Row>
                         <Threads />
                     </Col>
                 </Row>
