@@ -32,9 +32,19 @@ class ForumThreadViewSet(viewsets.ModelViewSet):
         queryset = Thread.objects.all().order_by('-created')
         categories = self.request.query_params.get('categories', None)
         author = self.request.query_params.get('author', None)
+        pinned = self.request.query_params.get('pinned', None)
+
         if categories is not None:
             categories_split = categories.split(',')
             queryset = Thread.objects.filter(categories__pk__in=categories_split).distinct().order_by('-created')
+
+        if author is not None:
+            queryset = Thread.objects.filter(author=author).distinct().order_by(
+                '-created')
+
+        if pinned is not None:
+            queryset = Thread.objects.filter(pinned=True).distinct().order_by(
+                '-created')
 
         if categories is not None and author is not None:
             categories_split = categories.split(',')

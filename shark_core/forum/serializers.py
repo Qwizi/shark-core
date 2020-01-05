@@ -25,6 +25,7 @@ class ForumThreadSerializer(serializers.ModelSerializer):
             'title',
             'content',
             'status',
+            'pinned',
             'author',
             'created',
             'updated',
