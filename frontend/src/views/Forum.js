@@ -91,7 +91,7 @@ class Forum extends React.Component
                             <Col md={{ offset: 1 }}>
                                 
                                     <Animated 
-                                        animationIn="zoomIn"  
+                                        animationIn="fadeIn"  
                                         isVisible={this.state.threads_is_loaded}
                                     >
                                     <Row>
@@ -125,7 +125,7 @@ class Forum extends React.Component
                                     </Col>
                                 </Row>
                                 <Animated 
-                                    animationIn="zoomIn"  
+                                    animationIn="fadeIn" 
                                     isVisible={this.state.threads_is_loaded}
                                 >
                                     <LastThreads 
@@ -142,7 +142,7 @@ class Forum extends React.Component
                                     </Col>
                                 </Row>
                                 <Animated 
-                                    animationIn="zoomIn"  
+                                    animationIn="fadeIn"
                                     isVisible={this.state.threads_is_loaded}
                                 >
                                     <Threads 

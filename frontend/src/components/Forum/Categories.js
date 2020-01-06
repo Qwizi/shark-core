@@ -24,6 +24,10 @@ class Categories extends React.Component
         console.log(this.props.match.path)
     }
 
+    componentWillUnmount() {
+        this.props.setPageAdditionalName(null)
+    }
+
     onClickNav(category_id, category_name) {
         this.props.getThreads(category_id)
         this.props.setCategoryName(category_name)
