@@ -57,6 +57,7 @@ class Main extends React.Component
         return (
             <main>
                 <Switch>
+                  <Route exact strict path="/:url*" render={props => <Redirect to={`${props.location.pathname}/`}/>} />
                     <Route exact path='/'>
                         <Home {...this.props} />
                     </Route>

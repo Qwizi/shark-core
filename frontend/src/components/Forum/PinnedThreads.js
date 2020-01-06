@@ -19,7 +19,6 @@ class PinnedThreads extends React.Component
                 this.setState({
                     pinned_threads: threads
                 })
-                console.log(threads)
             })
     }
 

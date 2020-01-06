@@ -2,6 +2,18 @@ import React from 'react';
 import Routes from './Routes';
 import Container from 'react-bootstrap/Container';
 
+const PageName = (props) => {
+    if (props.page_additonal_name == null) {
+        return (
+            <h1>{props.page_name}</h1>
+        )
+    } else {
+        return (
+            <h1>{props.page_name} | {props.page_additonal_name}</h1>
+        )
+    }
+}
+
 export default class PageContent extends React.Component
 {
     render() {
@@ -10,7 +22,7 @@ export default class PageContent extends React.Component
             <div className="page">
                 <div id="banner">
                 <div className="context">
-                    <h1>{page_name}</h1>
+                    <PageName page_name={this.props.page_name} page_additonal_name={this.props.page_additonal_name}/>
                 </div>
                         <div className="area">
                             <ul className="circles">
