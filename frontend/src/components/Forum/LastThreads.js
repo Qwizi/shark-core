@@ -6,24 +6,10 @@ import {
     Card
 } from 'react-bootstrap';
 import api from '../../api';
-import { Switch, Route, Redirect, withRouter, URLSearchParams } from 'react-router-dom';
-import querystring from "query-string";
 
-class Threads extends React.Component
-{   
-
-    componentDidMount() {
-        this.props.setPageName('Forum')
-        const params = querystring.parse(this.props.location.search)
-        api.get(`/forum/categories/${params['category']}/`)
-            .then(response => {
-                const name = response.data.name
-                this.props.setPageAdditionalName(name)
-            })
-
-        console.log(this.props.match)
-    }
-
+class LastThreads extends React.Component
+{
+    
     render() {
         const { threads } = this.props
         return (
@@ -56,4 +42,4 @@ class Threads extends React.Component
     }
 }
 
-export default withRouter(Threads)
+export default LastThreads

@@ -26,13 +26,15 @@ class App extends React.Component
         is_staff: null,
         date_joined: null
       },
-      page_name: 'Home'
+      page_name: 'Home',
+      page_additonal_name: null
     }
 
     this.loginUser = this.loginUser.bind(this)
     this.logOutUser = this.logOutUser.bind(this)
     this.getUserData = this.getUserData.bind(this)
     this.setPageName = this.setPageName.bind(this)
+    this.setPageAdditionalName = this.setPageAdditionalName.bind(this)
   }
 
   async getUserData() {
@@ -107,6 +109,12 @@ class App extends React.Component
     })
   }
 
+  setPageAdditionalName(page_name) {
+    this.setState({
+        page_additonal_name: page_name
+    })
+  }
+
   render() {
     return (
       <Router>
@@ -120,6 +128,8 @@ class App extends React.Component
           user={this.state.user}
           setPageName={this.setPageName}
           page_name={this.state.page_name}
+          setPageAdditionalName={this.setPageAdditionalName}
+          page_additonal_name={this.state.page_additonal_name}
         />
       </Router>
     );
