@@ -1,5 +1,5 @@
 import React from 'react';
-import { Switch, Route, Redirect } from 'react-router-dom';
+import { Switch, Route, Redirect, useParams } from 'react-router-dom';
 import {
     Home,
     SignIn,
@@ -60,7 +60,7 @@ class Main extends React.Component
                     <Route exact path='/'>
                         <Home {...this.props} />
                     </Route>
-                    <Route path='/forum/'>
+                    <Route path='/forum/' {...this.props}>
                         <Forum {...this.props} />
                     </Route>
                     <GuestRoute path='/sign-in/' {...this.props}>
