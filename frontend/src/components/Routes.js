@@ -6,7 +6,8 @@ import {
     SignUp,
     Shop,
     Forum,
-    NoMatch
+    NoMatch,
+    Thread
 } from '../views';
 
 function GuestRoute({ children, ...rest}) {

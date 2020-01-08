@@ -6,7 +6,7 @@ import {
     Card
 } from 'react-bootstrap';
 import api from '../../api';
-import { Switch, Route, Redirect, withRouter, URLSearchParams } from 'react-router-dom';
+import { Link, Switch, Route, Redirect, withRouter, URLSearchParams } from 'react-router-dom';
 import querystring from "query-string";
 
 class Threads extends React.Component
@@ -32,7 +32,7 @@ class Threads extends React.Component
                 <Col md={{span: 11, offset: 1}}>
                     <Card key={thread.id} className="bonus-card">
                         <Card.Body className="bonus-card-bg">
-                            <Card.Title>{thread.title}</Card.Title>
+                            <Card.Title><Link to={`${this.props.match.url}thread/${thread.id}`}>{thread.title}</Link></Card.Title>
                             <Card.Text>
                                 {thread.content}
                             </Card.Text>
@@ -42,9 +42,7 @@ class Threads extends React.Component
                                 <Col md={1}>{thread.author.username}</Col>
                                 <Col md={8}><p className="text-muted">{thread.created}</p></Col>
                                 <Col md={2}>
-                                {thread.categories.map((category) =>
-                                    <Badge variant="secondary">{category.name}</Badge>
-                                )}
+                                    <Badge variant="secondary">{thread.category.name}</Badge>
                                 </Col>
                             </Row>
                         </Card.Footer>
