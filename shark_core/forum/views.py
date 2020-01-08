@@ -30,13 +30,12 @@ class ForumThreadViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = Thread.objects.all().order_by('-created')
-        categories = self.request.query_params.get('categories', None)
+        category = self.request.query_params.get('categories', None)
         author = self.request.query_params.get('author', None)
         pinned = self.request.query_params.get('pinned', None)
 
-        if categories is not None:
-            categories_split = categories.split(',')
-            queryset = Thread.objects.filter(categories__pk__in=categories_split).distinct().order_by('-created')
+        if category is not None:
+            queryset = Thread.objects.filter(category__pk=category).distinct().order_by('-created')
 
         if author is not None:
             queryset = Thread.objects.filter(author=author).distinct().order_by(
@@ -46,27 +45,45 @@ class ForumThreadViewSet(viewsets.ModelViewSet):
             queryset = Thread.objects.filter(pinned=True).distinct().order_by(
                 '-created')
 
-        if categories is not None and author is not None:
-            categories_split = categories.split(',')
+        if category is not None and author is not None:
 
-            queryset = Thread.objects.filter(categories__pk__in=categories_split, author=author).distinct().order_by(
+            queryset = Thread.objects.filter(category__pk=category, author=author).distinct().order_by(
                 '-created')
         return queryset
 
     def create(self, request, *args, **kwargs):
         author_id = request.data.get('author')
         author = Account.objects.get(id=author_id)
-        categories = request.data.get('categories', None)
+        category_id = request.data.get('category', None)
+        category = Category.objects.get(id=category_id)
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        instance = serializer.save(author=author)
-
-        if categories is not None:
-            for category in categories:
-                instance.categories.add(category)
+        serializer.save(author=author, category=category)
 
         return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        author_id = request.data.get('author', None)
+        category_id = request.data.get('category', None)
+
+        if author_id is not None:
+            author = Account.objects.get(id=author_id)
+            instance.author = author
+
+        if category_id is not None:
+            category = Category.objects.get(id=category_id)
+            instance.category = category
+
+        instance.save()
+
+        serializer = self.get_serializer(instance, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        return Response(serializer.data)
 
 
 class ForumPostViewSet(viewsets.ModelViewSet):

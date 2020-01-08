@@ -14,7 +14,7 @@ class ForumCategorySerializer(serializers.ModelSerializer):
 
 
 class ForumThreadSerializer(serializers.ModelSerializer):
-    categories = ForumCategorySerializer(many=True, read_only=True)
+    category = ForumCategorySerializer(read_only=True)
     author = AccountSerializer(read_only=True)
     last_poster = AccountSerializer(read_only=True)
 
@@ -30,7 +30,7 @@ class ForumThreadSerializer(serializers.ModelSerializer):
             'created',
             'updated',
             'last_poster',
-            'categories',
+            'category',
         ]
 
 

@@ -17,7 +17,7 @@ class Thread(models.Model):
 
     title = models.CharField(max_length=80)
     content = models.TextField()
-    categories = models.ManyToManyField(Category)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True)
     author = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='author')
     last_poster = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='last_poster', null=True)
     status = models.IntegerField(choices=ThreadStatusChoices.choices, default=ThreadStatusChoices.OPENED)

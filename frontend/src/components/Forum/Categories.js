@@ -19,9 +19,9 @@ class Categories extends React.Component
         api.get('/forum/categories/')
             .then(response => {
                 const categories = response.data.results
+                console.log(categories)
                 this.setState({categories: categories})
             })
-        console.log(this.props.match.path)
     }
 
     componentWillUnmount() {
@@ -43,7 +43,7 @@ class Categories extends React.Component
         return (
             categories.map((category) =>
                 <Nav.Item key={category.id}>
-                    <NavLink to={`${path}threads/?category=${category.id}`} onClick={() => this.onClickNav(category.id, category.name)}>
+                    <NavLink to={`${path}?category=${category.id}`} onClick={() => this.onClickNav(category.id, category.name)}>
                         {category.name}
                     </NavLink>
                 </Nav.Item>
