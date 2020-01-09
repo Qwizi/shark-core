@@ -1,6 +1,5 @@
 import React from 'react'
-import { Row, Col, Table } from 'react-bootstrap';
-import api from '../api'
+import { Row, Col } from 'react-bootstrap';
 
 
 class HelloMsg extends React.Component

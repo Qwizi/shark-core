@@ -7,11 +7,25 @@ import {
     Categories,
     Threads,
     PinnedThreads,
-    LastThreads
 } from '../components/Forum';
 import api from '../api';
 import { Animated } from "react-animated-css";
-import Thread from './Thread';
+import { 
+    Thread,
+    NewThread 
+} from './';
+
+const ThreadRedirect = (props) => {
+    if (props.new_thread_redirect) {
+        return (
+            <Redirect from={props.url} to={`${props.url}thread/new/`} />
+        )
+    } else {
+        return (
+            <></>
+        )
+    }
+}
 
 class Forum extends React.Component
 {
@@ -22,18 +36,34 @@ class Forum extends React.Component
         this.state = {
             threads: [],
             threads_is_loaded: false,
-            category_name: null
+            category_name: null,
+            new_thread_redirect: false,
         }
 
         this.getThreads = this.getThreads.bind(this)
         this.setCategoryName = this.setCategoryName.bind(this)
         this.setThreadIsLoadedFalse = this.setThreadIsLoadedFalse.bind(this)
         this.clearThreads = this.clearThreads.bind(this)
+        this.handleClickNewThreadButton = this.handleClickNewThreadButton.bind(this)
+        this.setNewThreadRedirectFalse = this.setNewThreadRedirectFalse.bind(this)
+    }
+
+    componentDidMount() {
+        this.props.setPageName('Forum')
+        this.getThreads(null)
+    }
+
+    componentWillUnmount() {
+        this.setState({
+            new_thread_redirect: false,
+            threads_is_loaded: false,
+            threads: []
+        })
     }
 
     getThreads(category_id) {
         if (category_id == null) {
-            api.get(`/forum/threads/`)
+            api.get('/forum/threads/')
             .then(response => {
                 const threads = response.data.results
                 this.setState({
@@ -71,9 +101,16 @@ class Forum extends React.Component
         })
     }
 
-    componentDidMount() {
-        this.props.setPageName('Forum')
-        this.getThreads(null)
+    handleClickNewThreadButton() {
+        this.setState({
+            new_thread_redirect: true
+        })
+    }
+
+    setNewThreadRedirectFalse() {
+        this.setState({
+            new_thread_redirect: false
+        })
     }
 
     render() {
@@ -82,11 +119,16 @@ class Forum extends React.Component
             <div>
                 <Switch>
                     <Route exact path={match.path}>
+                        <ThreadRedirect 
+                            url={match.url} 
+                            new_thread_redirect={this.state.new_thread_redirect} 
+                        />
                         <Row>
                             <Col md={{ span: 3, offset: 1 }}>
                                 <Button 
                                     variant="primary" 
                                     block
+                                    onClick={this.handleClickNewThreadButton}
                                 >
                                     Dodaj wątek
                                 </Button>
@@ -144,7 +186,13 @@ class Forum extends React.Component
                             </Col>
                         </Row>
                     </Route>
-                    <Route path={`${match.url}/thread/:threadId`} {...this.props}>
+                    <Route path={`${match.url}/thread/new/`} {...this.props}>
+                        <NewThread 
+                            setNewThreadRedirectFalse={this.setNewThreadRedirectFalse}
+                            {...this.props} 
+                        />
+                    </Route>
+                    <Route path={`${match.url}/thread/:threadId/`} {...this.props}>
                         <Thread {...this.props} />
                     </Route>
                 </Switch>

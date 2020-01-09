@@ -19,7 +19,6 @@ class Categories extends React.Component
         api.get('/forum/categories/')
             .then(response => {
                 const categories = response.data.results
-                console.log(categories)
                 this.setState({categories: categories})
             })
     }
@@ -33,7 +32,6 @@ class Categories extends React.Component
         this.props.setCategoryName(category_name)
         this.props.setPageAdditionalName(category_name)
         this.props.setThreadIsLoadedFalse()
-        console.log(category_name)
     }
 
     render() {

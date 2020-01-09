@@ -35,9 +35,18 @@ class ForumThreadSerializer(serializers.ModelSerializer):
 
 
 class ForumPostSerializer(serializers.ModelSerializer):
+    author = AccountSerializer(read_only=True)
+
     class Meta:
         model = Post
-        fields = '__all__'
+        fields = [
+            'id',
+            'content',
+            'thread',
+            'author',
+            'created',
+            'updated'
+        ]
 
 
 class ForumCommentSerializer(serializers.ModelSerializer):

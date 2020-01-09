@@ -39,6 +39,14 @@ class Post(models.Model):
     def __str__(self):
         return '{} | {} | {}'.format(self.pk, self.thread.title, self.author.username)
 
+    @staticmethod
+    def decode_content(content):
+        return content.replace('&', '&amp')
+
+    def save(self, *args, **kwargs):
+        self.content = self.decode_content(self.content)
+        super(Post, self).save(*args, **kwargs)
+
 
 class Comment(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
@@ -46,4 +54,3 @@ class Comment(models.Model):
     content = models.TextField(null=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now_add=True)
-

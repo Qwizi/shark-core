@@ -1,5 +1,4 @@
 import React from 'react';
-import { Redirect } from 'react-router-dom';
 import { Form, Button } from 'react-bootstrap';
 import api from '../../api';
 
