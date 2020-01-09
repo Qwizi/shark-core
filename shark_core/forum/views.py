@@ -15,6 +15,7 @@ from .serializers import (
     ForumPostSerializer,
     ForumCommentSerializer
 )
+from .permissions import IsAuthenticatedOnCreateUpdate
 
 
 class ForumCategoryViewSet(viewsets.ModelViewSet):
@@ -24,8 +25,7 @@ class ForumCategoryViewSet(viewsets.ModelViewSet):
 
 
 class ForumThreadViewSet(viewsets.ModelViewSet):
-    permission_classes = (AllowAny,)
-    # queryset = Thread.objects.all()
+    permission_classes = (IsAuthenticatedOnCreateUpdate,)
     serializer_class = ForumThreadSerializer
 
     def get_queryset(self):
@@ -46,37 +46,30 @@ class ForumThreadViewSet(viewsets.ModelViewSet):
                 '-created')
 
         if category is not None and author is not None:
-
             queryset = Thread.objects.filter(category__pk=category, author=author).distinct().order_by(
                 '-created')
         return queryset
 
     def create(self, request, *args, **kwargs):
-        author_id = request.data.get('author')
-        author = Account.objects.get(id=author_id)
         category_id = request.data.get('category', None)
         category = Category.objects.get(id=category_id)
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(author=author, category=category)
+        serializer.save(author=self.request.user, category=category)
 
         return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
 
-        author_id = request.data.get('author', None)
         category_id = request.data.get('category', None)
-
-        if author_id is not None:
-            author = Account.objects.get(id=author_id)
-            instance.author = author
 
         if category_id is not None:
             category = Category.objects.get(id=category_id)
             instance.category = category
 
+        instance.author = self.request.user
         instance.save()
 
         serializer = self.get_serializer(instance, data=request.data)
@@ -87,7 +80,7 @@ class ForumThreadViewSet(viewsets.ModelViewSet):
 
 
 class ForumPostViewSet(viewsets.ModelViewSet):
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticatedOnCreateUpdate,)
     serializer_class = ForumPostSerializer
 
     def get_queryset(self):
@@ -96,6 +89,13 @@ class ForumPostViewSet(viewsets.ModelViewSet):
         if thread is not None:
             queryset = Post.objects.filter(thread__pk=thread)
         return queryset
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(author=self.request.user)
+
+        return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
 
 class ForumCommentViewSet(viewsets.ModelViewSet):

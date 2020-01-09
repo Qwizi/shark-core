@@ -1,13 +1,12 @@
 import React from 'react';
-import { Switch, Route, Redirect, useParams } from 'react-router-dom';
+import { Switch, Route, Redirect } from 'react-router-dom';
 import {
     Home,
     SignIn,
     SignUp,
     Shop,
     Forum,
-    NoMatch,
-    Thread
+    NoMatch
 } from '../views';
 
 function GuestRoute({ children, ...rest}) {

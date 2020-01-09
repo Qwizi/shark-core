@@ -26,8 +26,8 @@ class PinnedThreads extends React.Component
         const { pinned_threads } = this.state
         return (
             pinned_threads.map((thread) =>
-                <Col md={{span: 6}}>
-                    <Card key={thread.id} className="bonus-card-pinned">
+                <Col key={thread.id} md={{span: 6}}>
+                    <Card className="bonus-card-pinned">
                         <Card.Header className="bonus-card-bg">
                             {thread.title}
                         </Card.Header>

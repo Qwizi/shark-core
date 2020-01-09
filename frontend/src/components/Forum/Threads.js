@@ -6,7 +6,7 @@ import {
     Card
 } from 'react-bootstrap';
 import api from '../../api';
-import { Link, Switch, Route, Redirect, withRouter, URLSearchParams } from 'react-router-dom';
+import { Link, withRouter} from 'react-router-dom';
 import querystring from "query-string";
 
 class Threads extends React.Component
@@ -15,22 +15,23 @@ class Threads extends React.Component
     componentDidMount() {
         this.props.setPageName('Forum')
         const params = querystring.parse(this.props.location.search)
-        api.get(`/forum/categories/${params['category']}/`)
+        if (params['category']) {
+            api.get(`/forum/categories/${params['category']}/`)
             .then(response => {
                 const name = response.data.name
                 this.props.setPageAdditionalName(name)
             })
-
-        console.log(this.props.match)
+        }
+        
     }
 
     render() {
         const { threads } = this.props
         return (
             threads.map((thread) =>
-            <Row>
+            <Row key={thread.id}>
                 <Col md={{span: 11, offset: 1}}>
-                    <Card key={thread.id} className="bonus-card">
+                    <Card className="bonus-card">
                         <Card.Body className="bonus-card-bg">
                             <Card.Title><Link to={`${this.props.match.url}thread/${thread.id}`}>{thread.title}</Link></Card.Title>
                             <Card.Text>

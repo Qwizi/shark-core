@@ -8,7 +8,7 @@ import api from '../api';
 const API_URLS = {
   USER: '/accounts/me/',
   LOGIN: '/token/auth/',
-  LOGOUT: '/auth/token/logout/'
+  REFRESH: '/token/refresh/'
 }
 
 class App extends React.Component
@@ -17,7 +17,7 @@ class App extends React.Component
     super(props);
     this.state = {
       user: {
-        logged: localStorage.getItem('auth_token') ? true : false,
+        logged: localStorage.getItem('access_token') && localStorage.getItem('refresh_token') ? true : false,
         pk: null,
         username: null,
         email: null,
@@ -38,25 +38,59 @@ class App extends React.Component
   }
 
   async getUserData() {
-    const auth_token = localStorage.getItem('auth_token')
+    const access_token = localStorage.getItem('access_token')
     const payload = {
       headers: {
-        Authorization: `Bearer ${auth_token}`
+        Authorization: `Bearer ${access_token}`
       }
     }
     const response = await api.get(API_URLS.USER, payload)
-
     const user = response.data
     return Promise.resolve(user)
+  }
+
+  async getNewToken(refresh_token) {
+    const response = await api.post(API_URLS.REFRESH, {refresh: refresh_token})
+    const { access } = response.data
+    return Promise.resolve(access)
   }
 
   async componentDidMount() {
     const { logged } = this.state.user
     if (logged) {
-      const user = await this.getUserData()
-      this.setState((state) => ({
-        user: {logged: state.user.logged, ...user}
-      }))
+
+      const refresh_token = localStorage.getItem('refresh_token')
+      this.getUserData()  
+        .then(user => {
+          this.setState((state) => ({
+            user: {logged: state.user.logged, ...user}
+          }))
+        })
+        .catch(error => {
+          if (error.response.status === 401) {
+            this.getNewToken(refresh_token)
+              .then(new_token => {
+                localStorage.setItem('access_token', new_token)
+                this.getUserData()  
+                .then(user => {
+                  this.setState((state) => ({
+                    user: {logged: state.user.logged, ...user}
+                  }))
+                })
+              })
+              .catch(error => {
+                if (error.response.status === 401) {
+                  this.logOutUser()
+                }
+              })
+
+          }
+        })
+
+      // const user = this.getUserData()
+      //this.setState((state) => ({
+       //user: {logged: state.user.logged, ...user}
+     //}))
     }
   }
 
@@ -66,40 +100,33 @@ class App extends React.Component
       password: password
     }
     const response = await api.post(API_URLS.LOGIN, data)
-    const { token } = response.data;
-    return Promise.resolve(token)
-  }
+    const { access, refresh } = response.data
 
-  async removeAuthToken() {
-    const auth_token = localStorage.getItem('auth_token')
-    const data = {
-      headers: {
-        Authorization: `Token ${auth_token}`
-      }
+    const return_data = {
+      access: access,
+      refresh: refresh
     }
-    await api.post(API_URLS.LOGOUT, null, data)
+
+    return Promise.resolve(return_data)
   }
 
   async loginUser(username, password) {
-    this.getAuthToken(username, password).then(token => {
+    this.getAuthToken(username, password).then(data => {
 
-      localStorage.setItem('auth_token', token)
+      localStorage.setItem('access_token', data.access)
+      localStorage.setItem('refresh_token', data.refresh)
       
-      this.getUserData().then(user => {
-        const user_data = {logged: true, ...user}
-        this.setState({user: user_data})
-        const data = {
-          auth_token: token,
-          user: user_data
-        }
-        return Promise.resolve(data)
-      })
+      //this.getUserData().then(user => {
+      //  const user_data = {logged: true, ...user}
+      //  this.setState({user: user_data})
+      //  return Promise.resolve(user)
+      // })
     })
   }
 
   logOutUser() {
-    const auth_token = localStorage.getItem('auth_token')
-    localStorage.removeItem('auth_token')
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('refresh_token')
     this.setState({user: {}})
   }
 
