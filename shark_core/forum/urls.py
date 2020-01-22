@@ -7,7 +7,7 @@ from .views import (
     ForumCommentViewSet
 )
 
-router = routers.SimpleRouter()
+router = routers.DefaultRouter()
 router.register(r'categories', ForumCategoryViewSet)
 router.register(r'threads', ForumThreadViewSet, basename='threads')
 router.register(r'posts', ForumPostViewSet, basename='posts')
