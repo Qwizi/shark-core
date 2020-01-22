@@ -10,6 +10,7 @@ urlpatterns = [
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('accounts/', include('accounts.urls')),
     path('store/', include('store.urls')),
-    path('servers/', include('servers.urls')),
-    path('forum/', include('forum.urls'))
+    path('forum/', include('forum.urls')),
+    path('sourcemod/', include('smadmins.urls')),
+    path('sourcemod/', include('servers.urls'))
 ]

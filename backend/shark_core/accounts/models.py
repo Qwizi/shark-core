@@ -8,10 +8,18 @@ from djmoney.models.fields import MoneyField
 from djmoney.money import Money
 
 
+class Steam(models.Model):
+    id32 = models.CharField(max_length=60, unique=True)
+    id64 = models.CharField(max_length=60, unique=True)
+    id3 = models.CharField(max_length=80, null=True, blank=True)
+    player_name = models.CharField(max_length=80)
+
+
 class Account(AbstractUser):
     display_group = models.ForeignKey(Group, on_delete=models.CASCADE, null=True)
     bonus_percent = models.IntegerField(default=1)
     last_login = models.DateTimeField(auto_now=True)
+    steam_data = models.ForeignKey(Steam, on_delete=models.CASCADE, null=True, blank=True)
 
     class Meta:
         verbose_name = _('account')
@@ -31,6 +39,12 @@ class Account(AbstractUser):
     def increase_bonus_percent(self):
         if self.bonus_percent < settings.SHARK_CORE['STORE']['ACCOUNT_MAX_BONUS_PERCENT']:
             self.bonus_percent += 1
+
+    def get_steamid32(self):
+        return self.steam_data.id32
+
+    def get_steamid64(self):
+        return self.steam_data.id64
 
 
 class Wallet(models.Model):
