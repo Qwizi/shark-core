@@ -11,6 +11,7 @@ from djmoney.money import Money
 class Account(AbstractUser):
     display_group = models.ForeignKey(Group, on_delete=models.CASCADE, null=True)
     bonus_percent = models.IntegerField(default=1)
+    last_login = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = _('account')
