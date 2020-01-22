@@ -38,13 +38,13 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'djmoney',
     'corsheaders',
-    # 'djoser',
     'accounts',
     'store',
     'api',
     'servers',
     'forum',
-    'premium_account'
+    'premium_account',
+    'smadmins'
 ]
 
 MIDDLEWARE = [
