@@ -15,6 +15,9 @@ steam = "*"
 pip = "*"
 django-jwt-auth = "*"
 djangorestframework-simplejwt = "*"
+gunicorn = "*"
+psycopg2-binary = "*"
+django-heroku = "*"
 
 [requires]
 python_version = "3.8"
