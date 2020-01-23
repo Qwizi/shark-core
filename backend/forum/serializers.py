@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from .models import Category, Thread, Post, Comment
 from accounts.serializers import AccountSerializer
-from accounts.models import Account
 
 
 class ForumCategorySerializer(serializers.ModelSerializer):
