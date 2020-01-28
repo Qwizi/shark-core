@@ -1,12 +1,13 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from django.contrib.auth.models import AbstractUser, Group
+from django.contrib.auth.models import AbstractUser, Group, UserManager
 from django.db.models.signals import post_save
 from django.conf import settings
 
 from djmoney.models.fields import MoneyField
 from djmoney.money import Money
 
+from .steam_helper import get_steam_user_info
 
 class Steam(models.Model):
     id32 = models.CharField(max_length=60, unique=True)
@@ -15,11 +16,32 @@ class Steam(models.Model):
     player_name = models.CharField(max_length=80)
 
 
+class AccountManager(UserManager):
+    def create_superuser_steam(self, steamid64=None):
+        user_info = get_steam_user_info(steamid64)
+
+        account = self.model()
+        account.username = user_info['username']
+        account.steamid64 = user_info['steamid64']
+        account.steamid32 = user_info['steamid32']
+        account.steamid3 = user_info['steamid3']
+        account.is_active = True
+        account.is_staff = True
+        account.is_superuser = True
+
+        account.save(using=self._db)
+        return account
+
+
 class Account(AbstractUser):
     display_group = models.ForeignKey(Group, on_delete=models.CASCADE, null=True)
     bonus_percent = models.IntegerField(default=1)
     last_login = models.DateTimeField(auto_now=True)
-    steam_data = models.ForeignKey(Steam, on_delete=models.CASCADE, null=True, blank=True)
+    steamid32 = models.CharField(max_length=60, unique=True)
+    steamid64 = models.CharField(max_length=60, unique=True)
+    steamid3 = models.CharField(max_length=80, null=True, blank=True)
+
+    objects = AccountManager()
 
     class Meta:
         verbose_name = _('account')
@@ -39,12 +61,6 @@ class Account(AbstractUser):
     def increase_bonus_percent(self):
         if self.bonus_percent < settings.SHARK_CORE['STORE']['ACCOUNT_MAX_BONUS_PERCENT']:
             self.bonus_percent += 1
-
-    def get_steamid32(self):
-        return self.steam_data.id32
-
-    def get_steamid64(self):
-        return self.steam_data.id64
 
 
 class Wallet(models.Model):
@@ -82,7 +98,7 @@ class Wallet(models.Model):
 
 def on_create_account(sender, **kwargs):
     if kwargs['created']:
-        users_group, created = Group.objects.get_or_create(pk=3)
+        users_group, created = Group.objects.get_or_create(pk=3, name='Users')
         account = kwargs['instance']
         account.display_group = users_group
         account.groups.add(users_group)
