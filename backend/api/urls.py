@@ -1,13 +1,14 @@
 from django.urls import path, include
+from accounts.views import steam_token_obtain_pair
 from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
+    token_refresh,
+    #token_obtain_pair
 )
 app_name = 'api'
 
 urlpatterns = [
-    path('token/auth/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('token/auth/', steam_token_obtain_pair, name='token_obtain_pair'),
+    path('token/refresh/', token_refresh, name='token_refresh'),
     path('accounts/', include('accounts.urls')),
     path('store/', include('store.urls')),
     path('forum/', include('forum.urls')),
