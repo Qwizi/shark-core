@@ -1,4 +1,4 @@
-from rest_framework import viewsets, views
+from rest_framework import viewsets, views, generics
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
@@ -7,6 +7,30 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 
 from .serializers import AccountSerializer, SteamTokenObtainSerializer
 from .models import Account
+
+
+# Lista uzytkownikow
+class AccountListView(generics.ListAPIView):
+    queryset = Account.objects.all()
+    permission_classes = (AllowAny,)
+    serializer_class = AccountSerializer
+
+
+account_list = AccountListView.as_view()
+
+
+# Dane zalogowanego uzytkownika
+class AccountAuthMeView(views.APIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = AccountSerializer
+
+    def get(self, request):
+        account = request.user
+        serializer = self.serializer_class(account)
+        return Response(serializer.data)
+
+
+account_me = AccountAuthMeView.as_view()
 
 
 class AccountView(viewsets.ModelViewSet):
@@ -34,5 +58,6 @@ class AccountView(viewsets.ModelViewSet):
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
 
+# Tworzy uzytkownika / zwaraca token dostepu
 class AccountAuthSteamTokenView(TokenObtainPairView):
     serializer_class = SteamTokenObtainSerializer

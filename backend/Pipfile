@@ -20,6 +20,7 @@ django-rest-framework-social-oauth2 = "*"
 oauth2-provider = "*"
 social-auth-app-django = "*"
 djangorestframework-api-key = "*"
+drf-yasg = "*"
 
 [requires]
 python_version = "3.8"
