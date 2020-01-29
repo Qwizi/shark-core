@@ -13,7 +13,7 @@ class PinnedThreads extends React.Component
     }
 
     componentDidMount() {
-        api.get('/forum/threads/?pinned')
+        api.get('/api/v1/forum/threads/?pinned')
             .then(response => {
                 const threads = response.data.results
                 this.setState({

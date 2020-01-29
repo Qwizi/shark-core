@@ -18,7 +18,5 @@ from django.urls import path, include, re_path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/v1/', include('api.urls', namespace='api')),
-    path('oauth/', include('oauth2_provider.urls', namespace='oauth2_provider')),
-    path('social/', include('social_django.urls', namespace='social')),
+    path('api/', include('api.urls', namespace='api')),
 ]

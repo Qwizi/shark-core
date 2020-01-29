@@ -16,7 +16,7 @@ class Categories extends React.Component
     }
 
     componentDidMount() {
-        api.get('/forum/categories/')
+        api.get('/api/v1/forum/categories/')
             .then(response => {
                 const categories = response.data.results
                 this.setState({categories: categories})

@@ -63,7 +63,7 @@ class Forum extends React.Component
 
     getThreads(category_id) {
         if (category_id == null) {
-            api.get('/forum/threads/')
+            api.get('/api/v1/forum/threads/')
             .then(response => {
                 const threads = response.data.results
                 this.setState({
@@ -72,7 +72,7 @@ class Forum extends React.Component
                 })
             })
         } else {
-            api.get(`/forum/threads/?categories=${category_id}`)
+            api.get(`/api/v1/forum/threads/?categories=${category_id}`)
             .then(response => {
                 const threads = response.data.results
                 this.setState({

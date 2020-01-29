@@ -20,9 +20,8 @@ class NavBar extends React.Component
                 <Navbar.Toggle aria-controls="basic-navbar-nav" />
                 <Navbar.Collapse id="basic-navbar-nav">
                 <Nav className="mr-auto">
-                    <NavLink exact to="/" className="nav-link">Home</NavLink>
-                    <NavLink exact to="/shop/" className="nav-link">Shop</NavLink>
                     <NavLink exact to="/forum/" className="nav-link">Forum</NavLink>
+                    <NavLink exact to="/shop/" className="nav-link">Shop</NavLink>
                 </Nav>
                 <GuestNav logged={logged} logOutUser={logOutUser} />
             </Navbar.Collapse>
