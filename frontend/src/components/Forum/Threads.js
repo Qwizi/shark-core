@@ -8,15 +8,17 @@ import {
 import api from '../../api';
 import { Link, withRouter} from 'react-router-dom';
 import querystring from "query-string";
+import { API_CONFIG } from "../../config";
 
 class Threads extends React.Component
 {   
 
     componentDidMount() {
         this.props.setPageName('Forum')
-        const params = querystring.parse(this.props.location.search)
+        const params = querystring.parse(this.props.location.search);
+
         if (params['category']) {
-            api.get(`/forum/categories/${params['category']}/`)
+            api.get(API_CONFIG.ENDPOINTS.FORUM.CATEGORIES + params['category'])
             .then(response => {
                 const name = response.data.name
                 this.props.setPageAdditionalName(name)

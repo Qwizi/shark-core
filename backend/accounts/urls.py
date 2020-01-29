@@ -1,11 +1,13 @@
-from django.urls import path, re_path
+from django.urls import path, include
 from rest_framework import routers
 
-from .views import AccountViewSet
+from .views import AccountView, AccountAuthSteamTokenView
 
 router = routers.DefaultRouter()
-router.register(r'', AccountViewSet, basename='accounts')
+router.register(r'', AccountView, basename='accounts')
 
 app_name = 'accounts'
 
-urlpatterns = router.urls
+urlpatterns = [
+    path('', include(router.urls)),
+]

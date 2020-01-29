@@ -4,16 +4,12 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.views import TokenObtainPairView
-from social_core.actions import do_auth
-from django.contrib.auth import REDIRECT_FIELD_NAME
 
 from .serializers import AccountSerializer, SteamTokenObtainSerializer
 from .models import Account
 
-import requests
 
-
-class AccountViewSet(viewsets.ModelViewSet):
+class AccountView(viewsets.ModelViewSet):
     permission_classes = (AllowAny,)
     serializer_class = AccountSerializer
 
@@ -38,8 +34,5 @@ class AccountViewSet(viewsets.ModelViewSet):
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
 
-class SteamTokenObtainPairView(TokenObtainPairView):
+class AccountAuthSteamTokenView(TokenObtainPairView):
     serializer_class = SteamTokenObtainSerializer
-
-
-steam_token_obtain_pair = SteamTokenObtainPairView.as_view()
