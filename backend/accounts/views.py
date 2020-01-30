@@ -5,7 +5,9 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .serializers import AccountSerializer, SteamTokenObtainSerializer
+from oauth2_provider.contrib.rest_framework import OAuth2Authentication, TokenHasReadWriteScope
+
+from .serializers import AccountSerializer, SteamTokenObtainSerializer, ServerSteamTokenObtainSerializer
 from .models import Account
 
 
@@ -61,3 +63,9 @@ class AccountView(viewsets.ModelViewSet):
 # Tworzy uzytkownika / zwaraca token dostepu
 class AccountAuthSteamTokenView(TokenObtainPairView):
     serializer_class = SteamTokenObtainSerializer
+
+
+class ServerAccountAuthSteamTokenView(TokenObtainPairView):
+    authentication_classes = (OAuth2Authentication, )
+    permission_classes = (TokenHasReadWriteScope, )
+    serializer_class = ServerSteamTokenObtainSerializer

@@ -25,7 +25,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -38,12 +37,9 @@ INSTALLED_APPS = [
 
     # Apki spolecznsci
     'rest_framework',
-    'rest_framework.authtoken',
     'djmoney',
     'corsheaders',
     'oauth2_provider',
-    'rest_framework_api_key',
-    'social_django',
     'drf_yasg',
 
     # Moje apki
@@ -80,8 +76,6 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'social_django.context_processors.backends',
-                'social_django.context_processors.login_redirect',
             ],
         },
     },
@@ -138,8 +132,6 @@ STATIC_URL = '/static/'
 AUTH_USER_MODEL = 'accounts.Account'
 
 AUTHENTICATION_BACKENDS = [
-    'social_core.backends.open_id.OpenIdAuth',
-    'social_core.backends.steam.SteamOpenId',
     'accounts.backends.SteamBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
@@ -184,6 +176,7 @@ SHARK_CORE = {
 
 CORS_ORIGIN_ALLOW_ALL = True
 
-SOCIAL_AUTH_URL_NAMESPACE = 'social'
 
-SOCIAL_AUTH_STEAM_API_KEY = '7F5343D3443D1E45A7ED0BC683C29E52'
+OAUTH2_PROVIDER = {
+    'SCOPES': {'read': 'Read scope', 'write': 'Write scope', 'groups': 'Access to your groups'}
+}
