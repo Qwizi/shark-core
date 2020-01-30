@@ -1,5 +1,9 @@
-from rest_framework import viewsets, status
-from rest_framework.permissions import AllowAny
+from rest_framework import (
+    viewsets,
+    status,
+    generics,
+    permissions
+)
 from rest_framework.response import Response
 
 from .models import (
@@ -14,17 +18,34 @@ from .serializers import (
     ForumPostSerializer,
     ForumCommentSerializer
 )
-from .permissions import IsAuthenticatedOnCreateUpdate
+from .permissions import (
+    IsAdminOnCreateUpdateDelete,
+    IsAuthenticatedOnCreateUpdateDelete
+)
 
 
-class ForumCategoryViewSet(viewsets.ModelViewSet):
-    permission_classes = (AllowAny,)
+# Lista i tworzenie kategorii
+class ForumCategoryListView(generics.ListCreateAPIView):
     queryset = Category.objects.all()
+    permission_classes = (IsAdminOnCreateUpdateDelete,)
     serializer_class = ForumCategorySerializer
 
 
+forum_category_list = ForumCategoryListView.as_view()
+
+
+# Dane pojedynczej kategorii
+class ForumCategoryDetailView(generics.RetrieveAPIView):
+    queryset = Category.objects.all()
+    permission_classes = (permissions.AllowAny,)
+    serializer_class = ForumCategorySerializer
+
+
+forum_category_detail = ForumCategoryDetailView.as_view()
+
+
 class ForumThreadViewSet(viewsets.ModelViewSet):
-    permission_classes = (IsAuthenticatedOnCreateUpdate,)
+    permission_classes = (IsAuthenticatedOnCreateUpdateDelete,)
     serializer_class = ForumThreadSerializer
 
     def get_queryset(self):
@@ -79,7 +100,7 @@ class ForumThreadViewSet(viewsets.ModelViewSet):
 
 
 class ForumPostViewSet(viewsets.ModelViewSet):
-    permission_classes = (IsAuthenticatedOnCreateUpdate,)
+    permission_classes = (IsAuthenticatedOnCreateUpdateDelete,)
     serializer_class = ForumPostSerializer
 
     def get_queryset(self):
@@ -98,7 +119,7 @@ class ForumPostViewSet(viewsets.ModelViewSet):
 
 
 class ForumCommentViewSet(viewsets.ModelViewSet):
-    permission_classes = (AllowAny,)
+    permission_classes = (permissions.AllowAny,)
     serializer_class = ForumCommentSerializer
 
     def get_queryset(self):
