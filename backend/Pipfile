@@ -16,6 +16,7 @@ djangorestframework-simplejwt = "*"
 gunicorn = "*"
 drf-yasg = "*"
 django-oauth-toolkit = "*"
+django-heroku = "*"
 
 [requires]
 python_version = "3.8"
