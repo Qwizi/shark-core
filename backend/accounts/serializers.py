@@ -106,3 +106,53 @@ class SteamTokenObtainSerializer(SteamTokenSerializer):
         data['access'] = str(refresh.access_token)
 
         return data
+
+
+class ServerSteamTokenSerializer(serializers.Serializer):
+    default_error_messages = {
+        'no_active_account': _('No active account found with the given credentials')
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields['steamid64'] = serializers.CharField()
+
+    def validate(self, attrs):
+        authenticate_kwargs = {
+            'steamid64': attrs['steamid64']
+        }
+
+        try:
+            authenticate_kwargs['request'] = self.context['request']
+        except KeyError:
+            pass
+
+        self.user = authenticate(**authenticate_kwargs)
+
+        if self.user is None or not self.user.is_active:
+            raise exceptions.AuthenticationFailed(
+                self.error_messages['no_active_account'],
+                'no_active_account',
+            )
+        return {}
+
+    @classmethod
+    def get_token(cls, user):
+        raise NotImplementedError('Must implement `get_token` method for `TokenObtainSerializer` subclasses')
+
+
+class ServerSteamTokenObtainSerializer(ServerSteamTokenSerializer):
+    @classmethod
+    def get_token(cls, user):
+        return RefreshToken.for_user(user)
+
+    def validate(self, attrs):
+        data = super().validate(attrs)
+
+        refresh = self.get_token(self.user)
+
+        data['refresh'] = str(refresh)
+        data['access'] = str(refresh.access_token)
+
+        return data

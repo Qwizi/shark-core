@@ -1,11 +1,13 @@
 from django.urls import path, include
 
-from accounts.views import AccountAuthSteamTokenView
+from accounts.views import AccountAuthSteamTokenView, ServerAccountAuthSteamTokenView
 
 app_name = 'api'
 
 urlpatterns = [
+    path('oauth/',  include('oauth2_provider.urls', namespace='oauth2_provider')),
     path('auth/token/', AccountAuthSteamTokenView.as_view()),
+    path('auth/server/token/', ServerAccountAuthSteamTokenView.as_view()),
     path('accounts/', include('accounts.urls')),
     path('store/', include('store.urls')),
     path('forum/', include('forum.urls')),
