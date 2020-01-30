@@ -1,0 +1,1 @@
+web: gunicorn shark_core.wsgi
