@@ -1,15 +1,15 @@
-from abc import ABC
+from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth import authenticate
 from rest_framework import exceptions, serializers
-from .models import Account, Group
-from djoser.serializers import UserSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.utils.translation import ugettext_lazy as _
+
+
+from .models import Account
 
 import requests
 
 
-class AccountSerializer(UserSerializer):
+class AccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
         fields = [
@@ -23,7 +23,6 @@ class AccountSerializer(UserSerializer):
             'is_staff',
             'date_joined',
         ]
-        read_only_fields = ('is_active', 'date_joined', 'is_staff', 'display_group')
 
 
 class SteamTokenSerializer(serializers.Serializer):

@@ -50,7 +50,8 @@ INSTALLED_APPS = [
     'servers',
     'forum',
     'premium_account',
-    'smadmins'
+    'smadmins',
+    'roulette',
 ]
 
 MIDDLEWARE = [
