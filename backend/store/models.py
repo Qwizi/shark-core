@@ -17,7 +17,7 @@ class Category(models.Model):
         return '{}'.format(self.name)
 
 
-class Module(models.Model):
+class Type(models.Model):
     BONUS_CHOICES = bonus_manager.get_bonus_choices()
 
     tag = models.CharField(
@@ -38,7 +38,7 @@ class Bonus(models.Model):
     options = models.TextField(blank=True)
     price = MoneyField(max_digits=14, decimal_places=2, default_currency='PLN', default=0)
     is_active = models.BooleanField(default=True)
-    module = models.ForeignKey(Module, on_delete=models.CASCADE, null=True)
+    type = models.ForeignKey(Type, on_delete=models.CASCADE, null=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True)
 
     @staticmethod
