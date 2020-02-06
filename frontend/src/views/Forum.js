@@ -1,46 +1,48 @@
 import React from 'react';
-import { Row, Col, Button } from 'react-bootstrap';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faStar } from '@fortawesome/free-solid-svg-icons';
-import { Switch, Route, Redirect, withRouter } from 'react-router-dom';
-import { 
+import {Row, Col, Button} from 'react-bootstrap';
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import {faStar} from '@fortawesome/free-solid-svg-icons';
+import {Switch, Route, Redirect, withRouter} from 'react-router-dom';
+import {
     Categories,
     Threads,
     PinnedThreads,
 } from '../components/Forum';
 import api from '../api';
-import { Animated } from "react-animated-css";
-import { 
+import {Animated} from "react-animated-css";
+import {
     Thread,
-    NewThread 
+    NewThread
 } from './';
+import {CONFIG} from "../config";
+
+const FORUM_THREADS_ENDPOINT = CONFIG.API.ENDPOINTS.FORUM.THREADS;
 
 const ThreadRedirect = (props) => {
     if (props.new_thread_redirect) {
         return (
-            <Redirect from={props.url} to={`${props.url}thread/new/`} />
+            <Redirect from={props.url} to={`${props.url}thread/new/`}/>
         )
     } else {
         return (
             <></>
         )
     }
-}
+};
 
-class Forum extends React.Component
-{
+class Forum extends React.Component {
 
     constructor(props) {
-        super(props)
+        super(props);
 
         this.state = {
             threads: [],
             threads_is_loaded: false,
             category_name: null,
             new_thread_redirect: false,
-        }
+        };
 
-        this.getThreads = this.getThreads.bind(this)
+        this.getThreads = this.getThreads.bind(this);
         this.setCategoryName = this.setCategoryName.bind(this)
         this.setThreadIsLoadedFalse = this.setThreadIsLoadedFalse.bind(this)
         this.clearThreads = this.clearThreads.bind(this)
@@ -49,7 +51,7 @@ class Forum extends React.Component
     }
 
     componentDidMount() {
-        this.props.setPageName('Forum')
+        this.props.setPageName('Forum');
         this.getThreads(null)
     }
 
@@ -63,23 +65,23 @@ class Forum extends React.Component
 
     getThreads(category_id) {
         if (category_id == null) {
-            api.get('/api/v1/forum/threads/')
-            .then(response => {
-                const threads = response.data.results
-                this.setState({
-                    threads: threads,
-                    threads_is_loaded: true
+            api.get(FORUM_THREADS_ENDPOINT)
+                .then(response => {
+                    const threads = response.data.results
+                    this.setState({
+                        threads: threads,
+                        threads_is_loaded: true
+                    })
                 })
-            })
         } else {
-            api.get(`/api/v1/forum/threads/?categories=${category_id}`)
-            .then(response => {
-                const threads = response.data.results
-                this.setState({
-                    threads: threads,
-                    threads_is_loaded: true
+            api.get(FORUM_THREADS_ENDPOINT + "?categories=${category_id}")
+                .then(response => {
+                    const threads = response.data.results
+                    this.setState({
+                        threads: threads,
+                        threads_is_loaded: true
+                    })
                 })
-            })
         }
     }
 
@@ -114,19 +116,19 @@ class Forum extends React.Component
     }
 
     render() {
-        const { match } = this.props
+        const {match} = this.props
         return (
             <div>
                 <Switch>
                     <Route exact path={match.path}>
-                        <ThreadRedirect 
-                            url={match.url} 
-                            new_thread_redirect={this.state.new_thread_redirect} 
+                        <ThreadRedirect
+                            url={match.url}
+                            new_thread_redirect={this.state.new_thread_redirect}
                         />
                         <Row>
-                            <Col md={{ span: 3, offset: 1 }}>
-                                <Button 
-                                    variant="primary" 
+                            <Col md={{span: 3, offset: 1}}>
+                                <Button
+                                    variant="primary"
                                     block
                                     onClick={this.handleClickNewThreadButton}
                                 >
@@ -136,17 +138,17 @@ class Forum extends React.Component
                             <Col md={7}>
                                 <Row>
                                     <Col md={{span: 6, offset: 1}}>
-                                        <p>Przypięte tematy <FontAwesomeIcon icon={faStar} /></p>
+                                        <p>Przypięte tematy <FontAwesomeIcon icon={faStar}/></p>
                                     </Col>
                                 </Row>
                                 <Row>
-                                    <Col md={{ offset: 1 }}>
-                                        <Animated 
-                                            animationIn="fadeIn"  
+                                    <Col md={{offset: 1}}>
+                                        <Animated
+                                            animationIn="fadeIn"
                                             isVisible={this.state.threads_is_loaded}
                                         >
                                             <Row>
-                                                <PinnedThreads />
+                                                <PinnedThreads/>
                                             </Row>
                                         </Animated>
                                     </Col>
@@ -154,42 +156,42 @@ class Forum extends React.Component
                             </Col>
                         </Row>
                         <Row>
-                            <Col md={{ span: 3, offset: 1 }}>
+                            <Col md={{span: 3, offset: 1}}>
                                 <p>Kategorie</p>
-                                <Categories 
+                                <Categories
                                     getThreads={this.getThreads}
                                     setCategoryName={this.setCategoryName}
                                     threads={this.state.threads}
                                     setThreadIsLoadedFalse={this.setThreadIsLoadedFalse}
-                                    clearThreads={this.clearThreads} 
+                                    clearThreads={this.clearThreads}
                                     {...this.props}
                                 />
                             </Col>
                             <Col md={7}>
                                 <Row>
-                                    <Col md={{ offset: 1 }}>
+                                    <Col md={{offset: 1}}>
                                         <p>Tematy </p>
                                     </Col>
                                 </Row>
-                                <Animated 
-                                    animationIn="fadeIn" 
+                                <Animated
+                                    animationIn="fadeIn"
                                     isVisible={this.state.threads_is_loaded}
                                 >
-                                    <Threads 
+                                    <Threads
                                         getThreads={this.getThreads}
                                         setCategoryName={this.setCategoryName}
-                                        category_name={this.state.category_name} 
-                                        threads={this.state.threads} 
-                                        {...this.props} 
+                                        category_name={this.state.category_name}
+                                        threads={this.state.threads}
+                                        {...this.props}
                                     />
                                 </Animated>
                             </Col>
                         </Row>
                     </Route>
                     <Route path={`${match.url}/thread/new/`} {...this.props}>
-                        <NewThread 
+                        <NewThread
                             setNewThreadRedirectFalse={this.setNewThreadRedirectFalse}
-                            {...this.props} 
+                            {...this.props}
                         />
                     </Route>
                     <Route path={`${match.url}/thread/:threadId/`} {...this.props}>
