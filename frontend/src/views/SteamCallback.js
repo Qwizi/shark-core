@@ -2,6 +2,9 @@ import React from 'react';
 import {withRouter, Redirect} from 'react-router-dom';
 import querystring from "query-string";
 import api from '../api';
+import {CONFIG} from "../config";
+
+const AUTH_ENDPOINT = CONFIG.API.ENDPOINTS.TOKEN.AUTH;
 
 class SteamCallback extends React.Component {
 
@@ -35,7 +38,7 @@ class SteamCallback extends React.Component {
         };
 
 
-        api.post('/api/v1/token/auth/', params=steam_params)
+        api.post(AUTH_ENDPOINT, params=steam_params)
             .then(response => {
                 console.log(response.data);
                 this.setState({

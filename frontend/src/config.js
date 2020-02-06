@@ -1,9 +1,9 @@
 export const CONFIG = {
     API: {
-        URL: 'http://localhost:8000/api',
+        URL: 'http://0.0.0.0:8000/api',
         ENDPOINTS: {
             TOKEN: {
-                AUTH: '/token/auth/',
+                AUTH: '/auth/token/',
                 REFRESH: '/token/refresh/'
             },
             FORUM: {

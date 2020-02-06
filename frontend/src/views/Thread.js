@@ -1,30 +1,28 @@
 import React from 'react';
-import { Row, Col, Card, Button, Form } from 'react-bootstrap';
-import { withRouter } from 'react-router-dom';
-import { Events, scroller } from 'react-scroll'
+import {Row, Col, Card, Button, Form} from 'react-bootstrap';
+import {withRouter} from 'react-router-dom';
+import {Events, scroller} from 'react-scroll'
 import api from '../api';
-import { Animated } from "react-animated-css";
-import EditorJs from "react-editor-js";
-import { EDITOR_JS_TOOLS } from '../components/Forum/tools';
+import {Animated} from "react-animated-css";
 import CKEditor from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import Parser from 'html-react-parser';
 
 const NewPostForm = (props) => {
-        let display = 'none'
+    let display = 'none'
 
-        if (props.post_display) {
-            display = 'block'
-        }
+    if (props.post_display) {
+        display = 'block'
+    }
 
-        return (
-            <div id="new-post">
-                <Animated 
-                    animationIn="fadeInUp"
-                    animationOut="fadeOutDown"
-                    isVisible={props.show_new_post_form}
-                    animateOnMount={false}
-                >
+    return (
+        <div id="new-post">
+            <Animated
+                animationIn="fadeInUp"
+                animationOut="fadeOutDown"
+                isVisible={props.show_new_post_form}
+                animateOnMount={false}
+            >
                 <Row style={{display: display}}>
                     <Col md={{span: 8, offset: 2}}>
                         <Card className="bonus-card">
@@ -37,33 +35,32 @@ const NewPostForm = (props) => {
                                                 Tresc
                                             </Form.Label>
                                             <Col sm="11">
-                                                    <CKEditor
-                                                        editor={ ClassicEditor }
-                                                        data={props.post_content}
-                                                        onInit={ editor => {
-                                                            // You can store the "editor" and use when it is needed.
-                                                            console.log(editor)
-                                                            
-                                                        } }
-                                                        onChange={ ( e, editor ) => {
-                                                            props.handleChangePostContent(e, editor)
-                                                        } }
-                                                    />
+                                                <CKEditor
+                                                    editor={ClassicEditor}
+                                                    data={props.post_content}
+                                                    onInit={editor => {
+                                                        // You can store the "editor" and use when it is needed.
+                                                        console.log(editor)
+
+                                                    }}
+                                                    onChange={(e, editor) => {
+                                                        props.handleChangePostContent(e, editor)
+                                                    }}
+                                                />
                                             </Col>
                                         </Form.Group>
                                     </Form>
                                 </Card.Text>
-                            </Card.Body> 
+                            </Card.Body>
                         </Card>
-                    </Col> 
+                    </Col>
                 </Row>
             </Animated>
-            </div>
-        )
+        </div>
+    )
 }
 
-class Thread extends React.Component
-{
+class Thread extends React.Component {
 
     constructor(props) {
         super(props)
@@ -87,22 +84,22 @@ class Thread extends React.Component
     }
 
     componentDidMount() {
-        Events.scrollEvent.register('begin', function() {
+        Events.scrollEvent.register('begin', function () {
         })
 
         Events.scrollEvent.register('end', function () {
         })
         scroller.scrollTo('thread-content', {
-          duration: 800,
-          delay: 0,
-          smooth: 'easeInOutQuart'
+            duration: 800,
+            delay: 0,
+            smooth: 'easeInOutQuart'
         })
         const params = this.props.match.params
         api.get(`/forum/threads/${params.threadId}/`)
             .then(response => {
                 const thread = response.data
                 this.setState({
-                    thread: thread, 
+                    thread: thread,
                     author: thread.author
                 })
                 console.log(thread)
@@ -130,13 +127,13 @@ class Thread extends React.Component
     }
 
     handleClickNewPostButton() {
-            
+
         if (!this.state.show_new_post_form) {
             scroller.scrollTo('new-post', {
                 duration: 800,
                 delay: 0,
                 smooth: 'easeInOutQuart'
-              })
+            })
             this.setState({
                 show_new_post_form: true,
                 post_display: true,
@@ -144,28 +141,28 @@ class Thread extends React.Component
                 close_button_display: false
             })
             setTimeout(() => {
-                this.setState( prevState => ({
+                this.setState(prevState => ({
                     button_display: true,
                     close_button_display: true
                 }));
             }, 800)
         } else {
             this.submitPost()
-        } 
+        }
     }
 
     handleClickCloseNewPostForm() {
         this.setState({
-                show_new_post_form: false,
-                button_display: false,
-                close_button_display: false
-            })
-            setTimeout(() => {
-                this.setState( prevState => ({
-                    post_display: false,
-                    button_display: true
-                  }));
-            }, 1000)
+            show_new_post_form: false,
+            button_display: false,
+            close_button_display: false
+        })
+        setTimeout(() => {
+            this.setState(prevState => ({
+                post_display: false,
+                button_display: true
+            }));
+        }, 1000)
     }
 
     handleChangePostContent(e, editor) {
@@ -209,13 +206,13 @@ class Thread extends React.Component
             display_close = 'block'
         }
 
-        const { thread, author, posts } = this.state
+        const {thread, author, posts} = this.state
 
         let thread_content = String(thread.content)
         return (
             <div id="thread-content">
 
-                
+
                 <Row>
                     <Col md={{span: 8, offset: 2}}>
                         <h2>{thread.title}</h2>
@@ -225,19 +222,19 @@ class Thread extends React.Component
                                 <Card.Text>
                                     {Parser(thread_content)}
                                 </Card.Text>
-                            </Card.Body> 
+                            </Card.Body>
                         </Card>
-                    </Col> 
+                    </Col>
                 </Row>
                 <Row>
                     <Col md={{span: 8, offset: 2}}>
-                    <h3>Odpowiedzi: </h3>
+                        <h3>Odpowiedzi: </h3>
                     </Col>
                     {posts.map((post) =>
                         <Col md={{span: 8, offset: 2}}>
-                            <Animated 
-                                animationIn="fadeIn" 
-                                isVisible={post.loaded} 
+                            <Animated
+                                animationIn="fadeIn"
+                                isVisible={post.loaded}
                             >
                                 <Card key={post.id} className="bonus-card">
                                     <Card.Body className="bonus-card-bg">
@@ -245,54 +242,54 @@ class Thread extends React.Component
                                         <Card.Text>
                                             {Parser(post.content)}
                                         </Card.Text>
-                                    </Card.Body> 
+                                    </Card.Body>
                                 </Card>
                             </Animated>
-                        </Col> 
+                        </Col>
                     )}
                 </Row>
-                <NewPostForm 
+                <NewPostForm
                     show_new_post_form={this.state.show_new_post_form}
                     post_display={this.state.post_display}
                     post_content={this.state.post_content}
                     handleChangePostContent={this.handleChangePostContent}
-                />  
+                />
                 <Row>
-                    <Col md={{span: 3, offset: 7}}> 
-                            <Animated 
-                                animationIn="fadeIn"
-                                animationOut="fadeOut" 
-                                isVisible={this.state.button_display}
-                                animateOnMount={false}
-                            > 
-                                    <Button 
-                                        variant="secondary" 
-                                        block
-                                        onClick={this.handleClickNewPostButton}
-                                        style={{display: display, marginBottom: '5px'}}
-                                    >
-                                        Dodaj odpowiedź
-                                    </Button>
-                            </Animated>
+                    <Col md={{span: 3, offset: 7}}>
+                        <Animated
+                            animationIn="fadeIn"
+                            animationOut="fadeOut"
+                            isVisible={this.state.button_display}
+                            animateOnMount={false}
+                        >
+                            <Button
+                                variant="secondary"
+                                block
+                                onClick={this.handleClickNewPostButton}
+                                style={{display: display, marginBottom: '5px'}}
+                            >
+                                Dodaj odpowiedź
+                            </Button>
+                        </Animated>
                     </Col>
                 </Row>
                 <Row>
                     <Col md={{span: 3, offset: 7}}>
-                        <Animated 
-                                animationIn="fadeIn"
-                                animationOut="fadeOut" 
-                                isVisible={this.state.close_button_display}
-                                animateOnMount={false}
-                            > 
-                                    <Button 
-                                        variant="secondary" 
-                                        block
-                                        onClick={this.handleClickCloseNewPostForm}
-                                        style={{display: display_close}}
-                                    >   
-                                        Zamknij
-                                    </Button>
-                            </Animated>
+                        <Animated
+                            animationIn="fadeIn"
+                            animationOut="fadeOut"
+                            isVisible={this.state.close_button_display}
+                            animateOnMount={false}
+                        >
+                            <Button
+                                variant="secondary"
+                                block
+                                onClick={this.handleClickCloseNewPostForm}
+                                style={{display: display_close}}
+                            >
+                                Zamknij
+                            </Button>
+                        </Animated>
                     </Col>
                 </Row>
             </div>

@@ -1,6 +1,8 @@
 import React from 'react';
 import {Form, Button} from 'react-bootstrap';
-import axios from 'axios';
+import {CONFIG} from "../config";
+
+const STEAM_CALLBACK = CONFIG.STEAM.CALLBACK;
 
 class Steam extends React.Component {
     onFormSubmit() {
@@ -8,8 +10,8 @@ class Steam extends React.Component {
         const params = {
             'openid.ns': 'http://specs.openid.net/auth/2.0',
             'openid.mode': 'checkid_setup',
-            'openid.return_to': "http://localhost:3000/steam_callback/",
-            'openid.realm': 'http://localhost:3000/',
+            'openid.return_to': window.location.origin + STEAM_CALLBACK,
+            'openid.realm': window.location.origin,
             'openid.identity': 'http://specs.openid.net/auth/2.0/identifier_select',
             'openid.claimed_id': 'http://specs.openid.net/auth/2.0/identifier_select',
 

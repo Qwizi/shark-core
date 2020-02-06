@@ -1,6 +1,10 @@
 import React from 'react';
 import { Nav, NavDropdown } from 'react-bootstrap';
 import { NavLink } from 'react-router-dom';
+import querystring from "query-string";
+import {CONFIG} from "../../config";
+
+const STEAM_CALLBACK = CONFIG.STEAM.CALLBACK;
 
 class GuestNav extends React.Component
 {
@@ -18,8 +22,8 @@ class GuestNav extends React.Component
         const params = {
             'openid.ns': 'http://specs.openid.net/auth/2.0',
             'openid.mode': 'checkid_setup',
-            'openid.return_to': "http://localhost:3000/steam_callback/",
-            'openid.realm': 'http://localhost:3000/',
+            'openid.return_to': window.location.origin + STEAM_CALLBACK,
+            'openid.realm': window.location.origin,
             'openid.identity': 'http://specs.openid.net/auth/2.0/identifier_select',
             'openid.claimed_id': 'http://specs.openid.net/auth/2.0/identifier_select',
 
