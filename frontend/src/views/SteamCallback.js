@@ -1,10 +1,6 @@
 import React from 'react';
-import {withRouter, Redirect} from 'react-router-dom';
+import {Redirect, withRouter} from 'react-router-dom';
 import querystring from "query-string";
-import api from '../api';
-import {CONFIG} from "../config";
-
-const AUTH_ENDPOINT = CONFIG.API.ENDPOINTS.TOKEN.AUTH;
 
 class SteamCallback extends React.Component {
 
@@ -13,16 +9,15 @@ class SteamCallback extends React.Component {
 
         this.state = {
             redirect: false,
-            errorMsg: []
-        }
+        };
+
+        this.setRedirectState = this.setRedirectState.bind(this);
     }
 
     componentDidMount() {
         let params = querystring.parse(this.props.location.search);
 
-        let splitClaimedId = params['openid.claimed_id'].split('/');
-        let steamid64 = splitClaimedId[splitClaimedId.length-1];
-
+        const steamid64 = this.getSteamid64FromSteamLink(params['openid.claimed_id']);
 
         let steam_params = {
             'steamid64': steamid64,
@@ -37,22 +32,34 @@ class SteamCallback extends React.Component {
             'openid_response_nonce': params['openid.response_nonce'],
         };
 
+        // Jezeli logowanie przez steam powiodlo się logujemy uzytkownika w naszym systemie
+        this.props.loginUser(steam_params);
+        this.setRedirectState(true);
 
-        api.post(AUTH_ENDPOINT, params=steam_params)
-            .then(response => {
-                console.log(response.data);
-                this.setState({
-                    redirect: true
-                })
-            })
+    }
 
+    /*
+     * Ustawiamy stan redirect
+     */
+    setRedirectState(value) {
+        this.setState({
+            redirect: value
+        })
+    }
+
+    /*
+     * Pobieramy steamid z linku, zwrócenego przez steama
+     */
+    getSteamid64FromSteamLink(claimedId) {
+        let splitClaimedId = claimedId.split('/');
+        return splitClaimedId[splitClaimedId.length - 1];
     }
 
     render() {
         if (this.state.redirect) {
-            return <Redirect to="/forum/"/>
-        } else {
             return <Redirect to="/"/>
+        } else {
+            return <></>
         }
     }
 }

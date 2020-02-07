@@ -6,6 +6,9 @@ export const CONFIG = {
                 AUTH: '/auth/token/',
                 REFRESH: '/token/refresh/'
             },
+            ACCOUNTS: {
+                ME: '/accounts/me/',
+            },
             FORUM: {
                 CATEGORIES: '/forum/categories/',
                 THREADS: '/forum/threads/',
@@ -22,6 +25,6 @@ export const CONFIG = {
         },
     },
     STEAM: {
-        CALLBACK: '/steam_callback/'
+        CALLBACK: '/auth/steam/callback/'
     }
 };
