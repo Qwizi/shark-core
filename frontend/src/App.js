@@ -53,6 +53,11 @@ class App extends React.Component {
             console.log(user.logged);
             this.getUserData().then(userData => {
                 this.setUserState(userData);
+            }).catch(error => {
+                console.log(error.response.status);
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
+                this.logoutUserState();
             })
         }
     }
@@ -105,6 +110,7 @@ class App extends React.Component {
         // Pobieramy tokeny z api
         this.getAuthTokens(params).then(data => {
             localStorage.setItem('access_token', data.access);
+            localStorage.setItem('refresh_token', data.refresh);
             console.log(localStorage.getItem('access_token'));
             //Pobieramy dane zalogowanego uzytkownika
             this.getUserData().then(userData => {
@@ -121,6 +127,7 @@ class App extends React.Component {
     logoutUser() {
         // Usuwamy lokalne tokeny
         localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
         this.logoutUserState();
     }
 
@@ -147,6 +154,7 @@ class App extends React.Component {
         const response = await api.get(ACCOUNTS_ME_ENDPOINT, {
             headers: authorizationHeader
         });
+
         return response.data;
     };
 
@@ -242,6 +250,7 @@ class App extends React.Component {
                     user={this.state.user}
                     setPageName={this.setBannerPageName}
                     setPageAdditionalName={this.setBannerPageAdditionalName}
+                    banner={this.state.banner}
                 />
             </Router>
         );

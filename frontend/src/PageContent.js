@@ -17,12 +17,12 @@ const PageName = (props) => {
 export default class PageContent extends React.Component
 {
     render() {
-        const { page_name, page_additonal_name } = this.props
+        const { banner } = this.props
         return (
             <div className="page">
                 <div id="banner">
                 <div className="context">
-                    <PageName page_name={page_name} page_additonal_name={page_additonal_name}/>
+                    <PageName page_name={banner.name} page_additonal_name={banner.additional}/>
                 </div>
                         <div className="area">
                             <ul className="circles">
