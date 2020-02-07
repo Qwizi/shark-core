@@ -1,15 +1,16 @@
 import React from 'react';
 import {Switch, Route, Redirect} from 'react-router-dom';
 import {
-    Home,
-    SignIn,
-    SignUp,
     Shop,
     Forum,
     NoMatch
-} from '../views';
-import Steam from '../views/Steam';
-import SteamCallback from "../views/SteamCallback";
+} from './views';
+import SteamCallback from "./views/SteamCallback";
+import {CONFIG} from "./config";
+
+const STEAM_CALLBACK = CONFIG.STEAM.CALLBACK;
+/*
+
 
 function GuestRoute({children, ...rest}) {
     return (
@@ -52,6 +53,7 @@ function PrivateRoute({children, ...rest}) {
         />
     );
 }
+*/
 
 class Main extends React.Component {
     render() {
@@ -62,21 +64,12 @@ class Main extends React.Component {
                     <Route exact path='/(|forum)/' {...this.props}>
                         <Forum {...this.props} />
                     </Route>
-                    <Route path='/auth/steam/' {...this.props}>
-                        <Steam {...this.props} />
+                    <Route path='/auth/steam/callback/'>
+                        <SteamCallback loginUser={this.props.loginUser} />
                     </Route>
-                    <Route path='/steam_callback/' {...this.props}>
-                        <SteamCallback {...this.props} />
-                    </Route>
-                    <GuestRoute path='/sign-in/' {...this.props}>
-                        <SignIn {...this.props} />
-                    </GuestRoute>
-                    <GuestRoute path='/sign-up/' {...this.props}>
-                        <SignUp {...this.props} />
-                    </GuestRoute>
-                    <PrivateRoute pathname="/shop/" {...this.props}>
+                    <Route path="/shop/" {...this.props}>
                         <Shop {...this.props} />
-                    </PrivateRoute>
+                    </Route>
                     <Route {...this.props}>
                         <NoMatch/>
                     </Route>
