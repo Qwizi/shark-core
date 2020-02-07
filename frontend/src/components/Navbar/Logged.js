@@ -15,7 +15,7 @@ class Logged extends React.Component {
 
     render() {
         return (
-            <NavDropdown title={this.props.user.username} id="ucp-dropdown" className="navbar-brand">
+            <NavDropdown title={`${this.props.user.username}`} id="ucp-dropdown" className="navbar-brand">
                 <NavDropdown.Item onClick={this.handleLogOut}>
                     12123
                 </NavDropdown.Item>
