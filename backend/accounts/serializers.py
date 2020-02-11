@@ -3,17 +3,35 @@ from django.contrib.auth import authenticate
 from rest_framework import exceptions, serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 
-
 from .models import Account
+from forum.models import Thread
 
 import requests
 
 
 class AccountSerializer(serializers.ModelSerializer):
+    threads = serializers.IntegerField(read_only=True)
+    posts = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = Account
         fields = [
             'id',
+            'username',
+            'steamid64',
+            'steamid32',
+            'steamid3',
+            'display_group',
+            'date_joined',
+            'threads',
+            'posts'
+        ]
+
+
+class AccountMeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Account
+        fields = [
             'username',
             'steamid64',
             'steamid32',

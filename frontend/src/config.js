@@ -25,6 +25,7 @@ export const CONFIG = {
         },
     },
     STEAM: {
+        OPENID_URL: 'https://steamcommunity.com/openid/login?',
         CALLBACK: '/auth/steam/callback/'
     }
 };

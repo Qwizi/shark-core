@@ -18,7 +18,7 @@ class Thread(models.Model):
     title = models.CharField(max_length=80)
     content = models.TextField()
     category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True)
-    author = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='author')
+    author = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='thread_author_set')
     last_poster = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='last_poster', null=True)
     status = models.IntegerField(choices=ThreadStatusChoices.choices, default=ThreadStatusChoices.OPENED)
     pinned = models.BooleanField(default=False)
@@ -31,7 +31,7 @@ class Thread(models.Model):
 
 class Post(models.Model):
     thread = models.ForeignKey(Thread, on_delete=models.CASCADE)
-    author = models.ForeignKey(Account, on_delete=models.CASCADE)
+    author = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="post_author_set")
     content = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now_add=True)

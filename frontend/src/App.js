@@ -18,7 +18,6 @@ class App extends React.Component {
         this.state = {
             user: {
                 logged: !!localStorage.getItem('access_token'),
-                id: null,
                 username: null,
                 steamid64: null,
                 steamid32: null,
@@ -46,62 +45,19 @@ class App extends React.Component {
 
     async componentDidMount() {
         const {user} = this.state;
-        const {logged} = user;
-        console.log(logged);
+
         if (user.logged) {
-            console.log(localStorage.getItem('access_token'));
-            console.log(user.logged);
             this.getUserData().then(userData => {
                 this.setUserState(userData);
             }).catch(error => {
-                console.log(error.response.status);
-                localStorage.removeItem('access_token');
-                localStorage.removeItem('refresh_token');
-                this.logoutUserState();
+                console.log(error.response);
+                if (error.response.status === 401) {
+                    this.removeLocalTokens();
+                    this.logoutUserState();
+                }
             })
         }
     }
-
-
-    /*
-    async componentDidMount() {
-        const {logged} = this.state.user
-        if (logged) {
-
-            const refresh_token = localStorage.getItem('refresh_token')
-            this.getUserData()
-                .then(user => {
-                    this.setState((state) => ({
-                        user: {logged: state.user.logged, ...user}
-                    }))
-                })
-                .catch(error => {
-                    if (error.response.status === 401) {
-                        this.getNewToken(refresh_token)
-                            .then(new_token => {
-                                localStorage.setItem('access_token', new_token)
-                                this.getUserData()
-                                    .then(user => {
-                                        this.setState((state) => ({
-                                            user: {logged: state.user.logged, ...user}
-                                        }))
-                                    })
-                            })
-                            .catch(error => {
-                                if (error.response.status === 401) {
-                                    this.logOutUser()
-                                }
-                            })
-
-                    }
-                })
-
-            // const user = this.getUserData()
-            //this.setState((state) => ({
-            //user: {logged: state.user.logged, ...user}
-            //}))
-        }
-    }*/
 
     /*
      * Logujemy uzytkownika
@@ -109,12 +65,10 @@ class App extends React.Component {
     loginUser = async (params) => {
         // Pobieramy tokeny z api
         this.getAuthTokens(params).then(data => {
-            localStorage.setItem('access_token', data.access);
-            localStorage.setItem('refresh_token', data.refresh);
-            console.log(localStorage.getItem('access_token'));
+            // Ustawiamy lokalne tokeny
+            this.setLocalTokens(data.access, data.refresh);
             //Pobieramy dane zalogowanego uzytkownika
             this.getUserData().then(userData => {
-                console.log(userData);
                 // Uzupleniamy stan/obiek zalogowanego uzytkownika
                 this.setUserState(userData, true);
             })
@@ -126,8 +80,7 @@ class App extends React.Component {
      */
     logoutUser() {
         // Usuwamy lokalne tokeny
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
+        this.removeLocalTokens();
         this.logoutUserState();
     }
 
@@ -168,7 +121,7 @@ class App extends React.Component {
     /*
      * Uzupelniany obiekt/stan uzytkownika
      */
-    setUserState(userData, logged=null) {
+    setUserState(userData, logged = null) {
         this.setState(function (state) {
             return {
                 user: {
@@ -191,7 +144,6 @@ class App extends React.Component {
         this.setState({
             user: {
                 logged: false,
-                id: null,
                 username: null,
                 steamid64: null,
                 steamid32: null,
@@ -202,6 +154,65 @@ class App extends React.Component {
                 date_joined: null
             }
         })
+    }
+
+    /*
+     * Ustawiamy access token w localStorage
+     */
+    setLocalAccessToken(accessToken) {
+        localStorage.setItem('access_token', accessToken);
+    }
+
+    /*
+     * Ustawiamy refresh token w localStorage
+     */
+    setLocalRefreshToken(refreshToken) {
+        localStorage.setItem('refresh_token', refreshToken);
+    }
+
+    /*
+     * Ustawiamy tokeny w localStorage
+     */
+    setLocalTokens(accessToken, refreshToken) {
+        this.setLocalAccessToken(accessToken);
+        this.setLocalRefreshToken(refreshToken);
+    }
+
+    /*
+     * Pobieramy access token z localStorage
+     */
+    getLocalAccessToken() {
+        return localStorage.getItem('access_token');
+    }
+
+    /*
+     * Pobieramy refresh token z localStorage
+     */
+    getLocalRefreshToken() {
+        return localStorage.getItem('refresh_token');
+    }
+
+
+    /*
+     * Usuwamy access token z localStorage
+     */
+    removeLocalAccessToken() {
+        localStorage.removeItem('access_token');
+    }
+
+    /*
+     * Usuwamy refresh token z localStorage
+     */
+    removeLocalRefreshToken() {
+        localStorage.removeItem('refresh_token');
+    }
+
+    /*
+     * Uswamy access i refresh token z localStorage
+     */
+    removeLocalTokens() {
+        this.removeLocalAccessToken();
+        this.removeLocalRefreshToken();
     }
 
     /*
