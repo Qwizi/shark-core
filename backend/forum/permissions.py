@@ -1,9 +1,25 @@
-from rest_framework.permissions import BasePermission
+from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 
-class IsAdminOnCreateUpdateDelete(BasePermission):
+class IsAdminOnCreate(BasePermission):
     def has_permission(self, request, view):
-        if request.method in ['POST', 'PUT', 'DELETE']:
+        if request.method in ['POST']:
+            return bool(request.user and request.user.is_staff)
+        else:
+            return True
+
+
+class IsAdminOnUpdate(BasePermission):
+    def has_permission(self, request, view):
+        if request.method in ['UPDATE']:
+            return bool(request.user and request.user.is_staff)
+        else:
+            return True
+
+
+class IsAdminOnDelete(BasePermission):
+    def has_permission(self, request, view):
+        if request.method in ['DELETE']:
             return bool(request.user and request.user.is_staff)
         else:
             return True
@@ -33,9 +49,9 @@ class IsAuthenticatedOnDelete(BasePermission):
             return True
 
 
-class IsAuthenticatedOnCreateUpdateDelete(BasePermission):
-    def has_permission(self, request, view):
-        if request.method in ['POST', 'PUT', 'DELETE']:
-            return bool(request.user and request.user.is_authenticated)
+class IsAuthorOnNotSafeMethods(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if request.method not in SAFE_METHODS:
+            return bool(request.user == obj.author)
         else:
             return True

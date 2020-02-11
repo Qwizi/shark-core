@@ -7,7 +7,12 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 
 from oauth2_provider.contrib.rest_framework import OAuth2Authentication, TokenHasReadWriteScope
 
-from .serializers import AccountSerializer, SteamTokenObtainSerializer, ServerSteamTokenObtainSerializer
+from .serializers import (
+    AccountSerializer,
+    AccountMeSerializer,
+    SteamTokenObtainSerializer,
+    ServerSteamTokenObtainSerializer
+)
 from .models import Account
 
 
@@ -17,6 +22,22 @@ class AccountListView(generics.ListAPIView):
     permission_classes = (AllowAny,)
     serializer_class = AccountSerializer
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            new_page = []
+            for account in page:
+                account.threads = account.thread_author_set.all().count()
+                account.posts = account.post_author_set.all().count()
+                new_page.append(account)
+
+            serializer = self.get_serializer(new_page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
 
 account_list = AccountListView.as_view()
 
@@ -24,7 +45,7 @@ account_list = AccountListView.as_view()
 # Dane zalogowanego uzytkownika
 class AccountAuthMeView(views.APIView):
     permission_classes = (IsAuthenticated,)
-    serializer_class = AccountSerializer
+    serializer_class = AccountMeSerializer
 
     def get(self, request):
         account = request.user
@@ -35,37 +56,12 @@ class AccountAuthMeView(views.APIView):
 account_me = AccountAuthMeView.as_view()
 
 
-class AccountView(viewsets.ModelViewSet):
-    permission_classes = (AllowAny,)
-    serializer_class = AccountSerializer
-
-    def get_queryset(self):
-        queryset = Account.objects.all()
-
-        is_active = self.request.query_params.get('is_active', None)
-        is_staff = self.request.query_params.get('is_staff', None)
-
-        if is_active is not None:
-            queryset = Account.objects.filter(is_active=is_active)
-
-        if is_staff is not None:
-            queryset = Account.objects.filter(is_staff=is_staff)
-
-        return queryset
-
-    @action(detail=False, methods=['get'], permission_classes=(IsAuthenticated,))
-    def me(self, request):
-        account = request.user
-        serializer = self.serializer_class(account)
-        return Response(data=serializer.data, status=status.HTTP_200_OK)
-
-
 # Tworzy uzytkownika / zwaraca token dostepu
 class AccountAuthSteamTokenView(TokenObtainPairView):
     serializer_class = SteamTokenObtainSerializer
 
 
 class ServerAccountAuthSteamTokenView(TokenObtainPairView):
-    authentication_classes = (OAuth2Authentication, )
-    permission_classes = (TokenHasReadWriteScope, )
+    authentication_classes = (OAuth2Authentication,)
+    permission_classes = (TokenHasReadWriteScope,)
     serializer_class = ServerSteamTokenObtainSerializer

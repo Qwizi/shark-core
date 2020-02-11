@@ -5,6 +5,7 @@ import {CONFIG} from "../../config";
 import querystring from "query-string";
 
 const STEAM_CALLBACK = CONFIG.STEAM.CALLBACK;
+const STEAM_OPENID_LINK = CONFIG.STEAM.OPENID_URL;
 
 class Guest extends React.Component {
 
@@ -19,7 +20,11 @@ class Guest extends React.Component {
 
         };
 
-        window.location = `https://steamcommunity.com/openid/login?openid.ns=${params["openid.ns"]}&openid.mode=${params["openid.mode"]}&openid.return_to=${params["openid.return_to"]}&openid.realm=${params["openid.realm"]}&openid.identity=${params["openid.identity"]}&openid.claimed_id=${params["openid.claimed_id"]}`;
+        // Tworzymy odpowiednie paramsy
+        const paramsFields = querystring.stringify(params);
+
+        // Robimy przekierowanie na strone steama
+        window.location = STEAM_OPENID_LINK + paramsFields;
     }
 
     render() {
