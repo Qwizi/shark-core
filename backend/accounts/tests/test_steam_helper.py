@@ -1,10 +1,8 @@
 from django.test import TestCase
 from django.conf import settings
 
-from ..steam_helpers import (
-    get_steam_user_info,
-    get_steam_api_key
-)
+from ..steam_helpers import get_steam_user_info
+from shark_core.helpers import get_steam_setting
 
 
 class AccountSteamHelperTestCase(TestCase):
@@ -39,9 +37,3 @@ class AccountSteamHelperTestCase(TestCase):
             user_data = get_steam_user_info(steamid64=steamid64)
 
         self.assertTrue("Invalid steamid64" in str(context.exception))
-
-    def test_get_steam_api_key_valid_data(self):
-        execept_api_key = settings.SHARK_CORE['STEAM']['API_KEY']
-        api_key = get_steam_api_key()
-
-        self.assertEqual(api_key, execept_api_key)
