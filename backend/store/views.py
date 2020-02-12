@@ -13,7 +13,6 @@ from .serializers import (
     BonusSerializer,
     StoreOfferSerializer
 )
-from .base_bonus import bonus_manager
 
 
 class StoreCategoryViewSet(viewsets.ModelViewSet):

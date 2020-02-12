@@ -3,12 +3,12 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import AbstractUser, Group, UserManager
 from django.db.models.signals import post_save
 from django.conf import settings
-from django.db.utils import IntegrityError
 
 from djmoney.models.fields import MoneyField
 from djmoney.money import Money
 
 from .steam_helpers import get_steam_user_info
+from shark_core.helpers import check_banned_usernames
 
 
 class AccountManager(UserManager):
@@ -18,13 +18,14 @@ class AccountManager(UserManager):
             raise Exception('Steamid64 cannot be None')
 
         user_info = get_steam_user_info(steamid64)
-        username = extra_fields.pop('username', None)
+        username_field = extra_fields.pop('username', None)
+        username = user_info.pop('username')
 
-        if username is not None:
-            user_info.pop('username')
-            username = self.model.normalize_username(username)
+        if username_field is not None:
+            username_field = check_banned_usernames(username_field)
+            username = self.model.normalize_username(username_field)
         else:
-            username = user_info.pop('username')
+            username = check_banned_usernames(username)
             username = self.model.normalize_username(username)
 
         account = self.model(username=username, **user_info, **extra_fields)

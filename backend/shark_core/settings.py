@@ -183,8 +183,8 @@ SHARK_CORE = {
         'API_KEY': '7F5343D3443D1E45A7ED0BC683C29E52',
         'CHECK_BANNED_USER_NAMES': True,
         'BANNED_USER_NAMES': (
-            'admin',
-            'administrator',
+            r'^((a|A)dmin)$',
+            r'^((a|a)dministrator)$',
         )
     }
 }

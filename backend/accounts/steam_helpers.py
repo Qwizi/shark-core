@@ -1,24 +1,11 @@
 from django.conf import settings
 from steam.webapi import WebAPI
 from steam.steamid import SteamID
-from shark_core.helpers import get_shark_core_setting
-
-def check_steam_settings_exist():
-    steam_settings = get_shark_core_setting("STEAM")
-
-
-
-def get_steam_api_key():
-    try:
-        api_key = settings.SHARK_CORE['STEAM']['API_KEY']
-    except KeyError:
-        raise Exception('Steam api key not set')
-
-    return api_key
+from shark_core.helpers import get_steam_setting
 
 
 def get_steam_user_info(steamid64, username=None):
-    s_api = WebAPI(get_steam_api_key())
+    s_api = WebAPI(get_steam_setting("API_KEY"))
 
     results = s_api.call('ISteamUser.GetPlayerSummaries', steamids=steamid64)
 
