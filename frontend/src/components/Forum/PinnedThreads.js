@@ -1,6 +1,9 @@
 import React from 'react';
 import { Col, Card } from 'react-bootstrap';
 import api from '../../api';
+import {CONFIG} from "../../config";
+
+const FORUM_THREADS_ENDPOINT = CONFIG.API.ENDPOINTS.FORUM.THREADS;
 
 class PinnedThreads extends React.Component
 {
@@ -13,7 +16,7 @@ class PinnedThreads extends React.Component
     }
 
     componentDidMount() {
-        api.get('/api/v1/forum/threads/?pinned')
+        api.get(FORUM_THREADS_ENDPOINT + "?pinned=true")
             .then(response => {
                 const threads = response.data.results
                 this.setState({

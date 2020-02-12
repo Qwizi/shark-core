@@ -17,6 +17,7 @@ gunicorn = "*"
 drf-yasg = "*"
 django-oauth-toolkit = "*"
 django-heroku = "*"
+django-filter = "*"
 
 [requires]
 python_version = "3.8"

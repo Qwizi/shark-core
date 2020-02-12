@@ -2,7 +2,6 @@ from django.db import models
 from django.conf import settings
 
 from djmoney.models.fields import MoneyField
-from .base_bonus import bonus_manager
 
 import json
 import string
@@ -18,12 +17,12 @@ class Category(models.Model):
 
 
 class Type(models.Model):
-    BONUS_CHOICES = bonus_manager.get_bonus_choices()
+   # BONUS_CHOICES = bonus_manager.get_bonus_choices()
 
     tag = models.CharField(
         max_length=32,
-        choices=BONUS_CHOICES,
-        default=BONUS_CHOICES[0][0],
+        #choices=BONUS_CHOICES,
+        #default=BONUS_CHOICES[0][0],
         blank=False,
         unique=True
     )

@@ -61,7 +61,10 @@ class Main extends React.Component {
             <main>
                 <Switch>
                     <Route exact strict path="/:url*" render={props => <Redirect to={`${props.location.pathname}/`}/>}/>
-                    <Route exact path='/(|forum)/' {...this.props}>
+                    <Route exact path={'/'}>
+                        <Redirect to='/forum/'/>
+                    </Route>
+                    <Route exact path='/forum/' {...this.props}>
                         <Forum {...this.props} />
                     </Route>
                     <Route path='/auth/steam/callback/'>

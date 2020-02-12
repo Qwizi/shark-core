@@ -29,6 +29,9 @@ class AccountSerializer(serializers.ModelSerializer):
 
 
 class AccountMeSerializer(serializers.ModelSerializer):
+    threads = serializers.IntegerField(read_only=True)
+    posts = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = Account
         fields = [
@@ -40,6 +43,8 @@ class AccountMeSerializer(serializers.ModelSerializer):
             'is_active',
             'is_staff',
             'date_joined',
+            'threads',
+            'posts'
         ]
 
 
