@@ -3,34 +3,47 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import AbstractUser, Group, UserManager
 from django.db.models.signals import post_save
 from django.conf import settings
+from django.db.utils import IntegrityError
 
 from djmoney.models.fields import MoneyField
 from djmoney.money import Money
 
-from .steam_helper import get_steam_user_info
-
-class Steam(models.Model):
-    id32 = models.CharField(max_length=60, unique=True)
-    id64 = models.CharField(max_length=60, unique=True)
-    id3 = models.CharField(max_length=80, null=True, blank=True)
-    player_name = models.CharField(max_length=80)
+from .steam_helpers import get_steam_user_info
 
 
 class AccountManager(UserManager):
-    def create_superuser_steam(self, steamid64=None):
-        user_info = get_steam_user_info(steamid64)
 
-        account = self.model()
-        account.username = user_info['username']
-        account.steamid64 = user_info['steamid64']
-        account.steamid32 = user_info['steamid32']
-        account.steamid3 = user_info['steamid3']
-        account.is_active = True
-        account.is_staff = True
-        account.is_superuser = True
+    def _create_user_steam(self, steamid64, **extra_fields):
+        if steamid64 is None:
+            raise Exception('Steamid64 cannot be None')
+
+        user_info = get_steam_user_info(steamid64)
+        username = extra_fields.pop('username', None)
+
+        if username is not None:
+            user_info.pop('username')
+            username = self.model.normalize_username(username)
+        else:
+            username = user_info.pop('username')
+            username = self.model.normalize_username(username)
+
+        account = self.model(username=username, **user_info, **extra_fields)
 
         account.save(using=self._db)
+
         return account
+
+    def create_user_steam(self, steamid64, **extra_fields):
+        extra_fields.setdefault('is_active', True)
+        extra_fields.setdefault('is_staff', False)
+        extra_fields.setdefault('is_superuser', False)
+        return self._create_user_steam(steamid64, **extra_fields)
+
+    def create_superuser_steam(self, steamid64, **extra_fields):
+        extra_fields.setdefault('is_active', True)
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        return self._create_user_steam(steamid64, **extra_fields)
 
 
 class Account(AbstractUser):
@@ -40,6 +53,11 @@ class Account(AbstractUser):
     steamid32 = models.CharField(max_length=60, unique=True)
     steamid64 = models.CharField(max_length=60, unique=True)
     steamid3 = models.CharField(max_length=80, null=True, blank=True)
+    profileurl = models.CharField(max_length=256, null=True, blank=True)
+    avatar = models.CharField(max_length=256, null=True, blank=True)
+    avatarmedium = models.CharField(max_length=256, null=True, blank=True)
+    avatarfull = models.CharField(max_length=256, null=True, blank=True)
+    loccountrycode = models.CharField(max_length=10, null=True, blank=True)
 
     objects = AccountManager()
 
@@ -48,19 +66,16 @@ class Account(AbstractUser):
         verbose_name_plural = _('accounts')
 
     def __str__(self):
-        return '{} | {} | {}'.format(self.username, self.email, self.is_activated())
+        return '{} | {} | {}'.format(self.username, self.steamid64, self.steamid32)
 
     def activate(self):
         self.is_active = True
-
-    def is_activated(self):
-        if self.is_active is True:
-            return 'Yes'
-        return 'No'
+        self.save()
 
     def increase_bonus_percent(self):
         if self.bonus_percent < settings.SHARK_CORE['STORE']['ACCOUNT_MAX_BONUS_PERCENT']:
             self.bonus_percent += 1
+            self.save()
 
 
 class Wallet(models.Model):

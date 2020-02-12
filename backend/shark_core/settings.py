@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'oauth2_provider',
     'drf_yasg',
+    'django_filters',
 
     # Moje apki
     'accounts',
@@ -88,16 +89,16 @@ WSGI_APPLICATION = 'shark_core.wsgi.application'
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
 DATABASES = {
-    #'default': {
+    # 'default': {
     #    'ENGINE': 'django.db.backends.sqlite3',
     #    'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    #}
+    # }
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'postgres',
         'USER': 'postgres',
-        'HOST': 'db', # set in docker-compose.yml
-        'PORT': 5432 # default postgres port
+        'HOST': 'db',  # set in docker-compose.yml
+        'PORT': 5432  # default postgres port
     }
 }
 
@@ -159,6 +160,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
 }
 
 SHARK_CORE = {
@@ -173,17 +175,21 @@ SHARK_CORE = {
             'BonusWallet',
         ),
         'ACCOUNT_MAX_BONUS_PERCENT': 15,
-        'BONUSES': (
+        'BONUS_TYPE_LIST': (
             'premium_account.bonuses.PremiumAccountBonus',
         ),
     },
     'STEAM': {
-        'API_KEY': '7F5343D3443D1E45A7ED0BC683C29E52'
+        'API_KEY': '7F5343D3443D1E45A7ED0BC683C29E52',
+        'CHECK_BANNED_USER_NAMES': True,
+        'BANNED_USER_NAMES': (
+            'admin',
+            'administrator',
+        )
     }
 }
 
 CORS_ORIGIN_ALLOW_ALL = True
-
 
 OAUTH2_PROVIDER = {
     'SCOPES': {'read': 'Read scope', 'write': 'Write scope', 'groups': 'Access to your groups'},

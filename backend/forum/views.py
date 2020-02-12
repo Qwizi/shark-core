@@ -57,6 +57,7 @@ class ThreadListView(generics.ListAPIView):
     queryset = Thread.objects.all()
     permission_classes = (permissions.AllowAny,)
     serializer_class = ThreadSerializer
+    filterset_fields = ['category', 'status', 'pinned']
 
 
 forum_thread_list = ThreadListView.as_view()

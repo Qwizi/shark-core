@@ -74,7 +74,7 @@ class Forum extends React.Component {
                     })
                 })
         } else {
-            api.get(FORUM_THREADS_ENDPOINT + "?categories=${category_id}")
+            api.get(FORUM_THREADS_ENDPOINT + `?category=${category_id}`)
                 .then(response => {
                     const threads = response.data.results
                     this.setState({

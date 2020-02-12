@@ -1,8 +1,6 @@
-from rest_framework import viewsets, views, generics
-from rest_framework.decorators import action
+from rest_framework import views, generics
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from rest_framework import status
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from oauth2_provider.contrib.rest_framework import OAuth2Authentication, TokenHasReadWriteScope
@@ -21,6 +19,7 @@ class AccountListView(generics.ListAPIView):
     queryset = Account.objects.all()
     permission_classes = (AllowAny,)
     serializer_class = AccountSerializer
+    filterset_fields = ['is_active', 'display_group']
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
@@ -49,6 +48,8 @@ class AccountAuthMeView(views.APIView):
 
     def get(self, request):
         account = request.user
+        account.threads = account.thread_author_set.all().count()
+        account.posts = account.post_author_set.all().count()
         serializer = self.serializer_class(account)
         return Response(serializer.data)
 

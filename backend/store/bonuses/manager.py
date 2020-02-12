@@ -10,7 +10,7 @@ class BonusTypeManager(object):
 
     @staticmethod
     def get_bonus_list_from_settings():
-        return settings.SHARK_CORE['STORE_BONUS_TYPE_LIST']
+        return ''
 
     def get_bonus_list(self):
         return self.__bonus_list
