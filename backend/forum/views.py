@@ -18,32 +18,33 @@ from .serializers import (
     ThreadSerializer,
     ThreadCreateSerializer,
     PostSerializer,
+    PostCreateSerializer,
     CommentSerializer
 )
-from .permissions import (
-    IsAuthenticatedOnCreate,
-    IsAuthenticatedOnUpdate,
-    IsAuthenticatedOnDelete,
-    IsAdminOnCreate,
-    IsAdminOnDelete,
-    IsAdminOnUpdate,
-    IsAuthorOnNotSafeMethods
-)
 
-from accounts.models import Account
+"""
+Przypisujemy permisje do stalych
+"""
+PERM_ALLOW_ANY = permissions.AllowAny
+PERM_IS_AUTHENTICATED = permissions.IsAuthenticated
 
-# Lista kategoii
+
 class CategoryListView(generics.ListAPIView):
+    """
+    Widok listy kategorii
+    """
     queryset = Category.objects.all()
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (PERM_ALLOW_ANY,)
     serializer_class = CategorySerializer
 
 
 forum_category_list = CategoryListView.as_view()
 
 
-# Dane pojedynczej kategorii
 class CategoryDetailView(generics.RetrieveAPIView):
+    """
+    Widok pojedynczej kategorii
+    """
     queryset = Category.objects.all()
     permission_classes = (permissions.AllowAny,)
     serializer_class = CategorySerializer
@@ -52,10 +53,12 @@ class CategoryDetailView(generics.RetrieveAPIView):
 forum_category_detail = CategoryDetailView.as_view()
 
 
-# Lista kategorii
 class ThreadListView(generics.ListAPIView):
+    """
+    Widok listy tematow
+    """
     queryset = Thread.objects.all()
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (PERM_ALLOW_ANY,)
     serializer_class = ThreadSerializer
     filterset_fields = ['category', 'status', 'pinned']
 
@@ -63,179 +66,74 @@ class ThreadListView(generics.ListAPIView):
 forum_thread_list = ThreadListView.as_view()
 
 
-# Tworzenie tematu
 class ThreadCreateView(generics.CreateAPIView):
+    """
+    Widok tworzenia tematu
+    """
     queryset = Thread.objects.all()
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (PERM_IS_AUTHENTICATED,)
     serializer_class = ThreadCreateSerializer
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
-        # TODO zamienic authora na obecnego zalogowanego uzytkownika
-        serializer.save(author=Account.objects.get(pk=1))
+        serializer.save(author=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 forum_thread_create = ThreadCreateView.as_view()
 
-"""
 
-
-# Lista i tworzenie tematów
-class ForumThreadListView(generics.ListCreateAPIView):
-    permission_classes = (permissions.AllowAny, IsAuthenticatedOnCreate,)
-    serializer_class = ForumThreadSerializer
-
-    def get_queryset(self):
-        queryset = Thread.objects.all().order_by('-created')
-        category = self.request.query_params.get('categories', None)
-        author = self.request.query_params.get('author', None)
-        pinned = self.request.query_params.get('pinned', None)
-
-        if category is not None:
-            queryset = Thread.objects.filter(category__pk=category).distinct().order_by('-created')
-
-        if author is not None:
-            queryset = Thread.objects.filter(author=author).distinct().order_by(
-                '-created')
-
-        if pinned is not None:
-            queryset = Thread.objects.filter(pinned=True).distinct().order_by(
-                '-created')
-
-        if category is not None and author is not None:
-            queryset = Thread.objects.filter(category__pk=category, author=author).distinct().order_by(
-                '-created')
-        return queryset
-
-    def create(self, request, *args, **kwargs):
-        category_id = request.data.get('category', None)
-        category = Category.objects.get(id=category_id)
-
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(author=self.request.user, category=category)
-
-        return Response(data=serializer.data, status=status.HTTP_201_CREATED)
-
-    def update(self, request, *args, **kwargs):
-        instance = self.get_object()
-
-        category_id = request.data.get('category', None)
-
-        if category_id is not None:
-            category = Category.objects.get(id=category_id)
-            instance.category = category
-
-        instance.author = self.request.user
-        instance.save()
-
-        serializer = self.get_serializer(instance, data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-
-        return Response(serializer.data)
-
-
-forum_thread_list = ForumThreadListView.as_view()
-"""
-
-
-# Dane pojedynczego tematu
-class ThreadDetail(generics.RetrieveAPIView):
+class ThreadDetailView(generics.RetrieveAPIView):
+    """
+    Widok pojedynczego tematu
+    """
     queryset = Thread.objects.all()
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (PERM_ALLOW_ANY,)
     serializer_class = ThreadSerializer
 
 
-forum_thread_detail = ThreadDetail.as_view()
+forum_thread_detail = ThreadDetailView.as_view()
 
-"""
-class ForumThreadViewSet(viewsets.ModelViewSet):
-    permission_classes = (IsAuthenticatedOnCreateUpdateDelete,)
-    serializer_class = ForumThreadSerializer
 
-    def get_queryset(self):
-        queryset = Thread.objects.all().order_by('-created')
-        category = self.request.query_params.get('categories', None)
-        author = self.request.query_params.get('author', None)
-        pinned = self.request.query_params.get('pinned', None)
+class PostListView(generics.ListAPIView):
+    """
+    Widok listy postow
+    """
+    queryset = Post.objects.all()
+    permission_classes = (PERM_ALLOW_ANY,)
+    serializer_class = PostSerializer
 
-        if category is not None:
-            queryset = Thread.objects.filter(category__pk=category).distinct().order_by('-created')
 
-        if author is not None:
-            queryset = Thread.objects.filter(author=author).distinct().order_by(
-                '-created')
+forum_post_list = PostListView.as_view()
 
-        if pinned is not None:
-            queryset = Thread.objects.filter(pinned=True).distinct().order_by(
-                '-created')
 
-        if category is not None and author is not None:
-            queryset = Thread.objects.filter(category__pk=category, author=author).distinct().order_by(
-                '-created')
-        return queryset
+class PostDetailView(generics.RetrieveAPIView):
+    """
+    Widok pojedynczego postu
+    """
+    queryset = Post.objects.all()
+    permission_classes = (PERM_ALLOW_ANY,)
+    serializer_class = PostSerializer
 
-    def create(self, request, *args, **kwargs):
-        category_id = request.data.get('category', None)
-        category = Category.objects.get(id=category_id)
 
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(author=self.request.user, category=category)
+forum_post_detail = PostDetailView.as_view()
 
-        return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
-    def update(self, request, *args, **kwargs):
-        instance = self.get_object()
+class PostCreateView(generics.CreateAPIView):
+    """
+    Widok tworzenia posta
+    """
 
-        category_id = request.data.get('category', None)
-
-        if category_id is not None:
-            category = Category.objects.get(id=category_id)
-            instance.category = category
-
-        instance.author = self.request.user
-        instance.save()
-
-        serializer = self.get_serializer(instance, data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-
-        return Response(serializer.data)
-"""
-
-"""
-class ForumPostViewSet(viewsets.ModelViewSet):
-    permission_classes = (IsAuthenticatedOnCreateUpdateDelete,)
-    serializer_class = ForumPostSerializer
-
-    def get_queryset(self):
-        queryset = Post.objects.all()
-        thread = self.request.query_params.get('thread', None)
-        if thread is not None:
-            queryset = Post.objects.filter(thread__pk=thread)
-        return queryset
+    queryset = Post.objects.all()
+    permission_classes = (PERM_IS_AUTHENTICATED,)
+    serializer_class = PostCreateSerializer
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(author=self.request.user)
+        serializer.save(author=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
-
-class ForumCommentViewSet(viewsets.ModelViewSet):
-    permission_classes = (permissions.AllowAny,)
-    serializer_class = ForumCommentSerializer
-
-    def get_queryset(self):
-        queryset = Comment.objects.all()
-        post = self.request.query_params.get('post', None)
-        if post is not None:
-            queryset = Comment.objects.filter(post__pk=post)
-        return queryset
-"""
+forum_post_create = PostCreateView.as_view()

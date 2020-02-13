@@ -1,23 +1,9 @@
-from django.test import TestCase
-
 from ..models import Account
 
+from .mixins import AccountTestMixin
 
-class AccountModelsTestCase(TestCase):
 
-    def setUp(self):
-        # Test na koncie Qwizi -> https://steamcommunity.com/id/34534645645
-        self.steamid64 = "76561198190469450"
-        self.steamid32 = "STEAM_1:0:115101861"
-        self.steamid3 = "[U:1:230203722]"
-        self.username = "Qwizi"
-        self.avatar = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/35/35f3a0e0d3f895f4ae608ccf68ae4e7b262a544d.jpg"
-        self.avatarmedium = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/35/35f3a0e0d3f895f4ae608ccf68ae4e7b262a544d_medium.jpg"
-        self.avatarfull = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/35/35f3a0e0d3f895f4ae608ccf68ae4e7b262a544d_full.jpg"
-        self.loccountrycode = "PL"
-        self.user_group_id = 3
-        self.user_group_name = "Users"
-
+class AccountModelsTestCase(AccountTestMixin):
     def test_create_user_steam_valid_steamid64(self):
         """
         Test sorawdzajacy poprawnosc tworzenia uzytkownika

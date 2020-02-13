@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import Category, Thread, Post, Comment
 from accounts.serializers import AccountSerializer
-from  accounts.models import Account
+from accounts.models import Account
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -35,35 +35,17 @@ class ThreadSerializer(serializers.ModelSerializer):
 
 
 class ThreadCreateSerializer(serializers.ModelSerializer):
-    category_id = serializers.IntegerField(required=True)
-
     class Meta:
         model = Thread
         fields = [
-            'category_id',
             'title',
             'content',
-            'author'
+            'author',
+            'category',
         ]
-
-    def create(self, validated_data):
-        # Usuwamy z tablicy category_id
-        category_id = validated_data.pop('category_id')
-        # author = validated_data.pop('author')
-
-        # Tworzymy instancje kategorii z podanego id
-        category_instance = Category.objects.get(id=category_id)
-        # author_instance = Account.objects.get(id=author)
-
-        # Tworzymy temat
-        instance = Thread.objects.create(**validated_data)
-
-        # Dodajemy categorie do instancji tematu
-        instance.category = category_instance
-        instance.save()
-        # instance.author = author_instance
-
-        return instance
+        extra_kwargs = {
+            'author': {'required': False}
+        }
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -79,6 +61,20 @@ class PostSerializer(serializers.ModelSerializer):
             'created',
             'updated'
         ]
+
+
+class PostCreateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Post
+        fields = [
+            'thread',
+            'content',
+            'author'
+        ]
+        extra_kwargs = {
+            'author': {'required': False}
+        }
 
 
 class CommentSerializer(serializers.ModelSerializer):

@@ -1,8 +1,8 @@
-from django.test import TestCase
-from rest_framework.test import APIClient
+from rest_framework.test import (
+    APIRequestFactory,
+    force_authenticate
+)
 from rest_framework_simplejwt.tokens import RefreshToken
-
-from ..models import Account
 
 from forum.models import (
     Category,
@@ -10,75 +10,64 @@ from forum.models import (
     Post
 )
 
+from ..models import Account
+from ..views import (
+    AccountListView,
+    AccountMeView
+)
+from .mixins import AccountTestMixin
 
-class AccountViewTestCase(TestCase):
+
+class AccountViewTestCase(AccountTestMixin):
+
     def setUp(self):
-        self.steamid64 = "76561198190469450"
-        self.steamid32 = "STEAM_1:0:115101861"
-        self.steamid3 = "[U:1:230203722]"
-        self.username = "Qwizi"
-        self.user_group_id = 3
+        super().setUp()
+        self.account = Account.objects.create_user_steam(steamid64=self.steamid64)
+        self.token = RefreshToken.for_user(self.account)
 
-        self.client = APIClient()
-
-    """
-    Pomocnicze metody
-    """
-
-    def _login_user(self, steamid64: str = None):
+    def test_account_list_view(self):
         """
-        Metoda ktora rejestruje/loguje uzytkownika
+        Test sprawdzajacy poprawnosc implementacji widoku dla listy uzytkowników
         """
 
-        # Przypisujemy domyslna wartosc
-        s_steamid64 = self.steamid64
+        # Pobranie widoku dla listy uzytkownikow
+        account_list_view = AccountListView.as_view()
 
-        # Jezeli argument steamid64 jest uzupelniony przypisujemy odpowiedna wartosc
-        if steamid64:
-            s_steamid64 = steamid64
+        request = self.factory.get('/api/accounts/')
+        response = account_list_view(request)
 
-        # Rejestrujemy uzytkownika uzytkownika, lub logujemy jezeli istnieje juz w bazie
-        self.client.login(steamid64=s_steamid64)
+        self.assertEqual(response.status_code, 200)
 
-    def _get_token(self, user: Account = None) -> RefreshToken:
+    def test_account_me_with_authenticate_view(self):
         """
-        Metoda zwracajaca token dla danego uzytkownika
+        Test sprawdzajacy poprawnosc implementacji widoku dla danych zalogowanego uzytkownika
         """
 
-        # Rejestrujemy domyslnego usera
-        self._login_user()
+        # Pobranie widoku dla danych zalogowanego uzytkownika
+        view = AccountMeView.as_view()
 
-        # Pobieramy dane zarejestrowanego usera
-        t_user = Account.objects.get(steamid64=self.steamid64)
+        request = self.factory.get('/api/accounts/me/')
 
-        # Jezeli argument user jest uzupelniony przypisujemy odpowiedna wartosc
-        if user:
-            t_user = user
+        # Zmuszamy uzytkownika do autoryzacji
+        force_authenticate(request, user=self.account, token=self.token)
 
-        # Pobieramy token dla usera
-        token = RefreshToken.for_user(t_user)
+        response = view(request)
+        self.assertEqual(response.status_code, 200)
 
-        return token
-
-    def _create_credentials(self, token: RefreshToken = None):
+    def test_account_me_without_authenticate_view(self):
         """
-        Metoda ustawiajaca odpowiedni header dla autoryzacji
+        Test sprawdzajacy poprawnosc implementacji widoku dla danych nie zalogowanego uzytkownika
         """
 
-        # Pobieramy token dla domyslnego usera
-        c_token = self._get_token()
+        # Pobranie widoku dla danych nie zalogowanego uzytkownika
+        view = AccountMeView.as_view()
+        request = self.factory.get('/api/accounts/me/')
+        response = view(request)
 
-        # Jezli argument token jest uzupelniony przypisujemy odpowiedna wartosc
-        if token:
-            c_token = token
+        self.assertEqual(response.status_code, 401)
 
-        # Ustawiamy odpowiedni header
-        self.client.credentials(HTTP_AUTHORIZATION="Bearer {}".format(c_token.access_token))
 
-    """
-    Testy
-    """
-
+class AccountViewApiTestCase(AccountTestMixin):
     def test_account_register(self):
         """
         Test sprawdzajacy poprawnosc rejestracji uzykownika
