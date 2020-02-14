@@ -40,9 +40,10 @@ class AccountListView(generics.ListAPIView, AccountThreadsPostCounterMixin):
     permission_classes = (PERM_ALLOW_ANY,)
     serializer_class = AccountSerializer
     filterset_fields = ['is_active', 'display_role']
+    ordering = ['-id']
 
     def get_queryset(self):
-        return Account.objects.all()
+        return Account.objects.get_queryset().order_by('id')
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
@@ -94,9 +95,21 @@ class RoleListView(generics.ListAPIView):
     """
     Widok listy rol
     """
-    queryset = Role.objects.all()
+    queryset = Role.objects.get_queryset().order_by('id')
     permission_classes = (PERM_ALLOW_ANY,)
     serializer_class = RoleSerializer
 
 
 role_list = RoleListView.as_view()
+
+
+class RoleDetailView(generics.RetrieveAPIView):
+    """
+    Widok pojedynczej roli
+    """
+    queryset = Role.objects.all()
+    permission_classes = (PERM_ALLOW_ANY,)
+    serializer_class = RoleSerializer
+
+
+role_detail = RoleDetailView.as_view()

@@ -1,5 +1,4 @@
 from rest_framework.test import (
-    APIRequestFactory,
     force_authenticate
 )
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -16,7 +15,9 @@ from ..models import (
 )
 from ..views import (
     AccountListView,
-    AccountMeView
+    AccountMeView,
+    RoleListView,
+    RoleDetailView
 )
 from .mixins import AccountTestMixin
 
@@ -68,6 +69,31 @@ class AccountViewTestCase(AccountTestMixin):
         response = view(request)
 
         self.assertEqual(response.status_code, 401)
+
+    def test_role_list_view(self):
+        """
+        Test sprawdzajacy poprawnosc implenetacji widoku listy rol
+        """
+
+        view = RoleListView.as_view()
+        request = self.factory.get('/api/accounts/roles/')
+        response = view(request)
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_role_detail_view(self):
+        """
+        Test sprawdzajacy poprawnosc implentacji widoku danej roli
+        """
+
+        # Tworzymy przykladowa role
+        role, created = Role.objects.get_or_create(name=self.user_role_name)
+
+        view = RoleDetailView.as_view()
+        request = self.factory.get('/api/accounts/roles/')
+        response = view(request, pk=role.pk)
+
+        self.assertEqual(response.status_code, 200)
 
 
 class AccountViewApiTestCase(AccountTestMixin):
@@ -293,3 +319,40 @@ class AccountViewApiTestCase(AccountTestMixin):
         self.assertEqual(response.data['count'], 2)
         self.assertEqual(response.data['results'][0]['name'], self.user_role_name)
         self.assertEqual(response.data['results'][1]['name'], second_role_name)
+
+    def test_role_list_renders_empty(self):
+        """
+        Test sprawdzajacy porpawnosc wyswietlania pustej listy rol
+        """
+
+        response = self.client.get('/api/accounts/roles/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['count'], 0)
+
+    def test_role_detail_renders(self):
+        """
+        Test sprawdzajacy poprawnosc wyswietlania danej roli
+        """
+
+        # Tworzymy role
+        role = Role.objects.create(name=self.user_role_name)
+
+        response = self.client.get('/api/accounts/roles/{}/'.format(role.id))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['name'], role.name)
+        self.assertEqual(response.data['format'], role.format)
+
+    def test_role_detail_renders_not_exist(self):
+        """
+        Test sprawdzajacy poprawnosc wyswietlania pojedynczej roli,
+        gdy podano nie istniejaca role
+        """
+
+        # Nie istniejaca rola
+        invalid_role = 999
+
+        response = self.client.get('/api/accounts/roles/{}/'.format(invalid_role))
+
+        self.assertEqual(response.status_code, 404)
