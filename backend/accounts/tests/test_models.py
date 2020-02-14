@@ -2,7 +2,8 @@ from ..models import (
     Account,
     Role,
     Wallet,
-    BonusCode
+    BonusCode,
+    SMSNumber
 )
 
 from djmoney.money import Money
@@ -290,3 +291,17 @@ class AccountModelsTestCase(AccountTestMixin):
         self.assertEqual(bonus_code.code, code)
         self.assertEqual(bonus_code.money, Money(2, 'PLN'))
 
+    def test_smsnumber_create(self):
+        # Tworzymy przykladowy numer sms dla providera liveserver
+
+        smsnumber = SMSNumber.objects.create(
+            provider='liveserver',
+            number=7222,
+            expanse=Money(5, 'PLN'),
+            money=Money(2.50, 'PLN')
+        )
+
+        self.assertEqual(smsnumber.provider, 'liveserver')
+        self.assertEqual(smsnumber.number, 7222)
+        self.assertEqual(smsnumber.expanse, Money(5, 'PLN'))
+        self.assertEqual(smsnumber.money, Money(2.50, 'PLN'))

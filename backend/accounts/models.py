@@ -162,14 +162,6 @@ class Account(AbstractUser):
         self.save()
 
 
-class BonusCode(models.Model):
-    code = models.CharField(max_length=120)
-    money = MoneyField(max_digits=14, decimal_places=2, default_currency='PLN', default=0)
-
-    def __str__(self):
-        return '{} | {}'.format(self.code, self.money)
-
-
 class Wallet(models.Model):
     class WalletTypeChoices(models.IntegerChoices):
         PRIMARY = 1
@@ -192,6 +184,24 @@ class Wallet(models.Model):
     def subtract_money(self, money: Money):
         self.money -= money
         self.save()
+
+
+class BonusCode(models.Model):
+    code = models.CharField(max_length=120)
+    money = MoneyField(max_digits=14, decimal_places=2, default_currency='PLN', default=0)
+
+    def __str__(self):
+        return '{} | {}'.format(self.code, self.money)
+
+
+class SMSNumber(models.Model):
+    provider = models.CharField(max_length=120)
+    number = models.IntegerField()
+    expanse = MoneyField(max_digits=14, decimal_places=2, default_currency='PLN', default=0)
+    money = MoneyField(max_digits=14, decimal_places=2, default_currency='PLN', default=0)
+
+    def __str__(self):
+        return '{}'.format(self.provider)
 
 
 def on_create_account(sender, **kwargs):
