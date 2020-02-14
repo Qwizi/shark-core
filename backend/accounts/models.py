@@ -1,6 +1,11 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from django.contrib.auth.models import AbstractUser, Group, UserManager
+from django.contrib.auth.models import (
+    AbstractUser,
+    Group,
+    UserManager,
+    GroupManager
+)
 from django.db.models.signals import post_save
 from django.conf import settings
 
@@ -10,8 +15,60 @@ from djmoney.money import Money
 from .steam_helpers import get_steam_user_info
 from shark_core.helpers import check_banned_usernames
 
+import random
+
+
+class AbstractRole(Group):
+    class Meta:
+        abstract = True
+
+
+class Role(AbstractRole):
+    format = models.CharField(max_length=255, default="{username}")
+
+    @staticmethod
+    def _random_number():
+        return random.randint(0, 255)
+
+    def _random_color(self):
+        return '#%02X%02X%02X' % (self._random_number(), self._random_number(), self._random_number())
+
+    def create_random_color_format(self):
+        random_color_format = '<span color="{}">{}</a>'.format(
+            self._random_color(),
+            self.format
+        )
+        self.format = random_color_format
+        self.save()
+
 
 class AccountManager(UserManager):
+
+    @staticmethod
+    def _get_user_default_role() -> Role:
+        """
+        Metoda zwracajaca role uzytkownika
+        """
+        # TODO zamienic na Role.objects.get()
+        role, created = Role.objects.get_or_create(
+            pk=3,
+            name="User",
+            format='<span color="rgb(113,118,114)">{username}</span>'
+        )
+        return role
+
+    @staticmethod
+    def _get_user_administrator_role() -> Role:
+        """
+        Metoda zwracajaca role administratora
+        """
+        # TODO zamienic na Role.objects.get()
+        role, created = Role.objects.get_or_create(
+            pk=1,
+            name='Admin',
+            format='<span color="rgb(242,0,0)">{username}</span>'
+        )
+        return role
 
     def _create_user_steam(self, steamid64, **extra_fields):
         if steamid64 is None:
@@ -29,26 +86,44 @@ class AccountManager(UserManager):
             username = self.model.normalize_username(username)
 
         account = self.model(username=username, **user_info, **extra_fields)
-
         account.save(using=self._db)
+        account.roles.add(extra_fields.get('display_role'))
 
         return account
 
     def create_user_steam(self, steamid64, **extra_fields):
+        display_role = self._get_user_default_role()
+
         extra_fields.setdefault('is_active', True)
         extra_fields.setdefault('is_staff', False)
         extra_fields.setdefault('is_superuser', False)
+        extra_fields.setdefault('display_role', display_role)
         return self._create_user_steam(steamid64, **extra_fields)
 
     def create_superuser_steam(self, steamid64, **extra_fields):
+        display_role = self._get_user_administrator_role()
+
         extra_fields.setdefault('is_active', True)
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('display_role', display_role)
         return self._create_user_steam(steamid64, **extra_fields)
 
 
 class Account(AbstractUser):
-    display_group = models.ForeignKey(Group, on_delete=models.CASCADE, null=True)
+    groups = None
+    roles = models.ManyToManyField(
+        Role,
+        verbose_name=_('roles'),
+        blank=True,
+        help_text=_(
+            'The groups this user belongs to. A user will get all permissions '
+            'granted to each of their groups.'
+        ),
+        related_name="account_set",
+        related_query_name="account",
+    )
+    display_role = models.ForeignKey(Role, on_delete=models.CASCADE, null=True, related_name="account_display_role")
     bonus_percent = models.IntegerField(default=1)
     last_login = models.DateTimeField(auto_now=True)
     steamid32 = models.CharField(max_length=60, unique=True)
@@ -77,6 +152,10 @@ class Account(AbstractUser):
         if self.bonus_percent < settings.SHARK_CORE['STORE']['ACCOUNT_MAX_BONUS_PERCENT']:
             self.bonus_percent += 1
             self.save()
+
+    def set_display_role(self, role: Role):
+        self.display_role = role
+        self.save()
 
 
 class Wallet(models.Model):
@@ -114,11 +193,11 @@ class Wallet(models.Model):
 
 def on_create_account(sender, **kwargs):
     if kwargs['created']:
-        users_group, created = Group.objects.get_or_create(pk=3, name='Users')
+        # users_group, created = Group.objects.get_or_create(pk=3, name='Users')
         account = kwargs['instance']
-        account.display_group = users_group
-        account.groups.add(users_group)
-        account.save()
+        # account.display_group = users_group
+        # account.groups.add(users_group)
+        # account.save()
 
         Wallet.objects.bulk_create([
             Wallet(wtype=1, account=account),

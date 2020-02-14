@@ -20,8 +20,10 @@ class AccountTestMixin(TestCase):
         self.avatarmedium = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/35/35f3a0e0d3f895f4ae608ccf68ae4e7b262a544d_medium.jpg"
         self.avatarfull = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/35/35f3a0e0d3f895f4ae608ccf68ae4e7b262a544d_full.jpg"
         self.loccountrycode = "PL"
-        self.user_group_id = 3
-        self.user_group_name = "Users"
+        self.user_role_id = 3
+        self.user_group_name = "User"
+        self.user_role_name = 'User'
+        self.user_role_id = 3
 
         self.client = APIClient()
         self.factory = APIRequestFactory()

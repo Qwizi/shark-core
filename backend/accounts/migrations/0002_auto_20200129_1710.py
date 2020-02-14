@@ -3,13 +3,13 @@
 from django.db import migrations
 
 
-def create_default_groups(apps, schema_editor):
-    Group = apps.get_model('auth', 'Group')
-    Group.objects.bulk_create([
-        Group(id=1, name='Administrators'),
-        Group(id=2, name='Moderators'),
-        Group(id=3, name='Users'),
-        Group(id=4, name='Banned')
+def create_default_roles(apps, schema_editor):
+    Role = apps.get_model('accounts', 'Role')
+    Role.objects.bulk_create([
+        Role(id=1, name='Administrators'),
+        Role(id=2, name='Moderators'),
+        Role(id=3, name='Users'),
+        Role(id=4, name='Banned')
     ])
 
 
@@ -19,5 +19,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(create_default_groups),
+        #migrations.RunPython(create_default_roles),
     ]

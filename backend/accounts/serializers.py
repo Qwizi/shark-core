@@ -3,9 +3,10 @@ from django.contrib.auth import authenticate
 from rest_framework import exceptions, serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import Account
-from forum.models import Thread
-
+from .models import (
+    Account,
+    Role
+)
 import requests
 
 
@@ -21,7 +22,7 @@ class AccountSerializer(serializers.ModelSerializer):
             'steamid64',
             'steamid32',
             'steamid3',
-            'display_group',
+            'display_role',
             'date_joined',
             'threads',
             'posts'
@@ -39,7 +40,7 @@ class AccountMeSerializer(serializers.ModelSerializer):
             'steamid64',
             'steamid32',
             'steamid3',
-            'display_group',
+            'display_role',
             'is_active',
             'is_staff',
             'date_joined',
@@ -178,3 +179,13 @@ class ServerSteamTokenObtainSerializer(ServerSteamTokenSerializer):
         data['access'] = str(refresh.access_token)
 
         return data
+
+
+class RoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Role
+        fields = [
+            'id',
+            'name',
+            'format'
+        ]

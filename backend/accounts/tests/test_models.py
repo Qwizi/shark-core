@@ -1,10 +1,19 @@
-from ..models import Account
+from ..models import (
+    Account,
+    Role
+)
 
 from .mixins import AccountTestMixin
 
 
 class AccountModelsTestCase(AccountTestMixin):
-    def test_create_user_steam_valid_steamid64(self):
+
+    def setUp(self):
+        super().setUp()
+        self.role_name = 'Testowa rola'
+        self.role_format = '<span color="rgb(113,118,114)">{username}</span>'
+
+    def test_account_create_user_steam_valid_steamid64(self):
         """
         Test sorawdzajacy poprawnosc tworzenia uzytkownika
         """
@@ -19,15 +28,15 @@ class AccountModelsTestCase(AccountTestMixin):
         self.assertEqual(account.avatarmedium, self.avatarmedium)
         self.assertEqual(account.avatarfull, self.avatarfull)
         self.assertEqual(account.loccountrycode, self.loccountrycode)
-        self.assertEqual(account.display_group.id, self.user_group_id)
-        self.assertEqual(account.display_group.name, self.user_group_name)
-        self.assertEqual(account.groups.all().count(), 1)
+        self.assertEqual(account.display_role.id, self.user_role_id)
+        self.assertEqual(account.display_role.name, self.user_role_name)
+        self.assertEqual(account.roles.all().count(), 1)
         self.assertEqual(account.wallet_set.all().count(), 2)
         self.assertTrue(account.is_active)
         self.assertFalse(account.is_staff)
         self.assertFalse(account.is_superuser)
 
-    def test_create_user_steam_invalid_steamid64(self):
+    def test_account_create_user_steam_invalid_steamid64(self):
         """
         Test sprawdzajacy poprawnosc wyswietlania wyjatku w przypadku jak podano niepoprawny steamid64
         """
@@ -39,7 +48,7 @@ class AccountModelsTestCase(AccountTestMixin):
             Account.objects.create_user_steam(steamid64=steamid64)
         self.assertTrue("Invalid steamid64" in str(context.exception))
 
-    def test_create_user_none_steamid64(self):
+    def test_account_create_user_none_steamid64(self):
         """
         Test sprawdzajacy poprawnosc wyswietlania wyjatku w przypadku gdy steamid64 jest rowne None
         """
@@ -50,7 +59,7 @@ class AccountModelsTestCase(AccountTestMixin):
             Account.objects.create_user_steam(steamid64=steamid64)
         self.assertTrue("Steamid64 cannot be None" in str(context.exception))
 
-    def test_create_superuser_steam_valid_steamid64(self):
+    def test_account_create_superuser_steam_valid_steamid64(self):
         """
         Test sprawdzajacy poprawnosc tworznie super uzytkownika
         """
@@ -63,7 +72,7 @@ class AccountModelsTestCase(AccountTestMixin):
         self.assertTrue(account.is_active)
         self.assertTrue(account.is_superuser)
 
-    def test_create_superuser_steam_invalid_steamid64(self):
+    def test_account_create_superuser_steam_invalid_steamid64(self):
         """
         Test sprawdzajacy poprawnosc wyswietlania wyjatku w czasie tworzenia super uzytkownika
         gdy steamid 64 jest niepoprawne
@@ -76,7 +85,7 @@ class AccountModelsTestCase(AccountTestMixin):
             Account.objects.create_superuser_steam(steamid64=steamid64)
         self.assertTrue("Invalid steamid64" in str(context.exception))
 
-    def test_create_superuser_steam_none_steamid64(self):
+    def test_account_create_superuser_steam_none_steamid64(self):
         """
         Test sprawdzajacy poprawnosc wyswietlania wyjatku w czasie tworznia super uzytkownika
         gdy steamid64 jest rowne None
@@ -104,3 +113,34 @@ class AccountModelsTestCase(AccountTestMixin):
         account_activated = Account.objects.get(pk=account.pk)
 
         self.assertTrue(account_activated.is_active)
+
+    def test_role_create(self):
+        """
+        Test sprawdzajacy poprawnosc tworzenia roli
+        """
+        Role.objects.create(
+            name=self.role_name,
+            format=self.role_format
+        )
+
+        role = Role.objects.get(name=self.role_name)
+
+        self.assertEqual(role.name, self.role_name)
+        self.assertEqual(role.format, self.role_format)
+
+    def test_role_create_random_color_format(self):
+        """
+        Test sprawdzajacy poprawnosc tworzenia losowego koloru w formacie roli
+        """
+
+        # Tworzymy role
+        role = Role.objects.create(
+            name=self.role_name
+        )
+
+        # Tworzymy format z losowym kolorem
+        role.create_random_color_format()
+
+        print(role.format)
+
+        self.assertNotEqual(role.format, self.role_format)
