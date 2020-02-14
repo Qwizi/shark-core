@@ -116,6 +116,7 @@ class AccountMeWalletListView(generics.ListAPIView):
     """
     permission_classes = (PERM_IS_AUTHENTICATED,)
     serializer_class = AccountMeWalletListSerializer
+    filterset_fields = ['wtype',]
 
     def list(self, request, *args, **kwargs):
         account = request.user
