@@ -11,7 +11,8 @@ from forum.models import (
 
 from ..models import (
     Account,
-    Role
+    Role,
+    Wallet
 )
 from ..views import (
     AccountListView,
@@ -509,6 +510,45 @@ class AccountViewApiTestCase(AccountTestMixin):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['count'], 0)
+
+    def test_account_me_wallet_list_renders_filer_by_wtype(self):
+        # Rejestrujemy domyslnego uzytkownika
+        self._login_user()
+
+        # Pobieramy uzytkonwika
+        account = Account.objects.get(steamid64=self.steamid64)
+
+        # Pobieramy token dla uzykownika
+        token = self._get_token(account)
+
+        # Ustawawiamy headery dla autoryzacji
+        self._create_credentials(token)
+
+        first_response = self.client.get('/api/accounts/me/wallets/')
+
+        self.assertEqual(first_response.status_code, 200)
+        self.assertEqual(first_response.data['count'], 2)
+
+        PRIMARY = Wallet.WalletTypeChoices.PRIMARY
+        SECONDARY = Wallet.WalletTypeChoices.SECONDARY
+        OTHER = Wallet.WalletTypeChoices.OTHER
+
+        second_response = self.client.get('/api/accounts/me/wallets/?wtype={}'.format(PRIMARY))
+
+        self.assertEqual(second_response.status_code, 200)
+        self.assertEqual(second_response.data['count'], 1)
+        self.assertEqual(second_response.data['results'][0]['wtype'], PRIMARY)
+
+        third_response = self.client.get('/api/accounts/me/wallets/?wtype={}'.format(SECONDARY))
+
+        self.assertEqual(third_response.status_code, 200)
+        self.assertEqual(third_response.data['count'], 1)
+        self.assertEqual(third_response.data['results'][0]['wtype'], SECONDARY)
+
+        fourth_response = self.client.get('/api/accounts/me/wallets/?wtype={}'.format(OTHER))
+
+        self.assertEqual(fourth_response.status_code, 200)
+        self.assertEqual(fourth_response.data['count'], 0)
 
     def test_role_list_renders(self):
         """
