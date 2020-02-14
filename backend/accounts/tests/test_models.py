@@ -141,6 +141,4 @@ class AccountModelsTestCase(AccountTestMixin):
         # Tworzymy format z losowym kolorem
         role.create_random_color_format()
 
-        print(role.format)
-
         self.assertNotEqual(role.format, self.role_format)

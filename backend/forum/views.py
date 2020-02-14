@@ -33,7 +33,7 @@ class CategoryListView(generics.ListAPIView):
     """
     Widok listy kategorii
     """
-    queryset = Category.objects.all()
+    queryset = Category.objects.get_queryset().order_by('id')
     permission_classes = (PERM_ALLOW_ANY,)
     serializer_class = CategorySerializer
 
@@ -57,7 +57,7 @@ class ThreadListView(generics.ListAPIView):
     """
     Widok listy tematow
     """
-    queryset = Thread.objects.all()
+    queryset = Thread.objects.get_queryset().order_by('id')
     permission_classes = (PERM_ALLOW_ANY,)
     serializer_class = ThreadSerializer
     filterset_fields = ['category', 'status', 'pinned']
@@ -100,7 +100,7 @@ class PostListView(generics.ListAPIView):
     """
     Widok listy postow
     """
-    queryset = Post.objects.all()
+    queryset = Post.objects.get_queryset().order_by('id')
     permission_classes = (PERM_ALLOW_ANY,)
     serializer_class = PostSerializer
 
