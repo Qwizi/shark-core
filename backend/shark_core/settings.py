@@ -186,6 +186,17 @@ SHARK_CORE = {
             r'^((a|A)dmin)$',
             r'^((a|a)dministrator)$',
         ]
+    },
+    'PAYMENT_PROVIDERS': {
+        'BONUS_CODE': {
+            'DEFAULT_PROVIDER': 'accounts.providers.bonuscodes.sharkcore.SharkCoreBonusCodeProvider',
+        },
+        'SMS': {
+            'DEFAULT_PROVIDER': 'accounts.providers.sms.liveserver.LiveServerSMSProvider',
+        },
+        'TRANSFER': {
+            'DEFAULT_PROVIDER': 'accounts.providers.transfer.liveserver.LiveServerTransferProvider',
+        }
     }
 }
 

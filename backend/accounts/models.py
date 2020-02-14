@@ -162,8 +162,15 @@ class Account(AbstractUser):
         self.save()
 
 
-class Wallet(models.Model):
+class BonusCode(models.Model):
+    code = models.CharField(max_length=120)
+    money = MoneyField(max_digits=14, decimal_places=2, default_currency='PLN', default=0)
 
+    def __str__(self):
+        return '{} | {}'.format(self.code, self.money)
+
+
+class Wallet(models.Model):
     class WalletTypeChoices(models.IntegerChoices):
         PRIMARY = 1
         SECONDARY = 2

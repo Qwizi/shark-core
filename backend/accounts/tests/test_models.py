@@ -1,7 +1,8 @@
 from ..models import (
     Account,
     Role,
-    Wallet
+    Wallet,
+    BonusCode
 )
 
 from djmoney.money import Money
@@ -275,3 +276,17 @@ class AccountModelsTestCase(AccountTestMixin):
         wallet.subtract_money(money_to_subtract)
 
         self.assertEqual(wallet.money, except_money)
+
+    def test_bonus_code_create(self):
+        # Testowy kod
+        code = "TEST"
+
+        # Tworzymy nowy kod bonusowy
+        bonus_code = BonusCode.objects.create(
+            code=code,
+            money=Money(2, 'PLN')
+        )
+
+        self.assertEqual(bonus_code.code, code)
+        self.assertEqual(bonus_code.money, Money(2, 'PLN'))
+
