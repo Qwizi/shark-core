@@ -5,6 +5,7 @@ class AccountThreadsPostCounterMixin:
     """
     Klasa pomocznica do licznika tematow/postow
     """
+
     @staticmethod
     def get_account_threads_counter(account: Account) -> int:
         """
@@ -19,29 +20,25 @@ class AccountThreadsPostCounterMixin:
         """
         return account.post_author_set.all().count()
 
-    def create_accounts_querset_with_post_thread_counter(self, queryset):
+    def format_queryset(self, queryset, many=False):
         """
         Metoda zwracajaca nowa tablice uzytkownikow  z licznikiem tematow/postow
         """
+        if many:
+            # Tworzymy nowy pusty queryset
+            new_queryset = []
 
-        # Tworzymy nowy pusty queryset
-        new_queryset = []
+            # Iterujemy po liscie uzytkownikow
+            for account in queryset:
+                account.threads = self.get_account_threads_counter(account)
+                account.posts = self.get_account_posts_counter(account)
+                account.formatted_username = account.get_formatted_name()
+                # Dodajemy zaaktualiwanego uzytkownika do nowej listy
+                new_queryset.append(account)
 
-        # Iterujemy po liscie uzytkownikow
-        for account in queryset:
-            account.threads = self.get_account_threads_counter(account)
-            account.posts = self.get_account_posts_counter(account)
-
-            # Dodajemy zaaktualiwanego uzytkownika do nowej listy
-            new_queryset.append(account)
-
-        return new_queryset
-
-    def create_account_queryset_with_post_thread_counter(self, queryset):
-        """
-        Metoda zwracajaca nowy querset uzytkownika z licznikiem tematow/postow
-        """
-
-        queryset.threads = self.get_account_threads_counter(queryset)
-        queryset.posts = self.get_account_posts_counter(queryset)
-        return queryset
+            return new_queryset
+        else:
+            queryset.threads = self.get_account_threads_counter(queryset)
+            queryset.posts = self.get_account_posts_counter(queryset)
+            queryset.formatted_username = queryset.get_formatted_name()
+            return queryset

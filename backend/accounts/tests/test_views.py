@@ -16,8 +16,10 @@ from ..models import (
 from ..views import (
     AccountListView,
     AccountMeView,
+    AccountMeUpdateDisplayRoleView,
+    AccountMeWalletListView,
     RoleListView,
-    RoleDetailView
+    RoleDetailView,
 )
 from .mixins import AccountTestMixin
 
@@ -66,6 +68,55 @@ class AccountViewTestCase(AccountTestMixin):
         # Pobranie widoku dla danych nie zalogowanego uzytkownika
         view = AccountMeView.as_view()
         request = self.factory.get('/api/accounts/me/')
+        response = view(request)
+
+        self.assertEqual(response.status_code, 401)
+
+    def test_account_me_update_display_role_view_with_authenticate(self):
+        # Tworzymy nowa role
+        new_role = Role.objects.create(name="New role")
+
+        # Dodajemy nowa role do rol uzytkownika
+        self.account.roles.add(new_role)
+
+        new_display_role = {
+            'role': new_role.pk
+        }
+
+        view = AccountMeUpdateDisplayRoleView.as_view()
+        request = self.factory.put('/api/accounts/me/display-role/', data=new_display_role)
+        force_authenticate(request, user=self.account, token=self.token)
+        response = view(request)
+        self.assertEqual(response.status_code, 200)
+
+    def test_account_me_update_display_role_view_without_authenticate(self):
+        # Tworzymy nowa role
+        new_role = Role.objects.create(name="New role")
+
+        # Dodajemy nowa role do rol uzytkownika
+        self.account.roles.add(new_role)
+
+        new_display_role = {
+            'role': new_role.pk
+        }
+
+        view = AccountMeUpdateDisplayRoleView.as_view()
+        request = self.factory.put('/api/accounts/me/display-role/', data=new_display_role)
+
+        response = view(request)
+        self.assertEqual(response.status_code, 401)
+
+    def test_account_me_wallet_list_view_with_authenticate(self):
+        view = AccountMeWalletListView.as_view()
+        request = self.factory.get('/api/accounts/me/wallets/')
+        force_authenticate(request, user=self.account, token=self.token)
+        response = view(request)
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_account_me_wallet_list_view_without_authenticate(self):
+        view = AccountMeWalletListView.as_view()
+        request = self.factory.get('/api/accounts/me/wallets/')
         response = view(request)
 
         self.assertEqual(response.status_code, 401)
@@ -181,12 +232,20 @@ class AccountViewApiTestCase(AccountTestMixin):
 
         response = self.client.get('/api/accounts/')
 
+        # Pobieramy stworzonych uzytkownikow
+        account_one_username = Account.objects.get(steamid64=steamid64_one)
+        account_two_username = Account.objects.get(steamid64=steamid64_two)
+
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['count'], 2)
-        # Sprawdzamy czy steamid64 jest rowny pierwszemu uzytkownikowi
         self.assertEqual(response.data['results'][0]['steamid64'], steamid64_one)
-        # Sprawdzamy czy steamid64 jest rowny drugiemu uzytkownikowi
+        self.assertEqual(response.data['results'][0]['display_role']['id'], self.user_role_id)
+        self.assertEqual(response.data['results'][0]['formatted_username'], account_one_username.get_formatted_name())
+        self.assertEqual(len(response.data['results'][0]['roles']), 1)
         self.assertEqual(response.data['results'][1]['steamid64'], steamid64_two)
+        self.assertEqual(response.data['results'][1]['display_role']['id'], self.user_role_id)
+        self.assertEqual(response.data['results'][1]['formatted_username'], account_two_username.get_formatted_name())
+        self.assertEqual(len(response.data['results'][1]['roles']), 1)
 
     def test_account_list_renders_empty(self):
         """
@@ -196,6 +255,52 @@ class AccountViewApiTestCase(AccountTestMixin):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['count'], 0)
         self.assertEqual(response.data['results'], [])
+
+    def test_account_list_renders_filter_by_is_activate(self):
+        """
+        Test sprawdzajacy porpawnosc wyswietlania listy uzytkownikow filtrowanych po kluczu is_active
+        """
+
+        # Tworzenie aktywnego konta
+        activated_account = Account.objects.create_user_steam(steamid64=self.steamid64)
+
+        # Tworzenie nie aktywnego konta
+        deactivated_account = Account.objects.create_user_steam(steamid64="76561198188480002", is_active=False)
+
+        first_response = self.client.get('/api/accounts/?is_active=1')
+
+        self.assertEqual(first_response.status_code, 200)
+        self.assertEqual(first_response.data['count'], 1)
+        self.assertEqual(first_response.data['results'][0]['steamid64'], activated_account.steamid64)
+
+        second_response = self.client.get('/api/accounts/?is_active=0')
+
+        self.assertEqual(second_response.status_code, 200)
+        self.assertEqual(second_response.data['count'], 1)
+        self.assertEqual(second_response.data['results'][0]['steamid64'], deactivated_account.steamid64)
+
+    def test_account_list_renders_filter_by_display_role(self):
+        """
+        Test sprawdzajacy poprawnosc wyswietlania listy uzytkownikow filtrowanych po kluczu display_role
+        """
+
+        # Tworzenie konta z rola User
+        user_account = Account.objects.create_user_steam(steamid64=self.steamid64)
+
+        # Tworzenie konta z rola Admin
+        admin_account = Account.objects.create_superuser_steam(steamid64="76561198188480002")
+
+        first_response = self.client.get('/api/accounts/?display_role={}'.format(user_account.display_role.id))
+
+        self.assertEqual(first_response.status_code, 200)
+        self.assertEqual(first_response.data['count'], 1)
+        self.assertEqual(first_response.data['results'][0]['display_role']['id'], user_account.display_role.id)
+
+        second_response = self.client.get('/api/accounts/?display_role={}'.format(admin_account.display_role.id))
+
+        self.assertEqual(second_response.status_code, 200)
+        self.assertEqual(second_response.data['count'], 1)
+        self.assertEqual(second_response.data['results'][0]['display_role']['id'], admin_account.display_role.id)
 
     def test_account_me_renders_with_authenticate(self):
         """
@@ -221,7 +326,8 @@ class AccountViewApiTestCase(AccountTestMixin):
         self.assertEqual(response.data['steamid32'], self.steamid32)
         self.assertEqual(response.data['steamid3'], self.steamid3)
         self.assertEqual(response.data['username'], self.username)
-        self.assertEqual(response.data['display_role'], self.user_role_id)
+        self.assertEqual(response.data['formatted_username'], account.get_formatted_name())
+        self.assertEqual(response.data['display_role']['id'], self.user_role_id)
         self.assertEqual(response.data['threads'], 0)
         self.assertEqual(response.data['posts'], 0)
 
@@ -302,6 +408,107 @@ class AccountViewApiTestCase(AccountTestMixin):
         """
         response = self.client.get('/api/accounts/me/')
         self.assertEqual(response.status_code, 401)
+
+    def test_account_me_update_display_role_renders_with_authenticate(self):
+        """
+        Test sprawdzajacy poprawnosc aktualizowania roli wyswietlaniej dla zalgowoanego uzyttkownika
+        """
+
+        # Rejestrujemy domyslnego uzytkownika
+        self._login_user()
+
+        # Pobieramy uzytkonwika
+        account = Account.objects.get(steamid64=self.steamid64)
+
+        # Pobieramy token dla uzykownika
+        token = self._get_token(account)
+
+        # Ustawawiamy headery dla autoryzacji
+        self._create_credentials(token)
+
+        # Tworzymy nowa role
+        new_role = Role.objects.create(name="New role")
+
+        # Dodajemy nowa role do rol uzytkownika
+        account.roles.add(new_role)
+
+        new_display_role = {
+            'role': new_role.pk
+        }
+
+        response = self.client.put('/api/accounts/me/display-role/', data=new_display_role)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['display_role'], new_role.pk)
+
+    def test_account_me_update_display_role_renders_with_authenticate_not_exist_role(self):
+        """
+        Test sprawdzajacy poprawnosc wyswietlania informacji jezeli podana rola nie istnieje
+        """
+
+        # Rejestrujemy domyslnego uzytkownika
+        self._login_user()
+
+        # Pobieramy uzytkonwika
+        account = Account.objects.get(steamid64=self.steamid64)
+
+        # Pobieramy token dla uzykownika
+        token = self._get_token(account)
+
+        # Ustawawiamy headery dla autoryzacji
+        self._create_credentials(token)
+
+        # Id nie istniejaccej roli
+        invalid_role = 999
+
+        new_display_role = {
+            'role': invalid_role
+        }
+
+        response = self.client.put('/api/accounts/me/display-role/', data=new_display_role)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['msg'], 'Podana rola nie istnieje')
+
+    def test_account_me_wallet_list_renders_with_authenticate(self):
+        # Rejestrujemy domyslnego uzytkownika
+        self._login_user()
+
+        # Pobieramy uzytkonwika
+        account = Account.objects.get(steamid64=self.steamid64)
+
+        # Pobieramy token dla uzykownika
+        token = self._get_token(account)
+
+        # Ustawawiamy headery dla autoryzacji
+        self._create_credentials(token)
+
+        response = self.client.get('/api/accounts/me/wallets/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['count'], 2)
+
+    def test_account_me_wallet_list_renders_empty_with_authenticated(self):
+        # Rejestrujemy domyslnego uzytkownika
+        self._login_user()
+
+        # Pobieramy uzytkonwika
+        account = Account.objects.get(steamid64=self.steamid64)
+
+        # Usuwamy portfele
+        for wallet in account.wallet_set.all():
+            wallet.delete()
+
+        # Pobieramy token dla uzykownika
+        token = self._get_token(account)
+
+        # Ustawawiamy headery dla autoryzacji
+        self._create_credentials(token)
+
+        response = self.client.get('/api/accounts/me/wallets/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['count'], 0)
 
     def test_role_list_renders(self):
         """

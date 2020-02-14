@@ -153,18 +153,23 @@ class Account(AbstractUser):
             self.bonus_percent += 1
             self.save()
 
-    def set_display_role(self, role: Role):
-        self.display_role = role
+    def get_formatted_name(self) -> str:
+        return self.display_role.format.replace('{username}', self.username)
+
+    def update_display_role(self, role: Role):
+        if role in self.roles.all():
+            self.display_role = role
         self.save()
 
 
 class Wallet(models.Model):
-    class WalletTypes(models.IntegerChoices):
+
+    class WalletTypeChoices(models.IntegerChoices):
         PRIMARY = 1
         SECONDARY = 2
         OTHER = 3
 
-    wtype = models.CharField(max_length=64, choices=WalletTypes.choices, default=WalletTypes.choices[0][0], null=True)
+    wtype = models.IntegerField(choices=WalletTypeChoices.choices, default=WalletTypeChoices.PRIMARY, null=True)
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     money = MoneyField(max_digits=14, decimal_places=2, default_currency='PLN', default=0)
     bonus_percent = models.IntegerField(default=5)
@@ -173,35 +178,22 @@ class Wallet(models.Model):
     def __str__(self):
         return '{} | {}'.format(self.account.username, self.money)
 
-    def add_money(self, money):
+    def add_money(self, money: Money):
+        self.money += money
+        self.save()
 
-        if isinstance(money, Money):
-            self.money += money
-        else:
-            raise TypeError('A money must be Money instance')
-
-    def remove_money(self, money):
-        if isinstance(money, Money):
-            self.money -= money
-        else:
-            raise TypeError('A money must be Money instance')
-
-    def increase_bonus_percent(self):
-        if self.bonus_percent < self.bonus_max:
-            self.bonus_percent += 1
+    def subtract_money(self, money: Money):
+        self.money -= money
+        self.save()
 
 
 def on_create_account(sender, **kwargs):
     if kwargs['created']:
-        # users_group, created = Group.objects.get_or_create(pk=3, name='Users')
         account = kwargs['instance']
-        # account.display_group = users_group
-        # account.groups.add(users_group)
-        # account.save()
 
         Wallet.objects.bulk_create([
-            Wallet(wtype=1, account=account),
-            Wallet(wtype=2, account=account)
+            Wallet(wtype=Wallet.WalletTypeChoices.PRIMARY, account=account),
+            Wallet(wtype=Wallet.WalletTypeChoices.SECONDARY, account=account)
         ])
 
 

@@ -14,7 +14,7 @@ class ForumModelsTestCase(ForumTestMixin):
         super().setUp()
         self.author = Account.objects.create_user_steam(steamid64=self.steamid64)
 
-    def test_create_category(self):
+    def test_category_create(self):
         """
         Test sprawdzajacy poprawosc tworzenia kategorii
         """
@@ -28,7 +28,7 @@ class ForumModelsTestCase(ForumTestMixin):
         self.assertEqual(category.name, self.category_name)
         self.assertEqual(categories_count, 1)
 
-    def test_create_thread(self):
+    def test_thread_create(self):
         """
         Test sprawdzajacy poprawnosc tworzenia tematu
         """
@@ -50,26 +50,7 @@ class ForumModelsTestCase(ForumTestMixin):
         self.assertEqual(threads_count, 1)
         self.assertFalse(thread.pinned)
 
-    def test_create_post(self):
-        """
-        Test sprawdzajacy poprawnosc tworzenia posta
-        """
-
-        # Tworzenie domyslnego postu
-        self._create_post()
-
-        # Pobranie domyslnego postu
-        post = Post.objects.get(content=self.post_content)
-        # Licznik stworzonych postow
-        posts_count = Post.objects.all().count()
-
-        self.assertEqual(post.thread.title, self.thread_title)
-        self.assertEqual(post.content, self.post_content)
-        self.assertEqual(post.author.steamid64, self.author.steamid64)
-        self.assertEqual(post.status, Post.PostStatusChoices.VISIBLE)
-        self.assertEqual(posts_count, 1)
-
-    def test_pin_thread(self):
+    def test_thread_pin(self):
         """
         Test sprawdzajacy poprawnosc przypinania tematu
         """
@@ -88,7 +69,7 @@ class ForumModelsTestCase(ForumTestMixin):
 
         self.assertTrue(pinned_thread.pinned)
 
-    def test_unpin_thread(self):
+    def test_thread_unpin(self):
         """
         Test sprawdzajacy poprawnosc odpinania tematu
         """
@@ -119,7 +100,7 @@ class ForumModelsTestCase(ForumTestMixin):
         self.assertEqual(Thread.ThreadStatusChoices.CLOSED, CLOSED)
         self.assertEqual(Thread.ThreadStatusChoices.HIDDEN, HIDDEN)
 
-    def test_open_thread(self):
+    def test_thread_open(self):
         """
         Test sprawdzajacy poprawnosc otwierania tematu
         """
@@ -135,7 +116,7 @@ class ForumModelsTestCase(ForumTestMixin):
 
         self.assertEqual(opened_thread.status, Thread.ThreadStatusChoices.OPENED)
 
-    def test_close_thread(self):
+    def test_thread_close(self):
         """
         Test sprawdzajacy poprawnosc zamykania tematu
         """
@@ -151,7 +132,7 @@ class ForumModelsTestCase(ForumTestMixin):
 
         self.assertEqual(close_thread.status, Thread.ThreadStatusChoices.CLOSED)
 
-    def test_hide_thread(self):
+    def test_thread_hide(self):
         """
         Test sprawdzajacy poprawnoc ukrywania tematu
         """
@@ -166,6 +147,25 @@ class ForumModelsTestCase(ForumTestMixin):
         hidden_thread = Thread.objects.get(title=self.thread_title)
         self.assertEqual(hidden_thread.status, Thread.ThreadStatusChoices.HIDDEN)
 
+    def test_post_create(self):
+        """
+        Test sprawdzajacy poprawnosc tworzenia posta
+        """
+
+        # Tworzenie domyslnego postu
+        self._create_post()
+
+        # Pobranie domyslnego postu
+        post = Post.objects.get(content=self.post_content)
+        # Licznik stworzonych postow
+        posts_count = Post.objects.all().count()
+
+        self.assertEqual(post.thread.title, self.thread_title)
+        self.assertEqual(post.content, self.post_content)
+        self.assertEqual(post.author.steamid64, self.author.steamid64)
+        self.assertEqual(post.status, Post.PostStatusChoices.VISIBLE)
+        self.assertEqual(posts_count, 1)
+
     def test_post_status_choices(self):
         """
         Test sprawdzajacy poprawnosc statusow posta
@@ -179,7 +179,7 @@ class ForumModelsTestCase(ForumTestMixin):
         self.assertEqual(post.PostStatusChoices.VISIBLE, VISIBLE)
         self.assertEqual(post.PostStatusChoices.HIDDEN, HIDDEN)
 
-    def test_visible_post(self):
+    def test_post_visible(self):
         """
         Test sprawdzajacy poprawnosc pokazywania posta
         """
@@ -196,7 +196,7 @@ class ForumModelsTestCase(ForumTestMixin):
 
         self.assertEqual(visible_post.status, Post.PostStatusChoices.VISIBLE)
 
-    def test_hide_post(self):
+    def test_post_hide(self):
         """
         Test sprawdzajacy poprawnosc ukrytwania posta
         """
@@ -212,3 +212,18 @@ class ForumModelsTestCase(ForumTestMixin):
         hidden_post = Post.objects.get(content=self.post_content)
 
         self.assertEqual(hidden_post.status, Post.PostStatusChoices.HIDDEN)
+
+    def test_post_update_thread_last_poster(self):
+        """
+        Test sprawdzajacy poprawnosc aktualizowania ostatniego autora posta w temacie
+        """
+
+        # Tworzymy temat gdzie ktory nie ma zadnych postow i ostatniego autora postu
+        thread = self._create_thread()
+
+        self.assertEqual(thread.last_poster, None)
+
+        # Tworzymy nowy post w temacie
+        post = self._create_post(thread=thread)
+
+        self.assertEqual(post.thread.last_poster, post.author)

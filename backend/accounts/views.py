@@ -1,4 +1,4 @@
-from rest_framework import views, generics
+from rest_framework import views, generics, status
 from rest_framework.permissions import (
     IsAuthenticated,
     AllowAny
@@ -13,11 +13,14 @@ from .serializers import (
     AccountMeSerializer,
     SteamTokenObtainSerializer,
     ServerSteamTokenObtainSerializer,
-    RoleSerializer
+    RoleSerializer,
+    AccountMeUpdateDisplayRoleSerializer,
+    AccountMeWalletListSerializer
 )
 from .models import (
     Account,
-    Role
+    Role,
+    Wallet
 )
 from .mixins import (
     AccountThreadsPostCounterMixin
@@ -48,7 +51,7 @@ class AccountListView(generics.ListAPIView, AccountThreadsPostCounterMixin):
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         # Formatujemy queryset
-        formatted_queryset = self.create_accounts_querset_with_post_thread_counter(queryset)
+        formatted_queryset = self.format_queryset(queryset, many=True)
         page = self.paginate_queryset(formatted_queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -70,12 +73,63 @@ class AccountMeView(generics.RetrieveAPIView, AccountThreadsPostCounterMixin):
 
     def retrieve(self, request, *args, **kwargs):
         account = request.user
-        account = self.create_account_queryset_with_post_thread_counter(account)
+        account = self.format_queryset(account)
         serializer = self.get_serializer(account)
         return Response(serializer.data)
 
 
 account_me = AccountMeView.as_view()
+
+
+class AccountMeUpdateDisplayRoleView(generics.UpdateAPIView):
+    """
+    Widok aktualizacji wyswietlanej roli
+    """
+    permission_classes = (PERM_IS_AUTHENTICATED,)
+    serializer_class = AccountMeUpdateDisplayRoleSerializer
+
+    def update(self, request, *args, **kwargs):
+        account = request.user
+        serializer = self.get_serializer(account, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return self.perform_update(serializer)
+
+    def perform_update(self, serializer):
+        role_pk = serializer.validated_data['role']
+
+        try:
+            Role.objects.get(pk=role_pk)
+        except Role.DoesNotExist:
+            return Response(data={'msg': 'Podana rola nie istnieje'}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.save()
+
+        return Response(serializer.data)
+
+
+account_me_update_display_role = AccountMeUpdateDisplayRoleView.as_view()
+
+
+class AccountMeWalletListView(generics.ListAPIView):
+    """
+    Widok listy porfeli danego uzytkownika
+    """
+    permission_classes = (PERM_IS_AUTHENTICATED,)
+    serializer_class = AccountMeWalletListSerializer
+
+    def list(self, request, *args, **kwargs):
+        account = request.user
+        queryset = self.filter_queryset(account.wallet_set.all().order_by('id'))
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+account_me_wallet_list = AccountMeWalletListView.as_view()
 
 
 class AccountAuthSteamTokenView(TokenObtainPairView):

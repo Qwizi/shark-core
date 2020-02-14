@@ -55,7 +55,7 @@ class ForumViewsTestCase(ForumTestMixin):
 
         self.assertEqual(response.status_code, 200)
 
-    def test_not_exist_category_detail_view(self):
+    def test_category_detail_view_not_exist(self):
         """
         Test sprawdzajacy poprawnosc implementacji widoku detalu dla nie istniejacej kategorii
         """
@@ -101,7 +101,7 @@ class ForumViewsTestCase(ForumTestMixin):
 
         self.assertEqual(response.status_code, 200)
 
-    def test_not_exists_thread_detail_view(self):
+    def test_thread_detail_view_not_exist(self):
         """
         Test sprawdzajacy poprawnosc implementacji widoku detali dla nie istniejacego tematu
         """
@@ -163,7 +163,7 @@ class ForumViewsTestCase(ForumTestMixin):
 
         self.assertEqual(response.status_code, 200)
 
-    def test_not_exist_post_detail_view(self):
+    def test_post_detail_view_not_exist(self):
         """
         Test sprawdzajacy poprawnosc implenetacji widoku nie istniejacego postu
         """
@@ -207,7 +207,7 @@ class ForumViewsApiTestCase(ForumTestMixin):
         super().setUp()
         self.author = Account.objects.create_user_steam(steamid64=self.steamid64)
 
-    def test_category_list(self):
+    def test_category_list_renders(self):
         """
         Test sprawdzajacy poprawnosc wyswietlania listy kategorii
         """
@@ -224,7 +224,7 @@ class ForumViewsApiTestCase(ForumTestMixin):
         self.assertEqual(response.data['results'][0]['name'], self.category_name)
         self.assertEqual(response.data['results'][1]['name'], "Test")
 
-    def test_empty_category_list(self):
+    def test_category_list_renders_empty(self):
         """
         Test sprawdzajacy pooprawnosc wyswietlania pustej listy kategorii
         """
@@ -234,7 +234,7 @@ class ForumViewsApiTestCase(ForumTestMixin):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['count'], 0)
 
-    def test_category_detail(self):
+    def test_category_detail_renders(self):
         """
         Test sprawdzajacy poprawnosc wyswietlania detali danej kategorii
         """
@@ -247,7 +247,7 @@ class ForumViewsApiTestCase(ForumTestMixin):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['name'], category.name)
 
-    def test_thread_list(self):
+    def test_thread_list_renders(self):
         """
         Test sprawdzajacy poprawnosc wyswietlania listy watkow
         """
@@ -273,7 +273,7 @@ class ForumViewsApiTestCase(ForumTestMixin):
         self.assertEqual(response.data['results'][1]['content'], second_thread.content)
         self.assertEqual(response.data['results'][1]['category']['name'], second_thread.category.name)
 
-    def test_empty_thread_list(self):
+    def test_thread_list_renders_empty(self):
         """
         Test sprawdzajacy poprawnosc wyswietlania pustej listy tematow
         """
@@ -281,7 +281,7 @@ class ForumViewsApiTestCase(ForumTestMixin):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['count'], 0)
 
-    def test_thread_detail(self):
+    def test_thread_detail_renders(self):
         """
         Test sprawdzajacy poprawnosc wyswietlania detali danego tematu
         """
@@ -292,7 +292,7 @@ class ForumViewsApiTestCase(ForumTestMixin):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['title'], thread.title)
 
-    def test_thread_create(self):
+    def test_thread_create_renders(self):
         """
         Test sprawdzajacy poprawnosc tworzenia nowego tematu
         """
@@ -320,7 +320,7 @@ class ForumViewsApiTestCase(ForumTestMixin):
         self.assertEqual(response.data['content'], new_thread_data['content'])
         self.assertEqual(response.data['category'], new_thread_data['category'])
 
-    def test_thread_create_without_authenticate(self):
+    def test_thread_create_renders_without_authenticate(self):
         """
         Test sprawdzajacy poprawnosc wyswietlania towrzenia nowego tematu
         gdy autor nie jest zalogowany
@@ -340,7 +340,7 @@ class ForumViewsApiTestCase(ForumTestMixin):
 
         self.assertEqual(response.status_code, 401)
 
-    def test_thread_create_without_data(self):
+    def test_thread_create_renders_without_data(self):
         """
         Test sprawdzajacy poprawnosc wyswietlania tworzenia nowego tematu,
         gdy nie podano tytuly tematu
@@ -359,7 +359,7 @@ class ForumViewsApiTestCase(ForumTestMixin):
 
         self.assertEqual(response.status_code, 400)
 
-    def test_post_list(self):
+    def test_post_list_renders(self):
         """
         Test sprawdzajacy poprawnosc wyswietlania listy postow
         """
@@ -373,7 +373,7 @@ class ForumViewsApiTestCase(ForumTestMixin):
         self.assertEqual(response.data['count'], 1)
         self.assertEqual(response.data['results'][0]['content'], self.post_content)
 
-    def test_post_empty_list(self):
+    def test_post_list_renders_empty(self):
         """
         Test sprawdzajacy poprawnosc wyswietlania pustej listy postow
         """
@@ -383,7 +383,7 @@ class ForumViewsApiTestCase(ForumTestMixin):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['count'], 0)
 
-    def test_post_detail(self):
+    def test_post_detail_renders(self):
         """
         Test sprawdzajacy poprawnosc wyswietlania danych pojedynczego postu
         """
@@ -398,7 +398,7 @@ class ForumViewsApiTestCase(ForumTestMixin):
         self.assertEqual(response.data['content'], post.content)
         self.assertEqual(response.data['author']['username'], post.author.username)
 
-    def test_post_create(self):
+    def test_post_create_renders(self):
         """
         Test sprawdzajacy poprawnosc tworzenia posta
         """
@@ -418,11 +418,15 @@ class ForumViewsApiTestCase(ForumTestMixin):
 
         response = self.client.post('/api/forum/posts/create', data=new_post_data)
 
+        # Sprawdzamy czy poprawnie zostal zaaktualizowany ostatni autor posta w temacie
+        post = Post.objects.get(thread__pk=response.data['thread'])
+
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data['content'], new_post_data['content'])
         self.assertEqual(response.data['thread'], thread.id)
+        self.assertEqual(post.thread.last_poster, self.author)
 
-    def test_post_create_without_authenticate(self):
+    def test_post_create_renders_without_authenticate(self):
         """
         Test sprawdzajacy poprawnosc tworzenia posta,
         gdy autor nie jest zalogowany
@@ -440,7 +444,7 @@ class ForumViewsApiTestCase(ForumTestMixin):
 
         self.assertEqual(response.status_code, 401)
 
-    def test_post_create_without_data(self):
+    def test_post_create_renders_without_data(self):
         """
         Test sprawdzajacy poprawnosc tworzenia posta,
         gdy nie podano danych

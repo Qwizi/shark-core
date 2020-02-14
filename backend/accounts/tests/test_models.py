@@ -1,7 +1,10 @@
 from ..models import (
     Account,
-    Role
+    Role,
+    Wallet
 )
+
+from djmoney.money import Money
 
 from .mixins import AccountTestMixin
 
@@ -114,6 +117,40 @@ class AccountModelsTestCase(AccountTestMixin):
 
         self.assertTrue(account_activated.is_active)
 
+    def test_account_update_display_role(self):
+        """
+        Test sprawdzajacy poprawnosc aktualizwania wyswietlanej roli
+        """
+
+        # Tworzenie domyslnego uzytkownika
+        account = Account.objects.create_user_steam(steamid64=self.steamid64)
+
+        # Rola uzytkownika
+        user_role = Role.objects.get(name="User")
+        # Rola admina
+        admin_role, created = Role.objects.get_or_create(name="Admin")
+
+        self.assertEqual(account.display_role, user_role)
+
+        # Dodanie roli Admin do rol uzytkownika
+        account.roles.add(admin_role)
+
+        account.update_display_role(admin_role)
+
+        self.assertEqual(account.display_role, admin_role)
+
+    def test_account_on_created_wallet_exist(self):
+        """
+        Test sprawdzajacy poprawnosc tworzenia portfeli w chwili utworzenia konta
+        """
+
+        # Tworzymy konto
+        account = Account.objects.create_user_steam(steamid64=self.steamid64)
+
+        self.assertEqual(account.wallet_set.all().count(), 2)
+        self.assertEqual(account.wallet_set.all()[0].wtype, Wallet.WalletTypeChoices.PRIMARY)
+        self.assertEqual(account.wallet_set.all()[1].wtype, Wallet.WalletTypeChoices.SECONDARY)
+
     def test_role_create(self):
         """
         Test sprawdzajacy poprawnosc tworzenia roli
@@ -142,3 +179,99 @@ class AccountModelsTestCase(AccountTestMixin):
         role.create_random_color_format()
 
         self.assertNotEqual(role.format, self.role_format)
+
+    def test_wallet_create(self):
+        """
+        Test sprawdzajacy poprawnosc tworzenia portfela
+        """
+
+        # Tworzymy domyslnego uzytkwonika
+        account = Account.objects.create_user_steam(steamid64=self.steamid64)
+
+        # Tworzymy porfel dla uzytkownika
+        wallet = Wallet.objects.create(
+            wtype=Wallet.WalletTypeChoices.OTHER,
+            account=account
+        )
+
+        self.assertEqual(wallet.account, account)
+        self.assertEqual(wallet.wtype, Wallet.WalletTypeChoices.OTHER)
+
+    def test_wallet_add_money_integers(self):
+        """
+        Test sprawdzajacy poprawne dodawanie pieniedzy do portfela
+        gdy podano liczbe zalkowitą
+        """
+
+        # Tworzymy domyslnego uztykownika
+        account = Account.objects.create_user_steam(self.steamid64)
+
+        # Pobieramy podstawowy porfel uzytkownika
+        wallet = account.wallet_set.get(wtype=Wallet.WalletTypeChoices.PRIMARY)
+
+        self.assertEqual(wallet.money, Money(0, 'PLN'))
+
+        # Ustalamy jaka wartosc pieniedzy chcemy dodac, w tym przypdaku jest to 5 PLN
+        money_to_add = Money(5, 'PLN')
+
+        # Ustalamy jaka powinna byc wartosc pieniedzy po dodanu
+        except_money = Money(10, 'PLN')
+
+        # Dodajemy pieniadze
+        wallet.add_money(money_to_add)
+        wallet.add_money(money_to_add)
+
+        self.assertEqual(wallet.money, except_money)
+
+    def test_wallet_add_money_floats(self):
+        """
+        Test sprawdzajacy poprawnosc dodawania pienidedzy do portfela
+        gdy podano liczbe zmiennoprzecinkową
+        """
+
+        # Tworzymy domyslnego uztykownika
+        account = Account.objects.create_user_steam(self.steamid64)
+
+        # Pobieramy podstawowy porfel uzytkownika
+        wallet = account.wallet_set.get(wtype=Wallet.WalletTypeChoices.PRIMARY)
+
+        self.assertEqual(wallet.money, Money(0, 'PLN'))
+
+        # Ustalamy jaka wartosc pieniedzy chcemy dodac, w tym przypdaku jest to 5.50 PLN
+        money_to_add = Money(5.50, 'PLN')
+
+        # Ustalamy jaka powinna byc wartosc pieniedzy po dodanu
+        except_money = Money(11, 'PLN')
+
+        # Dodajemy pieniadze
+        wallet.add_money(money_to_add)
+        wallet.add_money(money_to_add)
+
+        self.assertEqual(wallet.money, except_money)
+
+    def test_wallet_subtract_money_integers(self):
+        """
+        Test sprawdzajacy poprawnosc odejmowania pieniedzy z portfela
+        gdy podano liczbe calkowita
+        """
+
+        # Tworzymy domyslnego uztykownika
+        account = Account.objects.create_user_steam(self.steamid64)
+
+        # Pobieramy podstawowy porfel uzytkownika
+        wallet = account.wallet_set.get(wtype=Wallet.WalletTypeChoices.PRIMARY)
+        wallet.money = Money(10, 'PLN')
+        wallet.save()
+
+        self.assertEqual(wallet.money, Money(10, 'PLN'))
+
+        # Ustalamy jaka wartosc pieniedzy chcemy odjac, w tym przypdaku jest to 5.50 PLN
+        money_to_subtract = Money(5, 'PLN')
+
+        # Ustalamy jaka powinna byc wartosc pieniedzy po dodanu
+        except_money = Money(5, 'PLN')
+
+        # Dodajemy pieniadze
+        wallet.subtract_money(money_to_subtract)
+
+        self.assertEqual(wallet.money, except_money)
