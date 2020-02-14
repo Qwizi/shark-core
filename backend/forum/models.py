@@ -73,15 +73,13 @@ class Post(models.Model):
         self.status = self.PostStatusChoices.HIDDEN
         self.save()
 
-    """
-    @staticmethod
-    def decode_content(content):
-        return content.replace('&', '&amp')
+    def update_thread_last_poster(self):
+        self.thread.last_poster = self.author
+        self.thread.save()
 
     def save(self, *args, **kwargs):
-        self.content = self.decode_content(self.content)
+        self.update_thread_last_poster()
         super(Post, self).save(*args, **kwargs)
-    """
 
 
 class Comment(models.Model):

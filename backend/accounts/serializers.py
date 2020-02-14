@@ -5,48 +5,99 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import (
     Account,
-    Role
+    Role,
+    Wallet
 )
 import requests
+
+
+class RoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Role
+        fields = [
+            'id',
+            'name',
+            'format'
+        ]
+
+
+class RoleUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Role
+        fields = [
+            'id',
+        ]
 
 
 class AccountSerializer(serializers.ModelSerializer):
     threads = serializers.IntegerField(read_only=True)
     posts = serializers.IntegerField(read_only=True)
+    display_role = RoleSerializer()
+    roles = RoleSerializer(many=True)
+    formatted_username = serializers.CharField(read_only=True)
 
     class Meta:
         model = Account
         fields = [
             'id',
             'username',
+            'formatted_username',
             'steamid64',
             'steamid32',
             'steamid3',
             'display_role',
+            'roles',
             'date_joined',
             'threads',
             'posts'
         ]
 
 
-class AccountMeSerializer(serializers.ModelSerializer):
-    threads = serializers.IntegerField(read_only=True)
-    posts = serializers.IntegerField(read_only=True)
-
+class AccountMeSerializer(AccountSerializer):
     class Meta:
         model = Account
         fields = [
             'username',
+            'formatted_username',
             'steamid64',
             'steamid32',
             'steamid3',
             'display_role',
+            'roles',
             'is_active',
             'is_staff',
             'date_joined',
             'threads',
             'posts'
         ]
+
+
+class AccountMeUpdateDisplayRoleSerializer(serializers.ModelSerializer):
+    role = serializers.IntegerField(required=True, write_only=True)
+
+    class Meta:
+        model = Account
+        fields = [
+            'username',
+            'display_role',
+            'role'
+        ]
+        read_only_fields = ('username', 'display_role',)
+        extra_kwargs = {
+            'display_role': {'required': False}
+        }
+
+    def update(self, instance, validated_data):
+        role = validated_data.get('role')
+        role_instance = Role.objects.get(pk=role)
+        instance.update_display_role(role_instance)
+        return instance
+
+
+class AccountMeWalletListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Wallet
+        fields = '__all__'
 
 
 class SteamTokenSerializer(serializers.Serializer):
@@ -179,13 +230,3 @@ class ServerSteamTokenObtainSerializer(ServerSteamTokenSerializer):
         data['access'] = str(refresh.access_token)
 
         return data
-
-
-class RoleSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Role
-        fields = [
-            'id',
-            'name',
-            'format'
-        ]

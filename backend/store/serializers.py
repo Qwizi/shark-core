@@ -16,7 +16,7 @@ class BonusSerializer(serializers.ModelSerializer):
 
 
 class StoreOfferSerializer(serializers.ModelSerializer):
-    wallet_type = serializers.ChoiceField(choices=Wallet.WalletTypes.choices)
+    wallet_type = serializers.ChoiceField(choices=Wallet.WalletTypeChoices.choices)
 
     class Meta:
         model = Offer
