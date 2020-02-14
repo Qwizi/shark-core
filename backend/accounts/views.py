@@ -12,9 +12,13 @@ from .serializers import (
     AccountSerializer,
     AccountMeSerializer,
     SteamTokenObtainSerializer,
-    ServerSteamTokenObtainSerializer
+    ServerSteamTokenObtainSerializer,
+    RoleSerializer
 )
-from .models import Account
+from .models import (
+    Account,
+    Role
+)
 from .mixins import (
     AccountThreadsPostCounterMixin
 )
@@ -35,7 +39,7 @@ class AccountListView(generics.ListAPIView, AccountThreadsPostCounterMixin):
 
     permission_classes = (PERM_ALLOW_ANY,)
     serializer_class = AccountSerializer
-    filterset_fields = ['is_active', 'display_group']
+    filterset_fields = ['is_active', 'display_role']
 
     def get_queryset(self):
         return Account.objects.all()
@@ -73,8 +77,10 @@ class AccountMeView(generics.RetrieveAPIView, AccountThreadsPostCounterMixin):
 account_me = AccountMeView.as_view()
 
 
-# Tworzy uzytkownika / zwaraca token dostepu
 class AccountAuthSteamTokenView(TokenObtainPairView):
+    """
+    Tworzy uzytkownika / zwaraca token dostepu
+    """
     serializer_class = SteamTokenObtainSerializer
 
 
@@ -82,3 +88,15 @@ class ServerAccountAuthSteamTokenView(TokenObtainPairView):
     authentication_classes = (OAuth2Authentication,)
     permission_classes = (TokenHasReadWriteScope,)
     serializer_class = ServerSteamTokenObtainSerializer
+
+
+class RoleListView(generics.ListAPIView):
+    """
+    Widok listy rol
+    """
+    queryset = Role.objects.all()
+    permission_classes = (PERM_ALLOW_ANY,)
+    serializer_class = RoleSerializer
+
+
+role_list = RoleListView.as_view()

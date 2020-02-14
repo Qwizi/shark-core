@@ -10,7 +10,10 @@ from forum.models import (
     Post
 )
 
-from ..models import Account
+from ..models import (
+    Account,
+    Role
+)
 from ..views import (
     AccountListView,
     AccountMeView
@@ -38,7 +41,7 @@ class AccountViewTestCase(AccountTestMixin):
 
         self.assertEqual(response.status_code, 200)
 
-    def test_account_me_with_authenticate_view(self):
+    def test_account_me_view_with_authenticate(self):
         """
         Test sprawdzajacy poprawnosc implementacji widoku dla danych zalogowanego uzytkownika
         """
@@ -54,7 +57,7 @@ class AccountViewTestCase(AccountTestMixin):
         response = view(request)
         self.assertEqual(response.status_code, 200)
 
-    def test_account_me_without_authenticate_view(self):
+    def test_account_me_view_without_authenticate(self):
         """
         Test sprawdzajacy poprawnosc implementacji widoku dla danych nie zalogowanego uzytkownika
         """
@@ -80,7 +83,7 @@ class AccountViewApiTestCase(AccountTestMixin):
         account = Account.objects.get(steamid64=self.steamid64)
 
         self.assertEqual(account.steamid64, self.steamid64)
-        self.assertEqual(account.display_group.id, self.user_group_id)
+        self.assertEqual(account.display_role.id, self.user_role_id)
 
     def test_account_login(self):
         """
@@ -136,7 +139,7 @@ class AccountViewApiTestCase(AccountTestMixin):
         self.assertEqual(first_account.username, self.username)
         self.assertNotEqual(second_account.username, first_account.username)
 
-    def test_account_list(self):
+    def test_account_list_renders(self):
         """
         Test sprawdzający poprawność wyswietlania listy kont
         """
@@ -159,7 +162,7 @@ class AccountViewApiTestCase(AccountTestMixin):
         # Sprawdzamy czy steamid64 jest rowny drugiemu uzytkownikowi
         self.assertEqual(response.data['results'][1]['steamid64'], steamid64_two)
 
-    def test_empty_account_list(self):
+    def test_account_list_renders_empty(self):
         """
         Test sprawdzajacy poprawnosc wyswietlania pustej listy kont
         """
@@ -168,7 +171,7 @@ class AccountViewApiTestCase(AccountTestMixin):
         self.assertEqual(response.data['count'], 0)
         self.assertEqual(response.data['results'], [])
 
-    def test_account_me_with_authenticate(self):
+    def test_account_me_renders_with_authenticate(self):
         """
         Test sprawdzajacy poprawnosc wyswietlania danych zalogowanego uzytkownika
         """
@@ -192,11 +195,11 @@ class AccountViewApiTestCase(AccountTestMixin):
         self.assertEqual(response.data['steamid32'], self.steamid32)
         self.assertEqual(response.data['steamid3'], self.steamid3)
         self.assertEqual(response.data['username'], self.username)
-        self.assertEqual(response.data['display_group'], self.user_group_id)
+        self.assertEqual(response.data['display_role'], self.user_role_id)
         self.assertEqual(response.data['threads'], 0)
         self.assertEqual(response.data['posts'], 0)
 
-    def test_account_me_count_threads_with_authenticate(self):
+    def test_account_me_renders_count_threads_with_authenticate(self):
         """
         Test sprawdzający poprawnosc wyswietlania licznika tematow dla zalogowanego uzytkownika
         """
@@ -229,7 +232,7 @@ class AccountViewApiTestCase(AccountTestMixin):
         self.assertEqual(response.data['threads'], 1)
         self.assertEqual(response.data['posts'], 0)
 
-    def test_account_me_count_posts_with_authenticate(self):
+    def test_account_me_renders_count_posts_with_authenticate(self):
         """
         Test sprawdzajacy poprawnosc wyswietlania licznika postow uzytkownika
         """
@@ -267,9 +270,26 @@ class AccountViewApiTestCase(AccountTestMixin):
         self.assertEqual(response.data['threads'], 1)
         self.assertEqual(response.data['posts'], 2)
 
-    def test_account_me_without_authenticate(self):
+    def test_account_me_renders_without_authenticate(self):
         """
         Test sprawdzajacy poprawnosc wyswietlania danych dla nie zalogowanego uzytkownika
         """
         response = self.client.get('/api/accounts/me/')
         self.assertEqual(response.status_code, 401)
+
+    def test_role_list_renders(self):
+        """
+        Test sprawdzajacy poprawnosc wyswietlania listy roli
+        """
+
+        second_role_name = 'Druga rola'
+
+        Role.objects.create(name=self.user_role_name)
+        Role.objects.create(name=second_role_name)
+
+        response = self.client.get('/api/accounts/roles/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['count'], 2)
+        self.assertEqual(response.data['results'][0]['name'], self.user_role_name)
+        self.assertEqual(response.data['results'][1]['name'], second_role_name)
