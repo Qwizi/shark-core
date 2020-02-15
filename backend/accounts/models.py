@@ -162,6 +162,18 @@ class Account(AbstractUser):
         self.save()
 
 
+class PaymentMethod(models.Model):
+    class PaymentChoices(models.TextChoices):
+        CODE = "bonuscode"
+        SMS = "sms"
+        TRANSFER = "transfer"
+
+    name = models.CharField(max_length=10, choices=PaymentChoices.choices, default=PaymentChoices.CODE)
+
+    def __str__(self):
+        return '{}'.format(self.name)
+
+
 class Wallet(models.Model):
     class WalletTypeChoices(models.IntegerChoices):
         PRIMARY = 1
@@ -173,6 +185,7 @@ class Wallet(models.Model):
     money = MoneyField(max_digits=14, decimal_places=2, default_currency='PLN', default=0)
     bonus_percent = models.IntegerField(default=5)
     bonus_max = models.IntegerField(default=25)
+    payment_methods = models.ManyToManyField(PaymentMethod)
 
     def __str__(self):
         return '{} | {}'.format(self.account.username, self.money)
@@ -208,10 +221,27 @@ def on_create_account(sender, **kwargs):
     if kwargs['created']:
         account = kwargs['instance']
 
-        Wallet.objects.bulk_create([
-            Wallet(wtype=Wallet.WalletTypeChoices.PRIMARY, account=account),
-            Wallet(wtype=Wallet.WalletTypeChoices.SECONDARY, account=account)
-        ])
+        # TODO Zamienic na PaymentType.objects.get()
+        payment_bonus_code, created = PaymentMethod.objects.get_or_create(name=PaymentMethod.PaymentChoices.CODE)
+        payment_sms, created = PaymentMethod.objects.get_or_create(name=PaymentMethod.PaymentChoices.SMS)
+        payment_transfer, created = PaymentMethod.objects.get_or_create(name=PaymentMethod.PaymentChoices.TRANSFER)
+
+        wallet_primary = Wallet.objects.create(
+            wtype=Wallet.WalletTypeChoices.PRIMARY,
+            account=account
+        )
+
+        wallet_secondary = Wallet.objects.create(
+            wtype=Wallet.WalletTypeChoices.SECONDARY,
+            account=account
+        )
+
+        # Dodawanie metody platnosci do portfela
+        wallet_primary.payment_methods.add(payment_sms)
+        wallet_primary.payment_methods.add(payment_transfer)
+
+        # Dodawanie metody platnosci do portfela
+        wallet_secondary.payment_methods.add(payment_bonus_code)
 
 
 post_save.connect(on_create_account, sender=Account)

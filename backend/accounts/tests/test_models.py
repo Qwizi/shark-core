@@ -3,12 +3,15 @@ from ..models import (
     Role,
     Wallet,
     BonusCode,
-    SMSNumber
+    SMSNumber,
+    PaymentMethod
 )
 
 from djmoney.money import Money
 
 from .mixins import AccountTestMixin
+
+from ..providers import payment_manager
 
 
 class AccountModelsTestCase(AccountTestMixin):
@@ -182,6 +185,12 @@ class AccountModelsTestCase(AccountTestMixin):
 
         self.assertNotEqual(role.format, self.role_format)
 
+    def test_paymentmethod_create(self):
+        # Tworzymy metode platnosci
+        payment_method = PaymentMethod.objects.create(name=PaymentMethod.PaymentChoices.CODE)
+
+        self.assertEqual(payment_method.name, PaymentMethod.PaymentChoices.CODE)
+
     def test_wallet_create(self):
         """
         Test sprawdzajacy poprawnosc tworzenia portfela
@@ -305,3 +314,46 @@ class AccountModelsTestCase(AccountTestMixin):
         self.assertEqual(smsnumber.number, 7222)
         self.assertEqual(smsnumber.expanse, Money(5, 'PLN'))
         self.assertEqual(smsnumber.money, Money(2.50, 'PLN'))
+
+    def test_wallet_add_money_bonuscodes_payment_method(self):
+        # Testowy kod
+        code = "TEST"
+        money = Money(5, 'PLN')
+
+        # Tworzymy bonusowy kod
+        bonus_code = BonusCode.objects.create(
+            code=code,
+            money=money
+        )
+
+        # Tworzymy konto uzykownika
+        account = Account.objects.create_user_steam(steamid64=self.steamid64)
+
+        # Pobieramy dodatkowy porfel uzytkownika
+        secondary_wallet = account.wallet_set.get(wtype=Wallet.WalletTypeChoices.SECONDARY)
+
+        self.assertEqual(secondary_wallet.money, Money(0, 'PLN'))
+
+        # Pobieramy metode platnosci
+        payment_bonus_code = PaymentMethod.objects.get(name=PaymentMethod.PaymentChoices.CODE)
+
+        # Sprawdzamy czy portfel obsluguje platnosc kodem bonusowym
+        # Jezeli tak pobieramy menadzer plantosci
+        self.assertTrue(payment_bonus_code in secondary_wallet.payment_methods.all())
+
+        if payment_bonus_code in secondary_wallet.payment_methods.all():
+            # Pobieramy domyslny provider od platnosci kodem bonusowym
+            provider_class = payment_manager.bonuscodes.get_provider_class()
+            provider_instance = provider_class(model=BonusCode, code=bonus_code.code)
+
+            # Walidujemy podany kod
+            self.assertTrue(provider_instance.is_valid())
+
+            # Jezeli jest zwalidowany pobieramy wartosc dodatkowych pieniedzy
+            if provider_instance.is_valid():
+                money_to_add = provider_instance.get_money()
+
+                # Doladowywujemy portfel
+                secondary_wallet.add_money(money_to_add)
+
+                self.assertEqual(secondary_wallet.money, Money(5, 'PLN'))

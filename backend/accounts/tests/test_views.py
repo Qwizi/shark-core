@@ -3,6 +3,8 @@ from rest_framework.test import (
 )
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from djmoney.money import Money
+
 from forum.models import (
     Category,
     Thread,
@@ -12,7 +14,9 @@ from forum.models import (
 from ..models import (
     Account,
     Role,
-    Wallet
+    Wallet,
+    BonusCode,
+    PaymentMethod
 )
 from ..views import (
     AccountListView,
@@ -550,6 +554,116 @@ class AccountViewApiTestCase(AccountTestMixin):
         self.assertEqual(fourth_response.status_code, 200)
         self.assertEqual(fourth_response.data['count'], 0)
 
+    def test_account_me_wallet_secondary_exchange_bonusodes_valid_code_renders_with_authenticate(self):
+        # Rejestrujemy domyslnego uzytkownika
+        self._login_user()
+
+        # Pobieramy uzytkonwika
+        account = Account.objects.get(steamid64=self.steamid64)
+
+        # Kod
+        code = "TEST"
+        # Ilosc gotowki
+        money = Money(2, 'PLN')
+
+        # Tworzymy bonusowy kod
+        BonusCode.objects.create(
+            code=code,
+            money=money
+        )
+
+        # Sprawdzanie czy drugi porfel uzytkownika nie posiada srodkow
+        secondary_wallet = account.wallet_set.get(wtype=Wallet.WalletTypeChoices.SECONDARY)
+        secondary_wallet_channel = secondary_wallet.payment_methods.get(name=PaymentMethod.PaymentChoices.CODE)
+        self.assertEqual(secondary_wallet.money, Money(0, 'PLN'))
+
+        # Pobieramy token dla uzykownika
+        token = self._get_token(account)
+
+        # Ustawawiamy headery dla autoryzacji
+        self._create_credentials(token)
+
+        # Dane ktore zostana wyslane na endpoint
+        data = {
+            'channel': secondary_wallet_channel.name,
+            'code': code
+        }
+        response = self.client.put('/api/accounts/me/wallets/{}/'.format(secondary_wallet.wtype), data=data)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(account.wallet_set.get(wtype=Wallet.WalletTypeChoices.SECONDARY).money, Money(2, 'PLN'))
+
+    def test_account_me_wallet_secondary_exchange_bonuscodes_invalid_code_renders_with_authenticate(self):
+        # Rejestrujemy domyslnego uzytkownika
+        self._login_user()
+
+        # Pobieramy uzytkonwika
+        account = Account.objects.get(steamid64=self.steamid64)
+
+        # Kod
+        code = "TEST"
+        # Ilosc gotowki
+        money = Money(2, 'PLN')
+
+        # Sprawdzanie czy drugi porfel uzytkownika nie posiada srodkow
+        secondary_wallet = account.wallet_set.get(wtype=Wallet.WalletTypeChoices.SECONDARY)
+        secondary_wallet_channel = secondary_wallet.payment_methods.get(name=PaymentMethod.PaymentChoices.CODE)
+        self.assertEqual(secondary_wallet.money, Money(0, 'PLN'))
+
+        # Pobieramy token dla uzykownika
+        token = self._get_token(account)
+
+        # Ustawawiamy headery dla autoryzacji
+        self._create_credentials(token)
+
+        # Dane ktore zostana wyslane na endpoint
+        data = {
+            'channel': secondary_wallet_channel.name,
+            'code': code
+        }
+        response = self.client.put('/api/accounts/me/wallets/{}/'.format(secondary_wallet.wtype), data=data)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data[0], "Podany kod jest niepoprawny")
+
+    def test_account_me_wallet_secondary_exchange_invalid_channel_bonuscodes_renders_with_authenticate(self):
+        # Rejestrujemy domyslnego uzytkownika
+        self._login_user()
+
+        # Pobieramy uzytkonwika
+        account = Account.objects.get(steamid64=self.steamid64)
+
+        # Kod
+        code = "TEST"
+        # Ilosc gotowki
+        money = Money(2, 'PLN')
+
+        # Tworzymy bonusowy kod
+        BonusCode.objects.create(
+            code=code,
+            money=money
+        )
+
+        # Sprawdzanie czy drugi porfel uzytkownika nie posiada srodkow
+        secondary_wallet = account.wallet_set.get(wtype=Wallet.WalletTypeChoices.SECONDARY)
+        # secondary_wallet_channel = secondary_wallet.payment_methods.get(name=PaymentMethod.PaymentChoices.SMS)
+        self.assertEqual(secondary_wallet.money, Money(0, 'PLN'))
+
+        # Pobieramy token dla uzykownika
+        token = self._get_token(account)
+
+        # Ustawawiamy headery dla autoryzacji
+        self._create_credentials(token)
+
+        # Dane ktore zostana wyslane na endpoint
+        data = {
+            'channel': PaymentMethod.PaymentChoices.SMS,
+            'code': code
+        }
+        response = self.client.put('/api/accounts/me/wallets/{}/'.format(secondary_wallet.wtype), data=data)
+        print(response.data)
+        self.assertEqual(response.status_code, 400)
+
     def test_role_list_renders(self):
         """
         Test sprawdzajacy poprawnosc wyswietlania listy roli
@@ -579,7 +693,7 @@ class AccountViewApiTestCase(AccountTestMixin):
 
     def test_role_detail_renders(self):
         """
-        Test sprawdzajacy poprawnosc wyswietlania danej roli
+        Test sprawdzajacy poprawnosc wyswietlania danej roldi
         """
 
         # Tworzymy role
@@ -592,12 +706,6 @@ class AccountViewApiTestCase(AccountTestMixin):
         self.assertEqual(response.data['format'], role.format)
 
     def test_role_detail_renders_not_exist(self):
-        """
-        Test sprawdzajacy poprawnosc wyswietlania pojedynczej roli,
-        gdy podano nie istniejaca role
-        """
-
-        # Nie istniejaca rola
         invalid_role = 999
 
         response = self.client.get('/api/accounts/roles/{}/'.format(invalid_role))

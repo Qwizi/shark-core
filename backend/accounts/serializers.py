@@ -6,8 +6,13 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .models import (
     Account,
     Role,
-    Wallet
+    Wallet,
+    PaymentMethod,
+    BonusCode
 )
+
+from .providers import payment_manager
+
 import requests
 
 
@@ -98,6 +103,59 @@ class AccountMeWalletListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Wallet
         fields = '__all__'
+
+
+class AccountMeWalletExchangeSerializer(serializers.ModelSerializer):
+    channel = serializers.ModelField(
+        model_field=PaymentMethod()._meta.get_field('name'),
+        write_only=True
+    )
+    code = serializers.ModelField(
+        model_field=BonusCode()._meta.get_field('code'),
+        write_only=True
+    )
+
+    class Meta:
+        model = Wallet
+        fields = [
+            'money',
+            'channel',
+            'code'
+        ]
+        read_only_fields = ('money',)
+
+    def update(self, instance, validated_data):
+        channel = validated_data.get('channel')
+        code = validated_data.get('code')
+
+        provider_class = None
+
+        # Sprawdzamy czy platnosc jest dostepna dla podanego porfelu
+
+        payment_method_exists = instance.payment_methods.filter(name=channel).exists()
+
+        if not payment_method_exists:
+            raise serializers.ValidationError('Portfel nie obsluguje takiej platnosci', 400)
+
+        if channel == PaymentMethod.PaymentChoices.CODE:
+            provider_class = payment_manager.bonuscodes.get_provider_class()
+        elif channel == PaymentMethod.PaymentChoices.SMS:
+            provider_class = payment_manager.sms.get_provider_class()
+
+        if not provider_class:
+            raise serializers.ValidationError('Wewnętrzny blad API', 500)
+
+        provider_instance = provider_class(code=code)
+
+        if not provider_instance.is_valid():
+            raise serializers.ValidationError('Podany kod jest niepoprawny', code=400)
+
+        # Pobieramy wartosc pieniedzy do dodania
+        money_to_add = provider_instance.get_money()
+        # Dodajmy pieniadze do portfela
+        instance.add_money(money_to_add)
+
+        return instance
 
 
 class SteamTokenSerializer(serializers.Serializer):

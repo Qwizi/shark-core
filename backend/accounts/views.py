@@ -15,7 +15,8 @@ from .serializers import (
     ServerSteamTokenObtainSerializer,
     RoleSerializer,
     AccountMeUpdateDisplayRoleSerializer,
-    AccountMeWalletListSerializer
+    AccountMeWalletListSerializer,
+    AccountMeWalletExchangeSerializer
 )
 from .models import (
     Account,
@@ -116,7 +117,7 @@ class AccountMeWalletListView(generics.ListAPIView):
     """
     permission_classes = (PERM_IS_AUTHENTICATED,)
     serializer_class = AccountMeWalletListSerializer
-    filterset_fields = ['wtype',]
+    filterset_fields = ['wtype', ]
 
     def list(self, request, *args, **kwargs):
         account = request.user
@@ -131,6 +132,25 @@ class AccountMeWalletListView(generics.ListAPIView):
 
 
 account_me_wallet_list = AccountMeWalletListView.as_view()
+
+
+class AccountMeWalletExchange(generics.UpdateAPIView):
+    """
+    Widok doladowania danego portfelu uzytkownika
+    """
+    permission_classes = (PERM_IS_AUTHENTICATED,)
+    serializer_class = AccountMeWalletExchangeSerializer
+
+    def update(self, request, *args, **kwargs):
+        account = request.user
+        wallet = account.wallet_set.get(wtype=kwargs['wtype'])
+        serializer = self.get_serializer(wallet, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+
+account_me_wallet_exchange = AccountMeWalletExchange.as_view()
 
 
 class AccountAuthSteamTokenView(TokenObtainPairView):
