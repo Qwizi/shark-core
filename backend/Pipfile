@@ -18,6 +18,8 @@ drf-yasg = "*"
 django-oauth-toolkit = "*"
 django-heroku = "*"
 django-filter = "*"
+pytest = "*"
+pytest-django = "*"
 
 [requires]
 python_version = "3.8"

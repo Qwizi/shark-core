@@ -1,359 +1,179 @@
-from ..models import (
-    Account,
-    Role,
-    Wallet,
-    BonusCode,
-    SMSNumber,
-    PaymentMethod
-)
+import pytest
+
+from .fixtures import *
 
 from djmoney.money import Money
 
-from .mixins import AccountTestMixin
-
-from ..providers import payment_manager
-
-
-class AccountModelsTestCase(AccountTestMixin):
-
-    def setUp(self):
-        super().setUp()
-        self.role_name = 'Testowa rola'
-        self.role_format = '<span color="rgb(113,118,114)">{username}</span>'
-
-    def test_account_create_user_steam_valid_steamid64(self):
-        """
-        Test sorawdzajacy poprawnosc tworzenia uzytkownika
-        """
-        # Tworzenie domyslnego uzytkownika
-        account = Account.objects.create_user_steam(steamid64=self.steamid64)
-
-        self.assertEqual(account.steamid64, self.steamid64)
-        self.assertEqual(account.steamid32, self.steamid32)
-        self.assertEqual(account.steamid3, self.steamid3)
-        self.assertEqual(account.username, self.username)
-        self.assertEqual(account.avatar, self.avatar)
-        self.assertEqual(account.avatarmedium, self.avatarmedium)
-        self.assertEqual(account.avatarfull, self.avatarfull)
-        self.assertEqual(account.loccountrycode, self.loccountrycode)
-        self.assertEqual(account.display_role.id, self.user_role_id)
-        self.assertEqual(account.display_role.name, self.user_role_name)
-        self.assertEqual(account.roles.all().count(), 1)
-        self.assertEqual(account.wallet_set.all().count(), 2)
-        self.assertTrue(account.is_active)
-        self.assertFalse(account.is_staff)
-        self.assertFalse(account.is_superuser)
-
-    def test_account_create_user_steam_invalid_steamid64(self):
-        """
-        Test sprawdzajacy poprawnosc wyswietlania wyjatku w przypadku jak podano niepoprawny steamid64
-        """
-        # Niepoprawny steamid64
-        steamid64 = "3112121"
-
-        with self.assertRaises(Exception) as context:
-            # Tworznie uzytkownika
-            Account.objects.create_user_steam(steamid64=steamid64)
-        self.assertTrue("Invalid steamid64" in str(context.exception))
-
-    def test_account_create_user_none_steamid64(self):
-        """
-        Test sprawdzajacy poprawnosc wyswietlania wyjatku w przypadku gdy steamid64 jest rowne None
-        """
-
-        steamid64 = None
-        with self.assertRaises(Exception) as context:
-            # Tworzenie uzytkownika
-            Account.objects.create_user_steam(steamid64=steamid64)
-        self.assertTrue("Steamid64 cannot be None" in str(context.exception))
-
-    def test_account_create_superuser_steam_valid_steamid64(self):
-        """
-        Test sprawdzajacy poprawnosc tworznie super uzytkownika
-        """
-
-        # Tworzenie super uzytkownika
-        account = Account.objects.create_superuser_steam(steamid64=self.steamid64)
-
-        self.assertEqual(account.steamid64, self.steamid64)
-        self.assertTrue(account.is_staff)
-        self.assertTrue(account.is_active)
-        self.assertTrue(account.is_superuser)
-
-    def test_account_create_superuser_steam_invalid_steamid64(self):
-        """
-        Test sprawdzajacy poprawnosc wyswietlania wyjatku w czasie tworzenia super uzytkownika
-        gdy steamid 64 jest niepoprawne
-        """
-
-        # Niepoprawnie steamid64
-        steamid64 = "3112121"
-
-        with self.assertRaises(Exception) as context:
-            Account.objects.create_superuser_steam(steamid64=steamid64)
-        self.assertTrue("Invalid steamid64" in str(context.exception))
-
-    def test_account_create_superuser_steam_none_steamid64(self):
-        """
-        Test sprawdzajacy poprawnosc wyswietlania wyjatku w czasie tworznia super uzytkownika
-        gdy steamid64 jest rowne None
-        """
-        steamid64 = None
-
-        with self.assertRaises(Exception) as context:
-            Account.objects.create_superuser_steam(steamid64=steamid64)
-        self.assertTrue("Steamid64 cannot be None" in str(context.exception))
-
-    def test_account_activate(self):
-        """
-        Test sprawdzajacy poprawnosc aktywacji konta uzytkownika
-        """
-        # Tworzenie nie aktywnego konta uzytkownika
-        account = Account.objects.create_user_steam(steamid64=self.steamid64, is_active=False)
 
-        # Sprawdzamy czy konto jest na pewno nie aktywne
-        self.assertFalse(account.is_active)
+@pytest.mark.django_db
+def test_role_create(create_role):
+    role = create_role(name="Role 1")
 
-        # Aktywujemy konto
-        account.activate()
+    assert Role.objects.all().count() == 1
+    assert Role.objects.all()[0].name == role.name
 
-        # Sprawdzamy czy konto zostalo aktywowne
-        account_activated = Account.objects.get(pk=account.pk)
 
-        self.assertTrue(account_activated.is_active)
+@pytest.mark.django_db
+def test_role_create_random_color_format(create_role, default_role_format):
+    role = create_role(name="Role 2")
+    role.create_random_color_format()
 
-    def test_account_update_display_role(self):
-        """
-        Test sprawdzajacy poprawnosc aktualizwania wyswietlanej roli
-        """
+    assert role.format != default_role_format
 
-        # Tworzenie domyslnego uzytkownika
-        account = Account.objects.create_user_steam(steamid64=self.steamid64)
 
-        # Rola uzytkownika
-        user_role = Role.objects.get(name="User")
-        # Rola admina
-        admin_role, created = Role.objects.get_or_create(name="Admin")
+@pytest.mark.django_db
+def test_account_create_user_steam_with_valid_steamid64(django_user_model, create_user, qwizi_data):
+    account = create_user()
 
-        self.assertEqual(account.display_role, user_role)
+    assert django_user_model.objects.all().count() == 1
+    assert account.steamid64 == qwizi_data['steamid64']
+    assert account.steamid32 == qwizi_data['steamid32']
+    assert account.steamid3 == qwizi_data['steamid3']
+    assert account.username == qwizi_data['username']
+    assert account.avatar == qwizi_data['avatar']
+    assert account.avatarmedium == qwizi_data['avatarmedium']
+    assert account.avatarfull == qwizi_data['avatarfull']
+    assert account.loccountrycode == qwizi_data['loccountrycode']
 
-        # Dodanie roli Admin do rol uzytkownika
-        account.roles.add(admin_role)
 
-        account.update_display_role(admin_role)
+@pytest.mark.django_db
+def test_account_create_user_steam_with_invalid_steamid64(create_user):
+    invalid_steamid64 = "12312112321"
 
-        self.assertEqual(account.display_role, admin_role)
+    with pytest.raises(Exception) as context:
+        create_user(steamid64=invalid_steamid64)
+    assert "Invalid steamid64" in str(context.value)
 
-    def test_account_on_created_wallet_exist(self):
-        """
-        Test sprawdzajacy poprawnosc tworzenia portfeli w chwili utworzenia konta
-        """
 
-        # Tworzymy konto
-        account = Account.objects.create_user_steam(steamid64=self.steamid64)
+@pytest.mark.django_db
+def test_account_create_superuser_steam_with_valid_steamid64(create_superuser, qwizi_data):
+    admin_account = create_superuser()
 
-        self.assertEqual(account.wallet_set.all().count(), 2)
-        self.assertEqual(account.wallet_set.all()[0].wtype, Wallet.WalletTypeChoices.PRIMARY)
-        self.assertEqual(account.wallet_set.all()[1].wtype, Wallet.WalletTypeChoices.SECONDARY)
+    assert admin_account.steamid64 == qwizi_data['steamid64']
 
-    def test_role_create(self):
-        """
-        Test sprawdzajacy poprawnosc tworzenia roli
-        """
-        Role.objects.create(
-            name=self.role_name,
-            format=self.role_format
-        )
 
-        role = Role.objects.get(name=self.role_name)
+@pytest.mark.django_db
+def test_account_create_user_steam_with_none_steamid64(create_user):
+    steamid64 = None
 
-        self.assertEqual(role.name, self.role_name)
-        self.assertEqual(role.format, self.role_format)
+    with pytest.raises(Exception) as context:
+        create_user(steamid64=steamid64)
+    assert "Steamid64 cannot be None" in str(context.value)
 
-    def test_role_create_random_color_format(self):
-        """
-        Test sprawdzajacy poprawnosc tworzenia losowego koloru w formacie roli
-        """
 
-        # Tworzymy role
-        role = Role.objects.create(
-            name=self.role_name
-        )
+@pytest.mark.django_db
+def test_account_activate(create_user):
+    deactivated_account = create_user(is_active=False)
 
-        # Tworzymy format z losowym kolorem
-        role.create_random_color_format()
+    deactivated_account.activate()
 
-        self.assertNotEqual(role.format, self.role_format)
+    assert deactivated_account.is_active is True
 
-    def test_paymentmethod_create(self):
-        # Tworzymy metode platnosci
-        payment_method = PaymentMethod.objects.create(name=PaymentMethod.PaymentChoices.CODE)
 
-        self.assertEqual(payment_method.name, PaymentMethod.PaymentChoices.CODE)
+@pytest.mark.django_db
+def test_account_get_formatted_name(create_user, default_user_role_format):
+    account = create_user()
 
-    def test_wallet_create(self):
-        """
-        Test sprawdzajacy poprawnosc tworzenia portfela
-        """
+    formatted_name = default_user_role_format.replace('{username}', account.username)
 
-        # Tworzymy domyslnego uzytkwonika
-        account = Account.objects.create_user_steam(steamid64=self.steamid64)
+    assert account.get_formatted_name() == formatted_name
 
-        # Tworzymy porfel dla uzytkownika
-        wallet = Wallet.objects.create(
-            wtype=Wallet.WalletTypeChoices.OTHER,
-            account=account
-        )
 
-        self.assertEqual(wallet.account, account)
-        self.assertEqual(wallet.wtype, Wallet.WalletTypeChoices.OTHER)
+@pytest.mark.django_db
+def test_account_update_display_role(create_user, create_role):
+    account = create_user()
+    # Tworzymy nowa role
+    new_role = create_role(pk=99, name="Role 3")
+    # Dodajemy role do konta
+    account.roles.add(new_role)
 
-    def test_wallet_add_money_integers(self):
-        """
-        Test sprawdzajacy poprawne dodawanie pieniedzy do portfela
-        gdy podano liczbe zalkowitą
-        """
+    account.update_display_role(new_role)
 
-        # Tworzymy domyslnego uztykownika
-        account = Account.objects.create_user_steam(self.steamid64)
+    assert account.display_role == new_role
 
-        # Pobieramy podstawowy porfel uzytkownika
-        wallet = account.wallet_set.get(wtype=Wallet.WalletTypeChoices.PRIMARY)
 
-        self.assertEqual(wallet.money, Money(0, 'PLN'))
+@pytest.mark.django_db
+def test_account_on_created_wallets_exist(create_user):
+    account = create_user()
 
-        # Ustalamy jaka wartosc pieniedzy chcemy dodac, w tym przypdaku jest to 5 PLN
-        money_to_add = Money(5, 'PLN')
+    assert account.wallet_set.all().count() == 2
+    assert account.wallet_set.all()[0].wtype == Wallet.WalletTypeChoices.PRIMARY
+    assert account.wallet_set.all()[1].wtype == Wallet.WalletTypeChoices.SECONDARY
 
-        # Ustalamy jaka powinna byc wartosc pieniedzy po dodanu
-        except_money = Money(10, 'PLN')
 
-        # Dodajemy pieniadze
-        wallet.add_money(money_to_add)
-        wallet.add_money(money_to_add)
+@pytest.mark.django_db
+def test_paymentmethod_create_with_code_name(create_paymentmethod):
+    create_paymentmethod(name=PaymentMethod.PaymentChoices.CODE)
 
-        self.assertEqual(wallet.money, except_money)
+    assert PaymentMethod.objects.all().count() == 1
 
-    def test_wallet_add_money_floats(self):
-        """
-        Test sprawdzajacy poprawnosc dodawania pienidedzy do portfela
-        gdy podano liczbe zmiennoprzecinkową
-        """
 
-        # Tworzymy domyslnego uztykownika
-        account = Account.objects.create_user_steam(self.steamid64)
+@pytest.mark.django_db
+def test_paymentmethod_create_with_sms_name(create_paymentmethod):
+    create_paymentmethod(name=PaymentMethod.PaymentChoices.SMS)
 
-        # Pobieramy podstawowy porfel uzytkownika
-        wallet = account.wallet_set.get(wtype=Wallet.WalletTypeChoices.PRIMARY)
+    assert PaymentMethod.objects.all().count() == 1
 
-        self.assertEqual(wallet.money, Money(0, 'PLN'))
 
-        # Ustalamy jaka wartosc pieniedzy chcemy dodac, w tym przypdaku jest to 5.50 PLN
-        money_to_add = Money(5.50, 'PLN')
+@pytest.mark.django_db
+def test_paymentmethod_create_with_transfer_name(create_paymentmethod):
+    create_paymentmethod(name=PaymentMethod.PaymentChoices.TRANSFER)
 
-        # Ustalamy jaka powinna byc wartosc pieniedzy po dodanu
-        except_money = Money(11, 'PLN')
+    assert PaymentMethod.objects.all().count() == 1
 
-        # Dodajemy pieniadze
-        wallet.add_money(money_to_add)
-        wallet.add_money(money_to_add)
 
-        self.assertEqual(wallet.money, except_money)
+@pytest.mark.django_db
+def test_wallet_create(create_user, create_wallet):
+    account = create_user()
+    create_wallet(
+        wtype=Wallet.WalletTypeChoices.OTHER,
+        account=account
+    )
 
-    def test_wallet_subtract_money_integers(self):
-        """
-        Test sprawdzajacy poprawnosc odejmowania pieniedzy z portfela
-        gdy podano liczbe calkowita
-        """
+    assert Wallet.objects.all().count() == 3
 
-        # Tworzymy domyslnego uztykownika
-        account = Account.objects.create_user_steam(self.steamid64)
 
-        # Pobieramy podstawowy porfel uzytkownika
-        wallet = account.wallet_set.get(wtype=Wallet.WalletTypeChoices.PRIMARY)
-        wallet.money = Money(10, 'PLN')
-        wallet.save()
+@pytest.mark.django_db
+def test_wallet_add_money(create_user):
+    account = create_user()
+    wallet = account.wallet_set.get(wtype=Wallet.WalletTypeChoices.PRIMARY)
+    money_to_add = Money(10, 'PLN')
+    wallet.add_money(money_to_add)
 
-        self.assertEqual(wallet.money, Money(10, 'PLN'))
+    assert wallet.money == money_to_add
 
-        # Ustalamy jaka wartosc pieniedzy chcemy odjac, w tym przypdaku jest to 5.50 PLN
-        money_to_subtract = Money(5, 'PLN')
 
-        # Ustalamy jaka powinna byc wartosc pieniedzy po dodanu
-        except_money = Money(5, 'PLN')
+@pytest.mark.django_db
+def test_wallet_subtract_money(create_user):
+    account = create_user()
 
-        # Dodajemy pieniadze
-        wallet.subtract_money(money_to_subtract)
+    wallet = account.wallet_set.get(wtype=Wallet.WalletTypeChoices.PRIMARY)
+    wallet.money = Money(20, 'PLN')
+    wallet.save()
 
-        self.assertEqual(wallet.money, except_money)
+    money_to_subtract = Money(10, 'PLN')
+    wallet.subtract_money(money_to_subtract)
 
-    def test_bonus_code_create(self):
-        # Testowy kod
-        code = "TEST"
+    assert wallet.money == Money(10, 'PLN')
 
-        # Tworzymy nowy kod bonusowy
-        bonus_code = BonusCode.objects.create(
-            code=code,
-            money=Money(2, 'PLN')
-        )
 
-        self.assertEqual(bonus_code.code, code)
-        self.assertEqual(bonus_code.money, Money(2, 'PLN'))
+@pytest.mark.django_db
+def test_bonuscode_create(create_bonuscode):
+    create_bonuscode(
+        code="TEST",
+        money=Money(5, 'PLN')
+    )
 
-    def test_smsnumber_create(self):
-        # Tworzymy przykladowy numer sms dla providera liveserver
+    assert BonusCode.objects.all().count() == 1
 
-        smsnumber = SMSNumber.objects.create(
-            provider='liveserver',
-            number=7222,
-            expanse=Money(5, 'PLN'),
-            money=Money(2.50, 'PLN')
-        )
 
-        self.assertEqual(smsnumber.provider, 'liveserver')
-        self.assertEqual(smsnumber.number, 7222)
-        self.assertEqual(smsnumber.expanse, Money(5, 'PLN'))
-        self.assertEqual(smsnumber.money, Money(2.50, 'PLN'))
+@pytest.mark.django_db
+def test_smsnumber_create(create_smsnumber):
+    create_smsnumber(
+        provider="test",
+        number=7777,
+        expanse=Money(5, 'PLN'),
+        money=Money(2.50, 'PLN')
+    )
 
-    def test_wallet_add_money_bonuscodes_payment_method(self):
-        # Testowy kod
-        code = "TEST"
-        money = Money(5, 'PLN')
-
-        # Tworzymy bonusowy kod
-        bonus_code = BonusCode.objects.create(
-            code=code,
-            money=money
-        )
-
-        # Tworzymy konto uzykownika
-        account = Account.objects.create_user_steam(steamid64=self.steamid64)
-
-        # Pobieramy dodatkowy porfel uzytkownika
-        secondary_wallet = account.wallet_set.get(wtype=Wallet.WalletTypeChoices.SECONDARY)
-
-        self.assertEqual(secondary_wallet.money, Money(0, 'PLN'))
-
-        # Pobieramy metode platnosci
-        payment_bonus_code = PaymentMethod.objects.get(name=PaymentMethod.PaymentChoices.CODE)
-
-        # Sprawdzamy czy portfel obsluguje platnosc kodem bonusowym
-        # Jezeli tak pobieramy menadzer plantosci
-        self.assertTrue(payment_bonus_code in secondary_wallet.payment_methods.all())
-
-        if payment_bonus_code in secondary_wallet.payment_methods.all():
-            # Pobieramy domyslny provider od platnosci kodem bonusowym
-            provider_class = payment_manager.bonuscodes.get_provider_class()
-            provider_instance = provider_class(model=BonusCode, code=bonus_code.code)
-
-            # Walidujemy podany kod
-            self.assertTrue(provider_instance.is_valid())
-
-            # Jezeli jest zwalidowany pobieramy wartosc dodatkowych pieniedzy
-            if provider_instance.is_valid():
-                money_to_add = provider_instance.get_money()
-
-                # Doladowywujemy portfel
-                secondary_wallet.add_money(money_to_add)
-
-                self.assertEqual(secondary_wallet.money, Money(5, 'PLN'))
+    assert SMSNumber.objects.all().count() == 1
