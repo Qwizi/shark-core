@@ -134,23 +134,27 @@ class AccountMeWalletListView(generics.ListAPIView):
 account_me_wallet_list = AccountMeWalletListView.as_view()
 
 
-class AccountMeWalletExchange(generics.UpdateAPIView):
+class AccountMeWalletExchangeView(generics.UpdateAPIView):
     """
     Widok doladowania danego portfelu uzytkownika
     """
     permission_classes = (PERM_IS_AUTHENTICATED,)
     serializer_class = AccountMeWalletExchangeSerializer
 
+    def get_object(self):
+        account = self.request.user
+        wallet = account.wallet_set.get(wtype=self.kwargs['wtype'])
+        return wallet
+
     def update(self, request, *args, **kwargs):
-        account = request.user
-        wallet = account.wallet_set.get(wtype=kwargs['wtype'])
+        wallet = self.get_object()
         serializer = self.get_serializer(wallet, data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
 
 
-account_me_wallet_exchange = AccountMeWalletExchange.as_view()
+account_me_wallet_exchange = AccountMeWalletExchangeView.as_view()
 
 
 class AccountAuthSteamTokenView(TokenObtainPairView):
@@ -173,6 +177,7 @@ class RoleListView(generics.ListAPIView):
     queryset = Role.objects.get_queryset().order_by('id')
     permission_classes = (PERM_ALLOW_ANY,)
     serializer_class = RoleSerializer
+    lookup_url_kwarg = 'pk'
 
 
 role_list = RoleListView.as_view()

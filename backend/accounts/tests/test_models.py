@@ -1,28 +1,45 @@
 import pytest
-
 from .fixtures import *
 
-from djmoney.money import Money
-
 
 @pytest.mark.django_db
-def test_role_create(create_role):
+@pytest.mark.parametrize(
+    'name, count', [
+        pytest.param(
+            'Role 1', 1, marks=pytest.mark.success_request
+        ),
+    ]
+)
+def test_role_create(
+        name, count, create_role
+):
     role = create_role(name="Role 1")
 
-    assert Role.objects.all().count() == 1
-    assert Role.objects.all()[0].name == role.name
+    assert role.name == name
+    assert Role.objects.all().count() == count
 
 
 @pytest.mark.django_db
-def test_role_create_random_color_format(create_role, default_role_format):
+@pytest.mark.parametrize(
+    'role_format', [
+        pytest.param(
+            default_role_format, marks=pytest.mark.success_request
+        )
+    ]
+)
+def test_role_create_random_color_format(
+        role_format, create_role
+):
     role = create_role(name="Role 2")
     role.create_random_color_format()
 
-    assert role.format != default_role_format
+    assert role.format != role_format
 
 
 @pytest.mark.django_db
-def test_account_create_user_steam_with_valid_steamid64(django_user_model, create_user, qwizi_data):
+def test_account_create_user_steam_with_valid_steamid64(
+        django_user_model, create_user, qwizi_data
+):
     account = create_user()
 
     assert django_user_model.objects.all().count() == 1

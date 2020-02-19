@@ -26,6 +26,10 @@ class AbstractRole(Group):
 class Role(AbstractRole):
     format = models.CharField(max_length=255, default="{username}")
 
+    class Meta:
+        verbose_name = _('role')
+        verbose_name_plural = _('roles')
+
     @staticmethod
     def _random_number():
         return random.randint(0, 255)
@@ -134,6 +138,7 @@ class Account(AbstractUser):
     avatarmedium = models.CharField(max_length=256, null=True, blank=True)
     avatarfull = models.CharField(max_length=256, null=True, blank=True)
     loccountrycode = models.CharField(max_length=10, null=True, blank=True)
+    tradeurl = models.CharField(max_length=256, null=True, blank=True)
 
     objects = AccountManager()
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import {Row, Col, Button} from 'react-bootstrap';
+import {Row, Col, Button, Card, ListGroup} from 'react-bootstrap';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faStar} from '@fortawesome/free-solid-svg-icons';
 import {Switch, Route, Redirect, withRouter} from 'react-router-dom';
@@ -116,6 +116,7 @@ class Forum extends React.Component {
     }
 
     render() {
+        const posts = ['test', '123', 'elo', '10', '5'];
         const {match} = this.props
         return (
             <div>
@@ -126,51 +127,43 @@ class Forum extends React.Component {
                             new_thread_redirect={this.state.new_thread_redirect}
                         />
                         <Row>
-                            <Col md={{span: 3, offset: 1}}>
-                                <Button
-                                    variant="primary"
-                                    block
-                                    onClick={this.handleClickNewThreadButton}
-                                >
-                                    Dodaj wątek
-                                </Button>
-                            </Col>
-                            <Col md={7}>
-                                <Row>
-                                    <Col md={{span: 6, offset: 1}}>
-                                        <p>Przypięte tematy <FontAwesomeIcon icon={faStar}/></p>
-                                    </Col>
-                                </Row>
-                                <Row>
-                                    <Col md={{offset: 1}}>
-                                        <Animated
-                                            animationIn="fadeIn"
-                                            isVisible={this.state.threads_is_loaded}
-                                        >
+                            <Col md={{span: 2, offset: 1}}>
+                                <Card className="bonus-card">
+                                    <Card.Body className="bonus-card-bg">
+                                        <Card.Text>
                                             <Row>
-                                                <PinnedThreads/>
+                                                <Col>
+                                                    <Button
+                                                        variant="primary"
+                                                        block
+                                                        onClick={this.handleClickNewThreadButton}
+                                                    >
+                                                        Dodaj wątek
+                                                    </Button>
+                                                </Col>
+
                                             </Row>
-                                        </Animated>
-                                    </Col>
-                                </Row>
+                                            <Row>
+                                                <Col>
+                                                    <p>Kategorie</p>
+                                                    <Categories
+                                                        getThreads={this.getThreads}
+                                                        setCategoryName={this.setCategoryName}
+                                                        threads={this.state.threads}
+                                                        setThreadIsLoadedFalse={this.setThreadIsLoadedFalse}
+                                                        clearThreads={this.clearThreads}
+                                                        {...this.props}
+                                                    />
+                                                </Col>
+                                            </Row>
+                                        </Card.Text>
+                                    </Card.Body>
+                                </Card>
                             </Col>
-                        </Row>
-                        <Row>
-                            <Col md={{span: 3, offset: 1}}>
-                                <p>Kategorie</p>
-                                <Categories
-                                    getThreads={this.getThreads}
-                                    setCategoryName={this.setCategoryName}
-                                    threads={this.state.threads}
-                                    setThreadIsLoadedFalse={this.setThreadIsLoadedFalse}
-                                    clearThreads={this.clearThreads}
-                                    {...this.props}
-                                />
-                            </Col>
-                            <Col md={7}>
+                            <Col md={6}>
                                 <Row>
                                     <Col md={{offset: 1}}>
-                                        <p>Tematy </p>
+                                        <p>Aktywność </p>
                                     </Col>
                                 </Row>
                                 <Animated
@@ -185,6 +178,20 @@ class Forum extends React.Component {
                                         {...this.props}
                                     />
                                 </Animated>
+                            </Col>
+                            <Col md={{span: 2}}>
+                                <Card className="bonus-card">
+                                    <Card.Body className="bonus-card-bg">
+                                        <Card.Title>Ostatnie tematy</Card.Title>
+                                        <Card.Text>
+                                            <ListGroup>
+                                                {posts.map((post) =>
+                                                    <ListGroup.Item className="bonus-card bonus-card-bg">{post}</ListGroup.Item>
+                                                )}
+                                            </ListGroup>
+                                        </Card.Text>
+                                    </Card.Body>
+                                </Card>
                             </Col>
                         </Row>
                     </Route>

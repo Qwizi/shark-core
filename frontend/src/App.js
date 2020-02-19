@@ -2,7 +2,7 @@ import React from 'react';
 import './App.css';
 import {NavBar} from './components/Navbar';
 import PageContent from './PageContent';
-import {BrowserRouter as Router} from 'react-router-dom'
+import {BrowserRouter as Router, HashRouter} from 'react-router-dom'
 import api from './api';
 import {CONFIG} from "./config";
 
@@ -251,7 +251,7 @@ class App extends React.Component {
 
     render() {
         return (
-            <Router>
+            <HashRouter>
                 <NavBar
                     logoutUser={this.logoutUser}
                     user={this.state.user}
@@ -263,7 +263,7 @@ class App extends React.Component {
                     setPageAdditionalName={this.setBannerPageAdditionalName}
                     banner={this.state.banner}
                 />
-            </Router>
+            </HashRouter>
         );
     }
 }

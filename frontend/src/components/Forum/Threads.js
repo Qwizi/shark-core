@@ -30,32 +30,51 @@ class Threads extends React.Component {
 
     render() {
         const {threads} = this.props;
-        return (
-            threads.map((thread) =>
-                <Row key={thread.id}>
+
+        if (threads.length > 0) {
+
+            return (
+                threads.map((thread) =>
+                    <Row key={thread.id}>
+                        <Col md={{span: 11, offset: 1}}>
+                            <Card className="bonus-card">
+                                <Card.Body className="bonus-card-bg">
+                                    <Card.Title><Link
+                                        to={`${this.props.match.url}thread/${thread.id}`}>{thread.title}</Link></Card.Title>
+                                    <Card.Text>
+                                        {thread.content}
+                                    </Card.Text>
+                                </Card.Body>
+                                <Card.Footer className="bonus-card-footer">
+                                    <Row>
+                                        <Col md={1}>{thread.author.username}</Col>
+                                        <Col md={8}><p className="text-muted">{thread.created}</p></Col>
+                                        <Col md={2}>
+                                            <Badge variant="secondary">{thread.category.name}</Badge>
+                                        </Col>
+                                    </Row>
+                                </Card.Footer>
+                            </Card>
+                        </Col>
+                    </Row>
+                )
+            )
+
+        } else {
+            return (
+                <Row>
                     <Col md={{span: 11, offset: 1}}>
                         <Card className="bonus-card">
                             <Card.Body className="bonus-card-bg">
-                                <Card.Title><Link
-                                    to={`${this.props.match.url}thread/${thread.id}`}>{thread.title}</Link></Card.Title>
                                 <Card.Text>
-                                    {thread.content}
+                                    Brak tematów
                                 </Card.Text>
                             </Card.Body>
-                            <Card.Footer className="bonus-card-footer">
-                                <Row>
-                                    <Col md={1}>{thread.author.username}</Col>
-                                    <Col md={8}><p className="text-muted">{thread.created}</p></Col>
-                                    <Col md={2}>
-                                        <Badge variant="secondary">{thread.category.name}</Badge>
-                                    </Col>
-                                </Row>
-                            </Card.Footer>
                         </Card>
                     </Col>
                 </Row>
             )
-        )
+        }
     }
 }
 
