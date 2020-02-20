@@ -23,3 +23,24 @@ def test_payment_manager_bonuscodes_get_provider_class_without_valid_code():
     provider_instance = provider_class(code=bonus_code)
 
     assert provider_instance.is_valid() is False
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    'code, money, bool', [
+        pytest.param(
+            'TEST0001', Money(5, 'PLN'), True
+        ),
+        pytest.param(
+            'INVALID1', None, False
+        )
+    ]
+)
+def test_payment_manager_sms_get_provider_class_with_valid_code(
+        code, money, bool
+):
+    provider_class = payment_manager.sms.get_provider_class()
+    provider_instance = provider_class(code=code)
+
+    assert provider_instance.is_valid() is bool
+    assert provider_instance.get_money() == money

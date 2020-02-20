@@ -62,7 +62,6 @@ class ThreadListView(generics.ListAPIView):
     serializer_class = ThreadSerializer
     filterset_fields = ['category', 'status', 'pinned']
 
-
 forum_thread_list = ThreadListView.as_view()
 
 

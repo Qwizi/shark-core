@@ -13,6 +13,9 @@ from .serializers import SteamBotQueueSerializer
 
 
 class SteamBotQueueListCreateView(generics.ListCreateAPIView):
+    """
+    Widok kolejki uzytkowników do wymiany z botem
+    """
     queryset = Queue.objects.get_queryset().order_by('id')
     permission_classes = (PERM_STEAMBOT_QUEUE,)
     serializer_class = SteamBotQueueSerializer

@@ -1,229 +1,200 @@
-from ..models import (
-    Category,
-    Thread,
-    Post
+import pytest
+from accounts.tests.fixtures import *
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    'name', [
+        pytest.param(
+            'Testowa kategoria'
+        )
+    ]
 )
-from accounts.models import Account
+def test_category_create(
+        name, create_category
+):
+    category = create_category()
 
-from .mixins import ForumTestMixin
+    assert category.name == name
 
 
-class ForumModelsTestCase(ForumTestMixin):
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    'category_name, thread_title, thread_content, author_username', [
+        pytest.param(
+            'Testowa kategoria', 'Testowy temat', 'Testowa tresc', 'Qwizi'
+        )
+    ]
+)
+def test_thread_create(
+        category_name, thread_title, thread_content, author_username, create_thread
+):
+    thread = create_thread(title='Testowy temat', content='Testowa tresc')
 
-    def setUp(self):
-        super().setUp()
-        self.author = Account.objects.create_user_steam(steamid64=self.steamid64)
+    assert thread.category.name == category_name
+    assert thread.title == thread_title
+    assert thread.content == thread_content
+    assert thread.author.username == author_username
 
-    def test_category_create(self):
-        """
-        Test sprawdzajacy poprawosc tworzenia kategorii
-        """
-        # Tworzenie domyslnej kategorii
-        self._create_category()
 
-        # Pobranie domyslnej kategoi
-        category = Category.objects.get(name=self.category_name)
-        # Pobranie liczny stworzonych kategorii
-        categories_count = Category.objects.all().count()
-        self.assertEqual(category.name, self.category_name)
-        self.assertEqual(categories_count, 1)
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    'pinned', [
+        pytest.param(
+            True
+        )
+    ]
+)
+def test_thread_pin(
+        pinned, create_thread
+):
+    thread = create_thread()
 
-    def test_thread_create(self):
-        """
-        Test sprawdzajacy poprawnosc tworzenia tematu
-        """
+    thread.pin()
 
-        # Tworzenie domyslnego tematu
-        self._create_thread()
+    assert thread.pinned == pinned
 
-        # Pobranie domyslnego tematu
-        thread = Thread.objects.get(title=self.thread_title)
-        # Pobranie liczby stworzonych tematow
-        threads_count = Thread.objects.all().count()
 
-        self.assertEqual(thread.title, self.thread_title)
-        self.assertEqual(thread.content, self.thread_content)
-        self.assertEqual(thread.category.name, self.category_name)
-        self.assertEqual(thread.author.steamid64, self.author.steamid64)
-        self.assertEqual(thread.last_poster, None)
-        self.assertEqual(thread.status, Thread.ThreadStatusChoices.OPENED)
-        self.assertEqual(threads_count, 1)
-        self.assertFalse(thread.pinned)
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    'pinned', [
+        pytest.param(
+            False
+        )
+    ]
+)
+def test_thread_unpin(
+        pinned, create_thread
+):
+    thread = create_thread()
 
-    def test_thread_pin(self):
-        """
-        Test sprawdzajacy poprawnosc przypinania tematu
-        """
+    thread.unpin()
 
-        # Tworzenie domyslnego tematu
-        thread = self._create_thread()
+    assert thread.pinned == pinned
 
-        # Sprawdzenie czy temat napewno nie jest przypiety
-        self.assertFalse(thread.pinned)
 
-        # Przypiecie tematu
-        thread.pin()
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    'status', [
+        pytest.param(
+            Thread.ThreadStatusChoices.OPENED
+        )
+    ]
+)
+def test_thread_open(
+        status, create_thread
+):
+    thread = create_thread()
 
-        # Pobranie tematu w celu sprawdzenia czy napewnop zostal przypiety
-        pinned_thread = Thread.objects.get(title=self.thread_title)
+    thread.open()
 
-        self.assertTrue(pinned_thread.pinned)
+    assert thread.status == status
 
-    def test_thread_unpin(self):
-        """
-        Test sprawdzajacy poprawnosc odpinania tematu
-        """
 
-        # Tworzenie domyslnego przypietego tematu
-        thread = self._create_thread(pinned=True)
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    'status', [
+        pytest.param(
+            Thread.ThreadStatusChoices.CLOSED
+        )
+    ]
+)
+def test_thread_close(
+        status, create_thread
+):
+    thread = create_thread()
 
-        # Sprawdzenie czy temat jest przypiety
-        self.assertTrue(thread.pinned)
+    thread.close()
 
-        # Odpiecie tematu
-        thread.unpin()
+    assert thread.status == status
 
-        # Pobranie teamtu w celu sprawdzenia czy zostal odpiety
-        unpinned_thread = Thread.objects.get(title=self.thread_title)
 
-        self.assertFalse(unpinned_thread.pinned)
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    'status', [
+        pytest.param(
+            Thread.ThreadStatusChoices.HIDDEN
+        )
+    ]
+)
+def test_thread_hide(
+        status, create_thread
+):
+    thread = create_thread()
 
-    def test_thread_status_choices(self):
-        """
-        Test sprawdzajacy poprawnosc ustawionych statusow tematow
-        """
-        CLOSED = 0
-        OPENED = 1
-        HIDDEN = -1
+    thread.hide()
 
-        self.assertEqual(Thread.ThreadStatusChoices.OPENED, OPENED)
-        self.assertEqual(Thread.ThreadStatusChoices.CLOSED, CLOSED)
-        self.assertEqual(Thread.ThreadStatusChoices.HIDDEN, HIDDEN)
+    assert thread.status == status
 
-    def test_thread_open(self):
-        """
-        Test sprawdzajacy poprawnosc otwierania tematu
-        """
 
-        # Tworzenie domyslnego zamknietego tematu
-        thread = self._create_thread(status=Thread.ThreadStatusChoices.CLOSED)
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    'content, thread_title', [
+        pytest.param(
+            'Testowa tresc', 'Testowy temat'
+        )
+    ]
+)
+def test_post_create(
+        content, thread_title, create_post
+):
+    post = create_post(content='Testowa tresc')
 
-        # Otwarcie tematu
-        thread.open()
+    assert post.content == content
+    assert post.thread.title == thread_title
 
-        # Sprawdzanie czy napewno temat zostal otwary
-        opened_thread = Thread.objects.get(title=self.thread_title)
 
-        self.assertEqual(opened_thread.status, Thread.ThreadStatusChoices.OPENED)
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    'status', [
+        pytest.param(
+            Post.PostStatusChoices.VISIBLE
+        )
+    ]
+)
+def test_post_visible(
+        status, create_post
+):
+    post = create_post()
 
-    def test_thread_close(self):
-        """
-        Test sprawdzajacy poprawnosc zamykania tematu
-        """
+    post.visible()
 
-        # Tworzenie domyslnego otwartego tematu
-        thread = self._create_thread(status=Thread.ThreadStatusChoices.OPENED)
+    assert post.status == status
 
-        # Zamkniecie tematu
-        thread.close()
 
-        # Sprawdzanie czy temat na pewno zostal zamkniety
-        close_thread = Thread.objects.get(title=self.thread_title)
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    'status', [
+        pytest.param(
+            Post.PostStatusChoices.HIDDEN
+        )
+    ]
+)
+def test_post_hide(
+        status, create_post
+):
+    post = create_post()
 
-        self.assertEqual(close_thread.status, Thread.ThreadStatusChoices.CLOSED)
+    post.hide()
 
-    def test_thread_hide(self):
-        """
-        Test sprawdzajacy poprawnoc ukrywania tematu
-        """
-        # Tworzenie domyslnego tematu
-        thread = self._create_thread()
+    assert post.status == status
 
-        # Ukrycie tematu
-        thread.hide()
 
-        # Sprawdzanie czy temat zostal napewno ukryty
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    'last_poster_username', [
+        pytest.param(
+            'Qwizi'
+        )
+    ]
+)
+def test_post_update_thread_last_poster(
+        last_poster_username, create_thread, create_post
+):
+    thread = create_thread()
 
-        hidden_thread = Thread.objects.get(title=self.thread_title)
-        self.assertEqual(hidden_thread.status, Thread.ThreadStatusChoices.HIDDEN)
+    post = create_post(thread=thread)
 
-    def test_post_create(self):
-        """
-        Test sprawdzajacy poprawnosc tworzenia posta
-        """
+    post.update_thread_last_poster()
 
-        # Tworzenie domyslnego postu
-        self._create_post()
-
-        # Pobranie domyslnego postu
-        post = Post.objects.get(content=self.post_content)
-        # Licznik stworzonych postow
-        posts_count = Post.objects.all().count()
-
-        self.assertEqual(post.thread.title, self.thread_title)
-        self.assertEqual(post.content, self.post_content)
-        self.assertEqual(post.author.steamid64, self.author.steamid64)
-        self.assertEqual(post.status, Post.PostStatusChoices.VISIBLE)
-        self.assertEqual(posts_count, 1)
-
-    def test_post_status_choices(self):
-        """
-        Test sprawdzajacy poprawnosc statusow posta
-        """
-        VISIBLE = 1
-        HIDDEN = 0
-
-        # Tworzenie domyslnego posta
-        post = self._create_post()
-
-        self.assertEqual(post.PostStatusChoices.VISIBLE, VISIBLE)
-        self.assertEqual(post.PostStatusChoices.HIDDEN, HIDDEN)
-
-    def test_post_visible(self):
-        """
-        Test sprawdzajacy poprawnosc pokazywania posta
-        """
-
-        # Tworzenie domyslnego ukrytego posta
-        post = self._create_post(status=Post.PostStatusChoices.HIDDEN)
-
-        # Pokazywanie posta
-        post.visible()
-
-        # Sprawdzanie czy na pewno post jest widoczny
-
-        visible_post = Post.objects.get(content=self.post_content)
-
-        self.assertEqual(visible_post.status, Post.PostStatusChoices.VISIBLE)
-
-    def test_post_hide(self):
-        """
-        Test sprawdzajacy poprawnosc ukrytwania posta
-        """
-
-        # Tworzenie domyslnego postu
-        post = self._create_post()
-
-        # Ukrycie posta
-        post.hide()
-
-        # Sprawdzanie czy post zostal napepwno ukryty
-
-        hidden_post = Post.objects.get(content=self.post_content)
-
-        self.assertEqual(hidden_post.status, Post.PostStatusChoices.HIDDEN)
-
-    def test_post_update_thread_last_poster(self):
-        """
-        Test sprawdzajacy poprawnosc aktualizowania ostatniego autora posta w temacie
-        """
-
-        # Tworzymy temat gdzie ktory nie ma zadnych postow i ostatniego autora postu
-        thread = self._create_thread()
-
-        self.assertEqual(thread.last_poster, None)
-
-        # Tworzymy nowy post w temacie
-        post = self._create_post(thread=thread)
-
-        self.assertEqual(post.thread.last_poster, post.author)
+    assert post.thread.last_poster.username == last_poster_username

@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'accounts',
     'store',
     'api',
+    'adminapi',
     'servers',
     'forum',
     'premium_account',
@@ -209,4 +210,15 @@ CORS_ORIGIN_ALLOW_ALL = True
 OAUTH2_PROVIDER = {
     'SCOPES': {'read': 'Read scope', 'write': 'Write scope', 'groups': 'Access to your groups'},
     'OAUTH2_BACKEND_CLASS': 'oauth2_provider.oauth2_backends.JSONOAuthLibCore'
+}
+
+SWAGGER_SETTINGS = {
+    'DEFAULT_INFO': 'api.urls.api_info',
+    'SECURITY_DEFINITIONS': {
+            'apiKey': {
+                'type': 'apiKey',
+                'name': 'Bearer',
+                'in': 'header',
+            }
+        },
 }

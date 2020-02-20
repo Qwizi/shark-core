@@ -251,7 +251,7 @@ class App extends React.Component {
 
     render() {
         return (
-            <HashRouter>
+            <Router>
                 <NavBar
                     logoutUser={this.logoutUser}
                     user={this.state.user}
@@ -263,7 +263,7 @@ class App extends React.Component {
                     setPageAdditionalName={this.setBannerPageAdditionalName}
                     banner={this.state.banner}
                 />
-            </HashRouter>
+            </Router>
         );
     }
 }

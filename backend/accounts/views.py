@@ -1,4 +1,4 @@
-from rest_framework import views, generics, status
+from rest_framework import views, generics, status, viewsets
 from rest_framework.permissions import (
     IsAuthenticated,
     AllowAny
@@ -16,7 +16,8 @@ from .serializers import (
     RoleSerializer,
     AccountMeUpdateDisplayRoleSerializer,
     AccountMeWalletListSerializer,
-    AccountMeWalletExchangeSerializer
+    AccountMeWalletExchangeSerializer,
+    AdminAccountSerializer
 )
 from .models import (
     Account,
@@ -26,14 +27,11 @@ from .models import (
 from .mixins import (
     AccountThreadsPostCounterMixin
 )
-
-"""
-Przypisujemy permisje do stalych
-"""
-# Dostep dla wszystkich
-PERM_ALLOW_ANY = AllowAny
-# Dostep tylko dla zalogowanych
-PERM_IS_AUTHENTICATED = IsAuthenticated
+from shark_core.permissions import (
+    PERM_ALLOW_ANY,
+    PERM_IS_AUTHENTICATED,
+    PERM_IS_ADMIN_USER
+)
 
 
 class AccountListView(generics.ListAPIView, AccountThreadsPostCounterMixin):
@@ -193,3 +191,20 @@ class RoleDetailView(generics.RetrieveAPIView):
 
 
 role_detail = RoleDetailView.as_view()
+
+
+class AdminAccountViewSet(viewsets.ModelViewSet):
+    """
+    Klasa do zarzadzania kontami
+    """
+    queryset = Account.objects.all().order_by('id')
+    permission_classes = (PERM_IS_ADMIN_USER,)
+    serializer_class = AdminAccountSerializer
+
+
+admin_account = AdminAccountViewSet.as_view({
+    'post': 'create',
+    'get': 'list',
+    'put': 'retrieve',
+    'delete': 'destroy'
+})

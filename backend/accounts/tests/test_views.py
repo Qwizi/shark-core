@@ -11,7 +11,8 @@ from ..views import (
     AccountMeView,
     AccountMeUpdateDisplayRoleView,
     AccountMeWalletListView,
-    AccountMeWalletExchangeView
+    AccountMeWalletExchangeView,
+    AdminAccountViewSet
 )
 
 """
@@ -174,26 +175,63 @@ def test_account_me_wallet_exchange_view_wallet_secondary_without_authenticate(
 
 
 @pytest.mark.django_db
-def test_account_me_wallet_exchange_view_wallet_secondary_with_channel_bonuscodes(
-        api_factory, create_user, get_token_for_user, create_bonuscode
+@pytest.mark.parametrize(
+    'code, wallet_type, channel, status_code', [
+        # PARAMSY DLA DODATKOWEGO PORTFELA
+        pytest.param(
+            'SHARK500', Wallet.WalletTypeChoices.SECONDARY.value, PaymentMethod.PaymentChoices.CODE.value, 200,
+            marks=pytest.mark.success_request
+        ),
+        pytest.param(
+            'TEST0000', Wallet.WalletTypeChoices.SECONDARY.value, PaymentMethod.PaymentChoices.CODE.value, 400,
+            marks=pytest.mark.bad_request
+        ),
+        pytest.param(
+            'TEST0000', Wallet.WalletTypeChoices.SECONDARY.value, PaymentMethod.PaymentChoices.SMS.value, 400,
+            marks=pytest.mark.bad_request
+        ),
+        pytest.param(
+            'TEST0000', Wallet.WalletTypeChoices.SECONDARY.value, PaymentMethod.PaymentChoices.TRANSFER.value, 400,
+            marks=pytest.mark.skip
+        ),
+        # PARAMSY DLA PODSTAWOWEGO PORTFELAd
+        pytest.param(
+            # Prawidlowy testowy kod liveserver
+            'TEST0001', Wallet.WalletTypeChoices.PRIMARY.value, PaymentMethod.PaymentChoices.SMS.value, 200,
+            marks=pytest.mark.success_request
+        ),
+        pytest.param(
+            'TEST0000', Wallet.WalletTypeChoices.PRIMARY.value, PaymentMethod.PaymentChoices.SMS.value, 400,
+            marks=pytest.mark.bad_request
+        ),
+        pytest.param(
+            'TEST0000', Wallet.WalletTypeChoices.PRIMARY.value, PaymentMethod.PaymentChoices.CODE.value, 400,
+            marks=pytest.mark.bad_request
+        ),
+        pytest.param(
+            'TEST0000', Wallet.WalletTypeChoices.PRIMARY.value, PaymentMethod.PaymentChoices.TRANSFER.value, 400,
+            marks=pytest.mark.skip
+        ),
+    ]
+)
+def test_account_me_wallet_exchange_view_with_authenticate(
+        code, wallet_type, channel, status_code, api_factory, create_user, get_token_for_user, create_bonuscode
 ):
     user = create_user()
-    bonus_code = create_bonuscode(code="TEST", money=Money(2, 'PLN'))
-    wtype = Wallet.WalletTypeChoices.SECONDARY
-    channel = PaymentMethod.PaymentChoices.CODE
+    create_bonuscode(code="SHARK500", money=Money(2, 'PLN'))
 
     data = {
         'channel': channel,
-        'code': bonus_code.code
+        'code': code
     }
 
     view = AccountMeWalletExchangeView.as_view()
     request = api_factory.put(
-        reverse('api:accounts:me-wallet-exchange', kwargs={'wtype': wtype}), data=data)
+        reverse('api:accounts:me-wallet-exchange', kwargs={'wtype': wallet_type}), data=data)
     force_authenticate(request, user=user, token=get_token_for_user(user=user))
-    response = view(request, wtype=wtype)
+    response = view(request, wtype=wallet_type)
 
-    assert response.status_code == 200
+    assert response.status_code == status_code
 
 
 @pytest.mark.django_db
@@ -236,6 +274,198 @@ def test_account_me_wallet_exchange_view_wallet_secondary_with_channel_transfer(
     response = view(request, wtype=wtype)
 
     assert response.status_code == 400
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    'http, method, status_code', [
+        pytest.param(
+            'get', 'list', 401
+        ),
+        pytest.param(
+            'post', 'create', 401
+        ),
+        pytest.param(
+            'get', 'retrieve', 401
+        ),
+        pytest.param(
+            'put', 'update', 401
+        ),
+        pytest.param(
+            'delete', 'destroy', 401
+        )
+    ]
+)
+def test_admin_account_view_without_authenticate(
+        http, method, status_code, api_factory
+):
+    view = AdminAccountViewSet.as_view({'{}'.format(http): method})
+    request = None
+    if http == 'get':
+        if method == 'list':
+            url = reverse('api:adminapi:accounts:list')
+            request = api_factory.get(url)
+        else:
+            url = reverse('api:adminapi:accounts:detail', kwargs={'pk': 9999})
+            request = api_factory.get(url)
+    elif http == 'post':
+        url = reverse('api:adminapi:accounts:list')
+        request = api_factory.post(url)
+    elif http == 'put':
+        url = reverse('api:adminapi:accounts:detail', kwargs={'pk': 999})
+        request = api_factory.put(url)
+    elif http == 'delete':
+        url = reverse('api:adminapi:accounts:detail', kwargs={'pk': 999})
+        request = api_factory.delete(url)
+
+    response = view(request)
+
+    assert response.status_code == status_code
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    'http, method, status_code', [
+        pytest.param(
+            'get', 'list', 403
+        ),
+        pytest.param(
+            'post', 'create', 403
+        ),
+        pytest.param(
+            'get', 'retrieve', 403
+        ),
+        pytest.param(
+            'put', 'update', 403
+        ),
+        pytest.param(
+            'delete', 'destroy', 403
+        )
+    ]
+)
+def test_admin_account_view_without_permissions(
+        http, method, status_code, api_factory, create_user, get_token_for_user
+):
+    user = create_user()
+
+    view = AdminAccountViewSet.as_view({'{}'.format(http): method})
+    request = None
+    if http == 'get':
+        if method == 'list':
+            url = reverse('api:adminapi:accounts:list')
+            request = api_factory.get(url)
+        else:
+            url = reverse('api:adminapi:accounts:detail', kwargs={'pk': 9999})
+            request = api_factory.get(url)
+    elif http == 'post':
+        url = reverse('api:adminapi:accounts:list')
+        request = api_factory.post(url)
+    elif http == 'put':
+        url = reverse('api:adminapi:accounts:detail', kwargs={'pk': 999})
+        request = api_factory.put(url)
+    elif http == 'delete':
+        url = reverse('api:adminapi:accounts:detail', kwargs={'pk': 999})
+        request = api_factory.delete(url)
+
+    force_authenticate(request, user=user, token=get_token_for_user(user=user))
+    response = view(request)
+
+    assert response.status_code == status_code
+
+
+@pytest.mark.django_db
+def test_admin_account_list_view(
+        api_factory, create_superuser, get_token_for_user
+):
+    user = create_superuser()
+
+    view = AdminAccountViewSet.as_view({'get': 'list'})
+    request = api_factory.get(reverse('api:adminapi:accounts:list'))
+    force_authenticate(request, user=user, token=get_token_for_user(user=user))
+    response = view(request)
+
+    assert response.status_code == 200
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    'acccount_id, status_code', [
+        pytest.param(
+            1, 200
+        ),
+        pytest.param(
+            999, 404
+        )
+    ]
+)
+def test_admin_account_detail_view(
+        acccount_id, status_code, api_factory, create_superuser, get_token_for_user
+):
+    user = create_superuser(pk=1)
+
+    view = AdminAccountViewSet.as_view({'get': 'retrieve'})
+    request = api_factory.get(reverse('api:adminapi:accounts:detail', kwargs={'pk': acccount_id}))
+    force_authenticate(request, user=user, token=get_token_for_user(user=user))
+    response = view(request, pk=acccount_id)
+
+    assert response.status_code == status_code
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    'account_id, status_code', [
+        pytest.param(
+            1, 204
+        ),
+        pytest.param(
+            999, 404
+        )
+    ]
+)
+def test_admin_account_delete_view(
+        account_id, status_code, api_factory, create_superuser, get_token_for_user
+):
+    user = create_superuser(pk=1)
+
+    view = AdminAccountViewSet.as_view({'delete': 'destroy'})
+    request = api_factory.delete(reverse('api:adminapi:accounts:detail', kwargs={'pk': account_id}))
+    force_authenticate(request, user=user, token=get_token_for_user(user=user))
+    response = view(request, pk=account_id)
+
+    assert response.status_code == status_code
+
+
+@pytest.mark.skip
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    'account_id, new_username, status_code', [
+        pytest.param(
+            1, 'Qwizi2', 202
+        ),
+        pytest.param(
+            999, None, 404
+        )
+    ]
+
+)
+def test_admin_account_update_view(
+        account_id, new_username, status_code, api_factory, create_superuser, get_token_for_user
+):
+    user = create_superuser(pk=1)
+
+    data = {
+        'username': 'Qwizi2'
+    }
+
+    view = AdminAccountViewSet.as_view({'put': 'update'})
+    request = api_factory.put(reverse('api:adminapi:accounts:detail', kwargs={'pk': account_id}), data=data)
+    force_authenticate(request, user=user, token=get_token_for_user(user=user))
+    response = view(request, pk=account_id)
+
+    assert response.data == 2
+    assert response.status_code == status_code
+    if response.status_code == 200:
+        assert response.data['username'] == new_username
 
 
 """
@@ -361,7 +591,7 @@ def test_account_list_renders_filter_by_display_role(
 @pytest.mark.parametrize(
     'data, status_code', [
         pytest.param(
-            qwizi_data, 200,
+            '76561198190469450', 200,
             marks=pytest.mark.success_request
         )
     ]
@@ -370,8 +600,9 @@ def test_account_me_renders_with_authenticate(
         data, status_code, api_client_with_credentials
 ):
     response = api_client_with_credentials.get(reverse('api:accounts:me-detail'))
-    data = response.data
+
     assert response.status_code == status_code
+    assert response.data['steamid64'] == data
 
 
 @pytest.mark.django_db
@@ -384,7 +615,7 @@ def test_account_me_renders_without_authenticate(
 
 
 @pytest.mark.django_db
-def test_account_me_update_display_role_without_authenticate(
+def test_account_me_update_display_role_renders_without_authenticate(
         api_client
 ):
     response = api_client.put(reverse('api:accounts:me-update-display-role'))
@@ -393,7 +624,7 @@ def test_account_me_update_display_role_without_authenticate(
 
 
 @pytest.mark.django_db
-def test_account_me_update_display_role_with_authenticate(
+def test_account_me_update_display_role_renders_with_authenticate(
         login_user, qwizi_data, django_user_model, create_role, api_client_with_credentials
 ):
     login_user()
@@ -442,7 +673,7 @@ def test_account_me_wallet_list_renders_with_authenticate(
         ),
     ]
 )
-def test_account_me_wallet_exchange_wallet_with_bonuscodes_without_authenticate(
+def test_account_me_wallet_exchange_renders_without_authenticate(
         wallet_type, channel, status_code, api_client
 ):
     data = {
@@ -459,34 +690,81 @@ def test_account_me_wallet_exchange_wallet_with_bonuscodes_without_authenticate(
 
 @pytest.mark.django_db
 @pytest.mark.parametrize(
-    'wallet_type, channel, code, status_code', [
+    'code, wallet_type, channel, money, status_code', [
+        # PARAMSY DLA DODATKOWEGO PORTFELA
         pytest.param(
+            'SHARK500',
             Wallet.WalletTypeChoices.SECONDARY.value,
             PaymentMethod.PaymentChoices.CODE.value,
-            'TEST',
-            200
+            Money(2, 'PLN'),
+            200,
+            marks=pytest.mark.success_request
         ),
         pytest.param(
+            'TEST0000',
             Wallet.WalletTypeChoices.SECONDARY.value,
             PaymentMethod.PaymentChoices.CODE.value,
-            'INVALID',
+            None,
             400,
             marks=pytest.mark.bad_request
         ),
         pytest.param(
+            'TEST0000',
+            Wallet.WalletTypeChoices.SECONDARY.value,
+            PaymentMethod.PaymentChoices.SMS.value,
+            None,
+            400,
+            marks=pytest.mark.bad_request
+        ),
+        pytest.param(
+            'TEST0000',
+            Wallet.WalletTypeChoices.SECONDARY.value,
+            PaymentMethod.PaymentChoices.TRANSFER.value,
+            None,
+            400,
+            marks=pytest.mark.skip
+        ),
+        # PARAMSY DLA PODSTAWOWEGO PORTFELAd
+        pytest.param(
+            # Prawidlowy testowy kod liveserver
+            'TEST0001',
+            Wallet.WalletTypeChoices.PRIMARY.value,
+            PaymentMethod.PaymentChoices.SMS.value,
+            Money(5, 'PLN'),
+            200,
+            marks=pytest.mark.success_request
+        ),
+        pytest.param(
+            'TEST0000',
+            Wallet.WalletTypeChoices.PRIMARY.value,
+            PaymentMethod.PaymentChoices.SMS.value,
+            None,
+            400,
+            marks=pytest.mark.bad_request
+        ),
+        pytest.param(
+            'TEST0000',
             Wallet.WalletTypeChoices.PRIMARY.value,
             PaymentMethod.PaymentChoices.CODE.value,
-            'TEST',
+            None,
             400,
             marks=pytest.mark.bad_request
+        ),
+        pytest.param(
+            'TEST0000',
+            Wallet.WalletTypeChoices.PRIMARY.value,
+            PaymentMethod.PaymentChoices.TRANSFER.value,
+            None,
+            400,
+            marks=pytest.mark.skip
         ),
     ]
 )
-def test_account_me_wallet_exchange_wallet_with_bonuscodes_with_authenticate(
-        wallet_type, channel, code, status_code, create_bonuscode, api_client_with_credentials
+def test_account_me_wallet_exchange_wallet_renders_with_authenticate(
+        code, wallet_type, channel, money, status_code, create_bonuscode, api_client_with_credentials
 ):
     create_bonuscode(
-        code="TEST",
+        code="SHARK500",
         money=Money(2, 'PLN')
     )
 
@@ -500,641 +778,57 @@ def test_account_me_wallet_exchange_wallet_with_bonuscodes_with_authenticate(
     response = api_client_with_credentials.put(url, data=data)
 
     assert response.status_code == status_code
-
-
-"""
-class AccountViewTestCase(AccountTestMixin):
-
-    def setUp(self):
-        super().setUp()
-        self.account = Account.objects.create_user_steam(steamid64=self.steamid64)
-        self.token = RefreshToken.for_user(self.account)
-
-    def test_account_list_view(self):
-
-        # Pobranie widoku dla listy uzytkownikow
-        account_list_view = AccountListView.as_view()
-
-        request = self.factory.get('/api/accounts/')
-        response = account_list_view(request)
-
-        self.assertEqual(response.status_code, 200)
-
-    def test_account_me_view_with_authenticate(self):
-
-        # Pobranie widoku dla danych zalogowanego uzytkownika
-        view = AccountMeView.as_view()
-
-        request = self.factory.get('/api/accounts/me/')
-
-        # Zmuszamy uzytkownika do autoryzacji
-        force_authenticate(request, user=self.account, token=self.token)
-
-        response = view(request)
-        self.assertEqual(response.status_code, 200)
-
-    def test_account_me_view_without_authenticate(self):
-
-        # Pobranie widoku dla danych nie zalogowanego uzytkownika
-        view = AccountMeView.as_view()
-        request = self.factory.get('/api/accounts/me/')
-        response = view(request)
-
-        self.assertEqual(response.status_code, 401)
-
-    def test_account_me_update_display_role_view_with_authenticate(self):
-        # Tworzymy nowa role
-        new_role = Role.objects.create(name="New role")
-
-        # Dodajemy nowa role do rol uzytkownika
-        self.account.roles.add(new_role)
-
-        new_display_role = {
-            'role': new_role.pk
-        }
-
-        view = AccountMeUpdateDisplayRoleView.as_view()
-        request = self.factory.put('/api/accounts/me/display-role/', data=new_display_role)
-        force_authenticate(request, user=self.account, token=self.token)
-        response = view(request)
-        self.assertEqual(response.status_code, 200)
-
-    def test_account_me_update_display_role_view_without_authenticate(self):
-        # Tworzymy nowa role
-        new_role = Role.objects.create(name="New role")
-
-        # Dodajemy nowa role do rol uzytkownika
-        self.account.roles.add(new_role)
-
-        new_display_role = {
-            'role': new_role.pk
-        }
-
-        view = AccountMeUpdateDisplayRoleView.as_view()
-        request = self.factory.put('/api/accounts/me/display-role/', data=new_display_role)
-
-        response = view(request)
-        self.assertEqual(response.status_code, 401)
-
-    def test_account_me_wallet_list_view_with_authenticate(self):
-        view = AccountMeWalletListView.as_view()
-        request = self.factory.get('/api/accounts/me/wallets/')
-        force_authenticate(request, user=self.account, token=self.token)
-        response = view(request)
-
-        self.assertEqual(response.status_code, 200)
-
-    def test_account_me_wallet_list_view_without_authenticate(self):
-        view = AccountMeWalletListView.as_view()
-        request = self.factory.get('/api/accounts/me/wallets/')
-        response = view(request)
-
-        self.assertEqual(response.status_code, 401)
-
-    def test_role_list_view(self):
-
-        view = RoleListView.as_view()
-        request = self.factory.get('/api/accounts/roles/')
-        response = view(request)
-
-        self.assertEqual(response.status_code, 200)
-
-    def test_role_detail_view(self):
-
-
-        # Tworzymy przykladowa role
-        role, created = Role.objects.get_or_create(name=self.user_role_name)
-
-        view = RoleDetailView.as_view()
-        request = self.factory.get('/api/accounts/roles/')
-        response = view(request, pk=role.pk)
-
-        self.assertEqual(response.status_code, 200)
-
-
-class AccountViewApiTestCase(AccountTestMixin):
-    def test_account_register(self):
-
-
-        # Rejestracja domyslnego uzykownika
-        self._login_user()
-
-        # Pobieranie tego uzytkownika
-        account = Account.objects.get(steamid64=self.steamid64)
-
-        self.assertEqual(account.steamid64, self.steamid64)
-        self.assertEqual(account.display_role.id, self.user_role_id)
-
-    def test_account_login(self):
-
-
-        # Rejestracja uzytkownika
-        self._login_user()
-
-        # Pobieranie zarejestrowanego uzytkownika
-
-        account = Account.objects.get(steamid64=self.steamid64)
-
-        # Logowanie uzytkownika
-        self._login_user(account.steamid64)
-
-        self.assertEqual(account.steamid64, self.steamid64)
-        self.assertEqual(account.steamid32, self.steamid32)
-
-    def test_account_login_invalid_steamid64(self):
-
-
-        # Bledny steamid64
-        steamid64 = "33234234"
-
-        with self.assertRaises(Exception) as context:
-            # Logowanie uzykownika
-            self._login_user(steamid64)
-        self.assertTrue("Invalid steamid64" in str(context.exception))
-
-    def test_account_login_exists_username(self):
-
-
-        # Steamid64 uzytkownika z podonmy istniejacym juz nickiem
-        # https://steamcommunity.com/profiles/76561198188480002
-        steamid64_qwizi = "76561198188480002"
-
-        # Logujemy pierwszego domyslnego uzytkownika o nicku Qwizi
-        self._login_user()
-
-        # Logowanie drugiego uzytkownika o nicku qwizi
-        self._login_user(steamid64=steamid64_qwizi)
-
-        # Pobranie pierwszego uzytkownika
-        first_account = Account.objects.get(steamid64=self.steamid64)
-        # Pobranie drugiego uzytkownika
-        second_account = Account.objects.get(steamid64=steamid64_qwizi)
-
-        self.assertEqual(first_account.username, self.username)
-        self.assertNotEqual(second_account.username, first_account.username)
-
-    def test_account_list_renders(self):
-
-        # Steamid64 pierwszego uzytkownika
-        steamid64_one = self.steamid64
-        # Steamid64 drugiego uzytkownika
-        steamid64_two = "76561198145076068"
-
-        # Rejestrujemy pierwszego usera
-        self._login_user(steamid64=steamid64_one)
-        # Rejestrujemy drugiego usera
-        self._login_user(steamid64=steamid64_two)
-
-        response = self.client.get('/api/accounts/')
-
-        # Pobieramy stworzonych uzytkownikow
-        account_one_username = Account.objects.get(steamid64=steamid64_one)
-        account_two_username = Account.objects.get(steamid64=steamid64_two)
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['count'], 2)
-        self.assertEqual(response.data['results'][0]['steamid64'], steamid64_one)
-        self.assertEqual(response.data['results'][0]['display_role']['id'], self.user_role_id)
-        self.assertEqual(response.data['results'][0]['formatted_username'], account_one_username.get_formatted_name())
-        self.assertEqual(len(response.data['results'][0]['roles']), 1)
-        self.assertEqual(response.data['results'][1]['steamid64'], steamid64_two)
-        self.assertEqual(response.data['results'][1]['display_role']['id'], self.user_role_id)
-        self.assertEqual(response.data['results'][1]['formatted_username'], account_two_username.get_formatted_name())
-        self.assertEqual(len(response.data['results'][1]['roles']), 1)
-
-    def test_account_list_renders_empty(self):
-
-        response = self.client.get('/api/accounts/')
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['count'], 0)
-        self.assertEqual(response.data['results'], [])
-
-    def test_account_list_renders_filter_by_is_activate(self):
-
-
-        # Tworzenie aktywnego konta
-        activated_account = Account.objects.create_user_steam(steamid64=self.steamid64)
-
-        # Tworzenie nie aktywnego konta
-        deactivated_account = Account.objects.create_user_steam(steamid64="76561198188480002", is_active=False)
-
-        first_response = self.client.get('/api/accounts/?is_active=1')
-
-        self.assertEqual(first_response.status_code, 200)
-        self.assertEqual(first_response.data['count'], 1)
-        self.assertEqual(first_response.data['results'][0]['steamid64'], activated_account.steamid64)
-
-        second_response = self.client.get('/api/accounts/?is_active=0')
-
-        self.assertEqual(second_response.status_code, 200)
-        self.assertEqual(second_response.data['count'], 1)
-        self.assertEqual(second_response.data['results'][0]['steamid64'], deactivated_account.steamid64)
-
-    def test_account_list_renders_filter_by_display_role(self):
-
-
-        # Tworzenie konta z rola User
-        user_account = Account.objects.create_user_steam(steamid64=self.steamid64)
-
-        # Tworzenie konta z rola Admin
-        admin_account = Account.objects.create_superuser_steam(steamid64="76561198188480002")
-
-        first_response = self.client.get('/api/accounts/?display_role={}'.format(user_account.display_role.id))
-
-        self.assertEqual(first_response.status_code, 200)
-        self.assertEqual(first_response.data['count'], 1)
-        self.assertEqual(first_response.data['results'][0]['display_role']['id'], user_account.display_role.id)
-
-        second_response = self.client.get('/api/accounts/?display_role={}'.format(admin_account.display_role.id))
-
-        self.assertEqual(second_response.status_code, 200)
-        self.assertEqual(second_response.data['count'], 1)
-        self.assertEqual(second_response.data['results'][0]['display_role']['id'], admin_account.display_role.id)
-
-    def test_account_me_renders_with_authenticate(self):
-
-
-        # Rejestrujemy domyslnego uzytkownika
-        self._login_user()
-
-        # Pobieramy uzytkonwika
-        account = Account.objects.get(steamid64=self.steamid64)
-
-        # Pobieramy token dla uzykownika
-        token = self._get_token(account)
-
-        # Ustawawiamy headery dla autoryzacji
-        self._create_credentials(token)
-
-        response = self.client.get('/api/accounts/me/')
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['steamid64'], self.steamid64)
-        self.assertEqual(response.data['steamid32'], self.steamid32)
-        self.assertEqual(response.data['steamid3'], self.steamid3)
-        self.assertEqual(response.data['username'], self.username)
-        self.assertEqual(response.data['formatted_username'], account.get_formatted_name())
-        self.assertEqual(response.data['display_role']['id'], self.user_role_id)
-        self.assertEqual(response.data['threads'], 0)
-        self.assertEqual(response.data['posts'], 0)
-
-    def test_account_me_renders_count_threads_with_authenticate(self):
-
-
-        # Rejestrujemy domyslnego uzytkownika
-        self._login_user()
-
-        # Pobieramy uzytkownika
-        account = Account.objects.get(steamid64=self.steamid64)
-
-        # Pobieramy token dla uzykownika
-        token = self._get_token(account)
-
-        # Ustawiamy headery
-        self._create_credentials(token)
-
-        # Tworzymy testową kategorie
-        category = Category.objects.create(name="Testowa kategoria")
-        # Tworzymy testowy temat, gdzie autorem jest stworzony uzytkownik
-        Thread.objects.create(
-            title="Testowy watek",
-            content="Testowa tresc",
-            author=account,
-            category=category
+    if status_code == 200:
+        response_money = Money(response.data['money'], 'PLN')
+        assert response_money == money
+
+
+@pytest.mark.django_db
+def test_admin_accounts_list_renders(
+        api_client_with_credentials
+):
+    response = api_client_with_credentials.get(reverse('api:adminapi:accounts:list'))
+
+    assert response.status_code == 200
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    'account_id, status_code', [
+        pytest.param(
+            1, 200
+        ),
+        pytest.param(
+            999, 404
         )
+    ]
+)
+def test_admin_accounts_detail_renders(
+        account_id, status_code, api_client_with_credentials, create_user
+):
+    user = create_user(pk=1)
 
-        response = self.client.get('/api/accounts/me/')
+    response = api_client_with_credentials.get(reverse('api:adminapi:accounts:detail', kwargs={'pk': account_id}))
 
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['threads'], 1)
-        self.assertEqual(response.data['posts'], 0)
-
-    def test_account_me_renders_count_posts_with_authenticate(self):
+    assert response.status_code == status_code
 
 
-        # Rejestrujemy domyslnego uzytkownika
-        self._login_user()
-
-        # Pobieramy uzytkownika
-        account = Account.objects.get(steamid64=self.steamid64)
-
-        # Pobieramy token dla uzykownika
-        token = self._get_token(account)
-
-        # Ustawiamy headery
-        self._create_credentials(token)
-
-        # Tworzymy testową kategorie
-        category = Category.objects.create(name="Testowa kategoria")
-        # Tworzymy testowy temat, gdzie autorem jest stworzony uzytkownik
-        thread = Thread.objects.create(
-            title="Testowy watek",
-            content="Testowa tresc",
-            author=account,
-            category=category
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    'account_id, status_code', [
+        pytest.param(
+            1, 204
+        ),
+        pytest.param(
+            999, 404
         )
-        # Tworzymy dwa testowe posty w utworzonym temacie
-        Post.objects.bulk_create([
-            Post(thread=thread, content="Testowa tresc", author=account),
-            Post(thread=thread, content="Testowa tresc", author=account)
-        ])
-
-        response = self.client.get('/api/accounts/me/')
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['threads'], 1)
-        self.assertEqual(response.data['posts'], 2)
-
-    def test_account_me_renders_without_authenticate(self):
-
-        response = self.client.get('/api/accounts/me/')
-        self.assertEqual(response.status_code, 401)
-
-    def test_account_me_update_display_role_renders_with_authenticate(self):
-
-
-        # Rejestrujemy domyslnego uzytkownika
-        self._login_user()
-
-        # Pobieramy uzytkonwika
-        account = Account.objects.get(steamid64=self.steamid64)
-
-        # Pobieramy token dla uzykownika
-        token = self._get_token(account)
-
-        # Ustawawiamy headery dla autoryzacji
-        self._create_credentials(token)
-
-        # Tworzymy nowa role
-        new_role = Role.objects.create(name="New role")
-
-        # Dodajemy nowa role do rol uzytkownika
-        account.roles.add(new_role)
-
-        new_display_role = {
-            'role': new_role.pk
-        }
-
-        response = self.client.put('/api/accounts/me/display-role/', data=new_display_role)
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['display_role'], new_role.pk)
-
-    def test_account_me_update_display_role_renders_with_authenticate_not_exist_role(self):
-
-
-        # Rejestrujemy domyslnego uzytkownika
-        self._login_user()
-
-        # Pobieramy uzytkonwika
-        account = Account.objects.get(steamid64=self.steamid64)
-
-        # Pobieramy token dla uzykownika
-        token = self._get_token(account)
-
-        # Ustawawiamy headery dla autoryzacji
-        self._create_credentials(token)
-
-        # Id nie istniejaccej roli
-        invalid_role = 999
-
-        new_display_role = {
-            'role': invalid_role
-        }
-
-        response = self.client.put('/api/accounts/me/display-role/', data=new_display_role)
-
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.data['msg'], 'Podana rola nie istnieje')
-
-    def test_account_me_wallet_list_renders_with_authenticate(self):
-        # Rejestrujemy domyslnego uzytkownika
-        self._login_user()
-
-        # Pobieramy uzytkonwika
-        account = Account.objects.get(steamid64=self.steamid64)
-
-        # Pobieramy token dla uzykownika
-        token = self._get_token(account)
-
-        # Ustawawiamy headery dla autoryzacji
-        self._create_credentials(token)
-
-        response = self.client.get('/api/accounts/me/wallets/')
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['count'], 2)
-
-    def test_account_me_wallet_list_renders_empty_with_authenticated(self):
-        # Rejestrujemy domyslnego uzytkownika
-        self._login_user()
-
-        # Pobieramy uzytkonwika
-        account = Account.objects.get(steamid64=self.steamid64)
-
-        # Usuwamy portfele
-        for wallet in account.wallet_set.all():
-            wallet.delete()
-
-        # Pobieramy token dla uzykownika
-        token = self._get_token(account)
-
-        # Ustawawiamy headery dla autoryzacji
-        self._create_credentials(token)
-
-        response = self.client.get('/api/accounts/me/wallets/')
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['count'], 0)
-
-    def test_account_me_wallet_list_renders_filer_by_wtype(self):
-        # Rejestrujemy domyslnego uzytkownika
-        self._login_user()
-
-        # Pobieramy uzytkonwika
-        account = Account.objects.get(steamid64=self.steamid64)
-
-        # Pobieramy token dla uzykownika
-        token = self._get_token(account)
-
-        # Ustawawiamy headery dla autoryzacji
-        self._create_credentials(token)
-
-        first_response = self.client.get('/api/accounts/me/wallets/')
-
-        self.assertEqual(first_response.status_code, 200)
-        self.assertEqual(first_response.data['count'], 2)
-
-        PRIMARY = Wallet.WalletTypeChoices.PRIMARY
-        SECONDARY = Wallet.WalletTypeChoices.SECONDARY
-        OTHER = Wallet.WalletTypeChoices.OTHER
-
-        second_response = self.client.get('/api/accounts/me/wallets/?wtype={}'.format(PRIMARY))
-
-        self.assertEqual(second_response.status_code, 200)
-        self.assertEqual(second_response.data['count'], 1)
-        self.assertEqual(second_response.data['results'][0]['wtype'], PRIMARY)
-
-        third_response = self.client.get('/api/accounts/me/wallets/?wtype={}'.format(SECONDARY))
-
-        self.assertEqual(third_response.status_code, 200)
-        self.assertEqual(third_response.data['count'], 1)
-        self.assertEqual(third_response.data['results'][0]['wtype'], SECONDARY)
-
-        fourth_response = self.client.get('/api/accounts/me/wallets/?wtype={}'.format(OTHER))
-
-        self.assertEqual(fourth_response.status_code, 200)
-        self.assertEqual(fourth_response.data['count'], 0)
-
-    def test_account_me_wallet_secondary_exchange_bonusodes_valid_code_renders_with_authenticate(self):
-        # Rejestrujemy domyslnego uzytkownika
-        self._login_user()
-
-        # Pobieramy uzytkonwika
-        account = Account.objects.get(steamid64=self.steamid64)
-
-        # Kod
-        code = "TEST"
-        # Ilosc gotowki
-        money = Money(2, 'PLN')
-
-        # Tworzymy bonusowy kod
-        BonusCode.objects.create(
-            code=code,
-            money=money
-        )
-
-        # Sprawdzanie czy drugi porfel uzytkownika nie posiada srodkow
-        secondary_wallet = account.wallet_set.get(wtype=Wallet.WalletTypeChoices.SECONDARY)
-        secondary_wallet_channel = secondary_wallet.payment_methods.get(name=PaymentMethod.PaymentChoices.CODE)
-        self.assertEqual(secondary_wallet.money, Money(0, 'PLN'))
-
-        # Pobieramy token dla uzykownika
-        token = self._get_token(account)
-
-        # Ustawawiamy headery dla autoryzacji
-        self._create_credentials(token)
-
-        # Dane ktore zostana wyslane na endpoint
-        data = {
-            'channel': secondary_wallet_channel.name,
-            'code': code
-        }
-        response = self.client.put('/api/accounts/me/wallets/{}/'.format(secondary_wallet.wtype), data=data)
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(account.wallet_set.get(wtype=Wallet.WalletTypeChoices.SECONDARY).money, Money(2, 'PLN'))
-
-    def test_account_me_wallet_secondary_exchange_bonuscodes_invalid_code_renders_with_authenticate(self):
-        # Rejestrujemy domyslnego uzytkownika
-        self._login_user()
-
-        # Pobieramy uzytkonwika
-        account = Account.objects.get(steamid64=self.steamid64)
-
-        # Kod
-        code = "TEST"
-        # Ilosc gotowki
-        money = Money(2, 'PLN')
-
-        # Sprawdzanie czy drugi porfel uzytkownika nie posiada srodkow
-        secondary_wallet = account.wallet_set.get(wtype=Wallet.WalletTypeChoices.SECONDARY)
-        secondary_wallet_channel = secondary_wallet.payment_methods.get(name=PaymentMethod.PaymentChoices.CODE)
-        self.assertEqual(secondary_wallet.money, Money(0, 'PLN'))
-
-        # Pobieramy token dla uzykownika
-        token = self._get_token(account)
-
-        # Ustawawiamy headery dla autoryzacji
-        self._create_credentials(token)
-
-        # Dane ktore zostana wyslane na endpoint
-        data = {
-            'channel': secondary_wallet_channel.name,
-            'code': code
-        }
-        response = self.client.put('/api/accounts/me/wallets/{}/'.format(secondary_wallet.wtype), data=data)
-
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.data[0], "Podany kod jest niepoprawny")
-
-    def test_account_me_wallet_secondary_exchange_invalid_channel_bonuscodes_renders_with_authenticate(self):
-        # Rejestrujemy domyslnego uzytkownika
-        self._login_user()
-
-        # Pobieramy uzytkonwika
-        account = Account.objects.get(steamid64=self.steamid64)
-
-        # Kod
-        code = "TEST"
-        # Ilosc gotowki
-        money = Money(2, 'PLN')
-
-        # Tworzymy bonusowy kod
-        BonusCode.objects.create(
-            code=code,
-            money=money
-        )
-
-        # Sprawdzanie czy drugi porfel uzytkownika nie posiada srodkow
-        secondary_wallet = account.wallet_set.get(wtype=Wallet.WalletTypeChoices.SECONDARY)
-        # secondary_wallet_channel = secondary_wallet.payment_methods.get(name=PaymentMethod.PaymentChoices.SMS)
-        self.assertEqual(secondary_wallet.money, Money(0, 'PLN'))
-
-        # Pobieramy token dla uzykownika
-        token = self._get_token(account)
-
-        # Ustawawiamy headery dla autoryzacji
-        self._create_credentials(token)
-
-        # Dane ktore zostana wyslane na endpoint
-        data = {
-            'channel': PaymentMethod.PaymentChoices.SMS,
-            'code': code
-        }
-        response = self.client.put('/api/accounts/me/wallets/{}/'.format(secondary_wallet.wtype), data=data)
-        print(response.data)
-        self.assertEqual(response.status_code, 400)
-
-    def test_role_list_renders(self):
-
-
-        second_role_name = 'Druga rola'
-
-        Role.objects.create(name=self.user_role_name)
-        Role.objects.create(name=second_role_name)
-
-        response = self.client.get('/api/accounts/roles/')
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['count'], 2)
-        self.assertEqual(response.data['results'][0]['name'], self.user_role_name)
-        self.assertEqual(response.data['results'][1]['name'], second_role_name)
-
-    def test_role_list_renders_empty(self):
-
-
-        response = self.client.get('/api/accounts/roles/')
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['count'], 0)
-
-    def test_role_detail_renders(self):
-
-
-        # Tworzymy role
-        role = Role.objects.create(name=self.user_role_name)
-
-        response = self.client.get('/api/accounts/roles/{}/'.format(role.id))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['name'], role.name)
-        self.assertEqual(response.data['format'], role.format)
-
-    def test_role_detail_renders_not_exist(self):
-        invalid_role = 999
-
-        response = self.client.get('/api/accounts/roles/{}/'.format(invalid_role))
-
-        self.assertEqual(response.status_code, 404)
-"""
+    ]
+)
+def test_admin_accounts_delete_renders(
+        account_id, status_code, api_client_with_credentials, create_user
+):
+    user = create_user(pk=1)
+
+    response = api_client_with_credentials.delete(reverse('api:adminapi:accounts:detail', kwargs={'pk': account_id}))
+
+    assert response.status_code == status_code

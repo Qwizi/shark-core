@@ -110,10 +110,7 @@ class AccountMeWalletExchangeSerializer(serializers.ModelSerializer):
         model_field=PaymentMethod()._meta.get_field('name'),
         write_only=True
     )
-    code = serializers.ModelField(
-        model_field=BonusCode()._meta.get_field('code'),
-        write_only=True
-    )
+    code = serializers.CharField(required=True, write_only=True, min_length=8)
 
     class Meta:
         model = Wallet
@@ -124,6 +121,16 @@ class AccountMeWalletExchangeSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ('money',)
 
+    def validate_channel(self, value):
+        """
+        Sprawdzamy czy platnoscc jest dostepna dla danego porfela:
+        """
+        payment_method_exists = self.instance.payment_methods.filter(name=value).exists()
+
+        if not payment_method_exists:
+            raise serializers.ValidationError('Portfel nie obsluguje takiej platnosci', 400)
+        return value
+
     def update(self, instance, validated_data):
         channel = validated_data.get('channel')
         code = validated_data.get('code')
@@ -132,15 +139,17 @@ class AccountMeWalletExchangeSerializer(serializers.ModelSerializer):
 
         # Sprawdzamy czy platnosc jest dostepna dla podanego porfelu
 
-        payment_method_exists = instance.payment_methods.filter(name=channel).exists()
+        # payment_method_exists = instance.payment_methods.filter(name=channel).exists()
 
-        if not payment_method_exists:
-            raise serializers.ValidationError('Portfel nie obsluguje takiej platnosci', 400)
+        # if not payment_method_exists:
+        #    raise serializers.ValidationError('Portfel nie obsluguje takiej platnosci', 400)
 
-        if channel == PaymentMethod.PaymentChoices.CODE:
+        if channel == PaymentMethod.PaymentChoices.CODE.value:
             provider_class = payment_manager.bonuscodes.get_provider_class()
-        elif channel == PaymentMethod.PaymentChoices.SMS:
+        elif channel == PaymentMethod.PaymentChoices.SMS.value:
             provider_class = payment_manager.sms.get_provider_class()
+        elif channel == PaymentMethod.PaymentChoices.TRANSFER.value:
+            provider_class = payment_manager.transfer.get_provider_class()
 
         if not provider_class:
             raise serializers.ValidationError('Wewnętrzny blad API', 500)
@@ -288,3 +297,9 @@ class ServerSteamTokenObtainSerializer(ServerSteamTokenSerializer):
         data['access'] = str(refresh.access_token)
 
         return data
+
+
+class AdminAccountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Account
+        fields = '__all__'

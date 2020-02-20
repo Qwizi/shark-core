@@ -1,7 +1,6 @@
-from .mixins import ForumTestMixin
-
-from rest_framework.test import force_authenticate
-from rest_framework_simplejwt.tokens import RefreshToken
+import pytest
+from django.urls import reverse
+from accounts.tests.fixtures import *
 
 from ..views import (
     CategoryListView,
@@ -14,448 +13,349 @@ from ..views import (
     PostDetailView
 )
 
-from ..models import (
-    Category,
-    Thread,
-    Post
+
+@pytest.mark.django_db
+def test_category_list_view(
+        api_factory
+):
+    view = CategoryListView.as_view()
+    request = api_factory.get(reverse('api:forum-category-list'))
+    response = view(request)
+
+    assert response.status_code == 200
+
+
+@pytest.mark.django_db
+def test_category_detail_view(
+        api_factory, create_category
+):
+    category = create_category()
+
+    view = CategoryDetailView.as_view()
+    request = api_factory.get(reverse('api:forum-category-detail', kwargs={'pk': category.pk}))
+    response = view(request, pk=category.pk)
+
+    assert response.status_code == 200
+
+
+@pytest.mark.django_db
+def test_thread_list_view(
+        api_factory
+):
+    view = ThreadListView.as_view()
+    request = api_factory.get(reverse('api:forum-thread-list'))
+    response = view(request)
+
+    assert response.status_code == 200
+
+
+@pytest.mark.django_db
+def test_thread_detail_view(
+        api_factory, create_thread
+):
+    thread = create_thread()
+
+    view = ThreadDetailView.as_view()
+    request = api_factory.get(reverse('api:forum-thread-detail', kwargs={'pk': thread.pk}))
+    response = view(request, pk=thread.pk)
+
+    assert response.status_code == 200
+
+
+@pytest.mark.django_db
+def test_thread_create_view_without_authenticate(
+        api_factory
+):
+    view = ThreadCreateView.as_view()
+    request = api_factory.post(reverse('api:forum-thread-create'))
+    response = view(request)
+
+    assert response.status_code == 401
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    'title, content, category_name, status_code', [
+        pytest.param(
+            'Testowy temat', 'Testowa tresc', 'Testowa kategoria', 201
+        )
+    ]
 )
+def test_thread_create_view_with_authenticate(
+        title, content, category_name, status_code, api_factory, create_category, create_user, get_token_for_user
+):
+    category = create_category(name=category_name)
+    user = create_user()
 
-from accounts.models import Account
+    data = {
+        'title': title,
+        'content': content,
+        'category': category.pk
+    }
+
+    view = ThreadCreateView.as_view()
+    request = api_factory.post(reverse('api:forum-thread-create'), data=data)
+    force_authenticate(request, user=user, token=get_token_for_user(user=user))
+    response = view(request)
+
+    assert response.status_code == status_code
 
 
-class ForumViewsTestCase(ForumTestMixin):
+@pytest.mark.django_db
+def test_post_list_view(
+        api_factory
+):
+    view = PostListView.as_view()
+    request = api_factory.get(reverse('api:forum-post-list'))
+    response = view(request)
 
-    def setUp(self):
-        super().setUp()
-        self.author = Account.objects.create_user_steam(steamid64=self.steamid64)
+    assert response.status_code == 200
 
-    def test_category_list_view(self):
-        """
-        Test sprawdzajacy poprawnosc implenetacji widoku listy kategorii
-        """
 
-        # Widok listy kategorii
-        view = CategoryListView.as_view()
-        request = self.factory.get('/api/forum/categories/')
-        response = view(request)
+@pytest.mark.django_db
+def test_post_detail_view(
+        api_factory, create_post
+):
+    post = create_post()
 
-        self.assertEqual(response.status_code, 200)
+    view = PostDetailView.as_view()
+    request = api_factory.get(reverse('api:forum-post-detail', kwargs={'pk': post.pk}))
+    response = view(request, pk=post.pk)
 
-    def test_category_detail_view(self):
-        """
-        Test sprawdzajacy poprawnosc impletancji widoku detalu danej kategorii
-        """
+    assert response.status_code == 200
 
-        # Tworzenie przykladowej kategorii
-        category = Category.objects.create(name="Testowa kategoria")
 
-        view = CategoryDetailView.as_view()
-        request = self.factory.get('/api/forum/categories/')
-        response = view(request, pk=category.pk)
+@pytest.mark.django_db
+def test_post_create_view_without_authenticate(
+        api_factory
+):
+    view = PostCreateView.as_view()
+    request = api_factory.post(reverse('api:forum-post-create'))
+    response = view(request)
 
-        self.assertEqual(response.status_code, 200)
+    assert response.status_code == 401
 
-    def test_category_detail_view_not_exist(self):
-        """
-        Test sprawdzajacy poprawnosc implementacji widoku detalu dla nie istniejacej kategorii
-        """
 
-        view = CategoryDetailView.as_view()
-        request = self.factory.get('/api/forum/categories/')
-        response = view(request, pk=1)
-
-        self.assertEqual(response.status_code, 404)
-
-    def test_thread_list_view(self):
-        """
-        Test sprawdzajacy poprawnosc implenetacji widoku dla listy tematow
-        """
-
-        view = ThreadListView.as_view()
-        request = self.factory.get('/api/forum/threads/')
-        response = view(request)
-
-        self.assertEqual(response.status_code, 200)
-
-    def test_thread_detail_view(self):
-        """
-        Test sprawdzajacy poprawnosc implenetacji widoku detalu dla tematu
-        """
-
-        # Tworzenie przykladowej katogorii
-        category = Category.objects.create(name="Przykladowa kategoria")
-
-        # Tworzenie przykladowego autora
-        # author = Account.objects.create(steamid64=self.steamid64)
-
-        thread = Thread.objects.create(
-            title="Przykladowy temat",
-            content="Przykladowa tresc",
-            author=self.author,
-            category=category
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    'content, status_code', [
+        pytest.param(
+            'Testowy post', 201
         )
+    ]
+)
+def test_post_create_view_with_authenticate(
+        content, status_code, api_factory, create_thread, create_user, get_token_for_user
+):
+    user = create_user()
+    thread = create_thread(author=user)
 
-        view = ThreadDetailView.as_view()
-        request = self.factory.get('/api/forum/threads/')
-        response = view(request, pk=thread.pk)
+    data = {
+        'content': content,
+        'thread': thread.pk
+    }
 
-        self.assertEqual(response.status_code, 200)
+    view = PostCreateView.as_view()
+    request = api_factory.post(reverse('api:forum-post-create'), data=data)
+    force_authenticate(request, user=user, token=get_token_for_user(user=user))
+    response = view(request)
 
-    def test_thread_detail_view_not_exist(self):
-        """
-        Test sprawdzajacy poprawnosc implementacji widoku detali dla nie istniejacego tematu
-        """
-
-        view = ThreadDetailView.as_view()
-        request = self.factory.get('/api/forum/threads/')
-        response = view(request, pk=99)
-
-        self.assertEqual(response.status_code, 404)
-
-    def test_thread_create_view(self):
-        """
-        Test sprawdzajacy poprawnosc implenetacji widoku tworzenia tematu
-        """
-        # Tworzenie domyslnej kategorii
-        category = self._create_category()
-
-        # Dane nowego postu
-        new_thread_data = {
-            'title': self.thread_title,
-            'content': self.thread_content,
-            'category': category.id
-        }
-
-        view = ThreadCreateView.as_view()
-        request = self.factory.post('/api/forum/threads/create', data=new_thread_data)
-
-        # Pobieramy token dla autora
-        token = RefreshToken.for_user(self.author)
-
-        # Wymuszamy autoryzacje
-        force_authenticate(request, user=self.author, token=token.access_token)
-
-        response = view(request)
-
-        self.assertEqual(response.status_code, 201)
-
-    def test_post_list_view(self):
-        """
-        Test sprawdzajacy poprawna implenetacje widoku listy postow
-        """
-
-        view = PostListView.as_view()
-        request = self.factory.get('/api/forum/posts/')
-        response = view(request)
-        self.assertEqual(response.status_code, 200)
-
-    def test_post_detail_view(self):
-        """
-        Test sprawdzajacy poprawna implementacje widoku pojedynczego postu
-        """
-
-        # Tworzenie domyslnego postu
-        post = self._create_post()
-
-        view = PostDetailView.as_view()
-        request = self.factory.get('/api/forum/posts/')
-        response = view(request, pk=post.pk)
-
-        self.assertEqual(response.status_code, 200)
-
-    def test_post_detail_view_not_exist(self):
-        """
-        Test sprawdzajacy poprawnosc implenetacji widoku nie istniejacego postu
-        """
-
-        view = PostDetailView.as_view()
-        request = self.factory.get('/api/forum/posts/')
-        response = view(request, pk=123)
-
-        self.assertEqual(response.status_code, 404)
-
-    def test_post_create_view(self):
-        """
-        Test sprawdzajacy poprawnosc implenetacji widoku tworzenia postu
-        """
-
-        # Tworzymy przykladowy temat
-        thread = self._create_thread()
-
-        new_thread_data = {
-            'content': self.post_content,
-            'thread': thread.pk
-        }
-
-        view = PostCreateView.as_view()
-        request = self.factory.post('/api/forum/posts/create', data=new_thread_data)
-
-        # Pobieramy token dla autora
-        token = RefreshToken.for_user(self.author)
-
-        # Wymuszamy autoryzacje
-        force_authenticate(request, user=self.author, token=token.access_token)
-
-        response = view(request)
-
-        self.assertEqual(response.status_code, 201)
+    assert response.status_code == status_code
 
 
-class ForumViewsApiTestCase(ForumTestMixin):
-
-    def setUp(self):
-        super().setUp()
-        self.author = Account.objects.create_user_steam(steamid64=self.steamid64)
-
-    def test_category_list_renders(self):
-        """
-        Test sprawdzajacy poprawnosc wyswietlania listy kategorii
-        """
-
-        # Tworzenie domyslnej kategorii
-        self._create_category()
-        # Tworzenie drugiej kategorii
-        self._create_category(category_name="Test")
-
-        response = self.client.get('/api/forum/categories/')
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['count'], 2)
-        self.assertEqual(response.data['results'][0]['name'], self.category_name)
-        self.assertEqual(response.data['results'][1]['name'], "Test")
-
-    def test_category_list_renders_empty(self):
-        """
-        Test sprawdzajacy pooprawnosc wyswietlania pustej listy kategorii
-        """
-
-        response = self.client.get('/api/forum/categories/')
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['count'], 0)
-
-    def test_category_detail_renders(self):
-        """
-        Test sprawdzajacy poprawnosc wyswietlania detali danej kategorii
-        """
-
-        # Tworzenie domyslnej kategorii
-        category = self._create_category()
-
-        response = self.client.get('/api/forum/categories/{}/'.format(category.pk))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['name'], category.name)
-
-    def test_thread_list_renders(self):
-        """
-        Test sprawdzajacy poprawnosc wyswietlania listy watkow
-        """
-        second_thread_title = "Drugi testowy tytuł wątku"
-        second_thread_content = "Drugi testowa tresc wątku"
-        second_thread_category_name = "Druga kategoria"
-
-        first_thread = self._create_thread()
-        second_thread = self._create_thread(
-            title=second_thread_title,
-            content=second_thread_content,
-            category_name=second_thread_category_name
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    'name, count, status_code', [
+        pytest.param(
+            'Testowa kategoria', 1, 200
         )
+    ]
+)
+def test_category_list_renders(
+        name, count, status_code, api_client, create_category
+):
+    create_category()
 
-        response = self.client.get('/api/forum/threads/')
+    response = api_client.get(reverse('api:forum-category-list'))
 
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['count'], 2)
-        self.assertEqual(response.data['results'][0]['title'], first_thread.title)
-        self.assertEqual(response.data['results'][0]['content'], first_thread.content)
-        self.assertEqual(response.data['results'][0]['category']['name'], first_thread.category.name)
-        self.assertEqual(response.data['results'][1]['title'], second_thread.title)
-        self.assertEqual(response.data['results'][1]['content'], second_thread.content)
-        self.assertEqual(response.data['results'][1]['category']['name'], second_thread.category.name)
+    assert response.status_code == status_code
+    assert response.data['count'] == count
+    assert response.data['results'][0]['name'] == name
 
-    def test_thread_list_renders_empty(self):
-        """
-        Test sprawdzajacy poprawnosc wyswietlania pustej listy tematow
-        """
-        response = self.client.get('/api/forum/threads/')
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['count'], 0)
 
-    def test_thread_detail_renders(self):
-        """
-        Test sprawdzajacy poprawnosc wyswietlania detali danego tematu
-        """
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    'name, status_code', [
+        pytest.param(
+            'Testowa kategoria', 200
+        )
+    ]
+)
+def test_category_detail_renders(
+        name, status_code, api_client, create_category
+):
+    category = create_category()
 
-        thread = self._create_thread()
+    response = api_client.get(reverse('api:forum-category-detail', kwargs={'pk': category.pk}))
 
-        response = self.client.get('/api/forum/threads/{}/'.format(thread.pk))
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['title'], thread.title)
+    assert response.status_code == status_code
+    assert response.data['name'] == name
 
-    def test_thread_create_renders(self):
-        """
-        Test sprawdzajacy poprawnosc tworzenia nowego tematu
-        """
 
-        # Tworzenie domyslnej kategorii
-        category = self._create_category()
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    'count, thread_title, category_id, pinned, status_code', [
+        # Tematy bez filtrow
+        pytest.param(
+            3, 'Testowy temat', None, None, 200
+        ),
+        # Tematy filtrowane po kategorii Pierwsza kategoria, nie przypiete
+        pytest.param(
+            2, 'Testowy temat', 1, None, 200
+        ),
+        # Tematy filtrowane po kategorii Druga testowa kategoria, nie przypiete
+        pytest.param(
+            1, 'Drugi testowy temat', 2, None, 200
+        ),
+        # Tematy nie filtrowane, przypiete
+        pytest.param(
+            1, 'Przypiety temat', None, True, 200
+        ),
+    ]
+)
+def test_thread_list_renders(
+        count, thread_title, category_id, pinned, status_code, api_client, create_thread, create_category
+):
+    first_category = create_category(pk=1, name='Pierwsza kategoria')
+    second_category = create_category(pk=2, name='Druga testowa kategoria')
 
-        # Dane nowego tematu
-        new_thread_data = {
-            'title': self.thread_title,
-            'content': self.thread_content,
-            'category': category.id
-        }
+    first_thread = create_thread(title='Testowy temat', category=first_category)
+    second_thread = create_thread(title='Drugi testowy temat', category=second_category)
 
-        # Pobieramy token dla autora
-        token = RefreshToken.for_user(self.author)
+    pinned_thread = create_thread(title='Przypiety temat', category=first_category, pinned=True)
 
-        # Ustawiwamy naglowek autoryzacyjny
-        self.client.credentials(HTTP_AUTHORIZATION="Bearer {}".format(token.access_token))
+    url = reverse('api:forum-thread-list')
+    if category_id:
+        if pinned:
+            url_full = '{}?category={}&?pinned={}'.format(url, category_id, pinned)
+        else:
+            url_full = '{}?category={}'.format(url, category_id)
+    else:
+        if pinned:
+            url_full = '{}?pinned={}'.format(url, pinned)
+        else:
+            url_full = url
 
-        response = self.client.post('/api/forum/threads/create', data=new_thread_data)
+    response = api_client.get(url_full)
 
-        self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.data['title'], new_thread_data['title'])
-        self.assertEqual(response.data['content'], new_thread_data['content'])
-        self.assertEqual(response.data['category'], new_thread_data['category'])
+    assert response.status_code == status_code
+    assert response.data['count'] == count
+    if count:
+        assert response.data['results'][0]['title'] == thread_title
 
-    def test_thread_create_renders_without_authenticate(self):
-        """
-        Test sprawdzajacy poprawnosc wyswietlania towrzenia nowego tematu
-        gdy autor nie jest zalogowany
-        """
 
-        # Tworzenie domyslnej kategorii
-        category = self._create_category()
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    'title, author_username, status_code', [
+        pytest.param(
+            'Testowy temat', 'Qwizi', 200
+        )
+    ]
+)
+def test_thread_detail_renders(
+        title, author_username, status_code, api_client, create_thread
+):
+    thread = create_thread(title='Testowy temat')
 
-        # Dane nowego tematu
-        new_thread_data = {
-            'title': self.thread_title,
-            'content': self.thread_content,
-            'category': category.id
-        }
+    response = api_client.get(reverse('api:forum-thread-detail', kwargs={'pk': thread.pk}))
 
-        response = self.client.post('/api/forum/threads/create', data=new_thread_data)
+    assert response.status_code == status_code
+    assert response.data['title'] == title
+    assert response.data['author']['username'] == author_username
 
-        self.assertEqual(response.status_code, 401)
 
-    def test_thread_create_renders_without_data(self):
-        """
-        Test sprawdzajacy poprawnosc wyswietlania tworzenia nowego tematu,
-        gdy nie podano tytuly tematu
-        """
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    'title, content, status_code', [
+        pytest.param(
+            'Testowy temat', 'Testowa kategoria', 200
+        )
+    ]
+)
+def test_thread_create_renders(
+        title, content, status_code, api_client_with_credentials, create_category
+):
+    category = create_category(name='Testowa kategoria')
+    data = {
+        'title': title,
+        'content': content,
+        'category': category.pk
+    }
+    response = api_client_with_credentials.post(reverse('api:forum-thread-create'), data=data)
 
-        # Tworzenie domyslnej kategorii
-        category = self._create_category()
+    assert response.status_code == 201
+    assert response.data['title'] == title
+    assert response.data['content'] == content
 
-        # Pobieramy token dla autora
-        token = RefreshToken.for_user(self.author)
 
-        # Ustawiwamy naglowek autoryzacyjny
-        self.client.credentials(HTTP_AUTHORIZATION="Bearer {}".format(token.access_token))
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    'content, count, status_code', [
+        pytest.param(
+            'Testowa tresc', 1, 200
+        )
+    ]
+)
+def test_post_list_renders(
+        content, count, status_code, api_client, create_post
+):
+    create_post(content='Testowa tresc')
 
-        response = self.client.post('/api/forum/threads/create')
+    response = api_client.get(reverse('api:forum-post-list'))
 
-        self.assertEqual(response.status_code, 400)
+    assert response.status_code == status_code
+    assert response.data['count'] == count
+    assert response.data['results'][0]['content'] == content
 
-    def test_post_list_renders(self):
-        """
-        Test sprawdzajacy poprawnosc wyswietlania listy postow
-        """
 
-        # Tworzenie domyslnego postu
-        self._create_post()
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    'content, status_code', [
+        pytest.param(
+            'Testowa tresc', 200
+        )
+    ]
+)
+def test_post_detail_renders(
+        content, status_code, api_client, create_post
+):
+    post = create_post(content='Testowa tresc')
 
-        response = self.client.get('/api/forum/posts/')
+    response = api_client.get(reverse('api:forum-post-detail', kwargs={'pk': post.pk}))
 
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['count'], 1)
-        self.assertEqual(response.data['results'][0]['content'], self.post_content)
+    assert response.status_code == status_code
+    assert response.data['content'] == content
 
-    def test_post_list_renders_empty(self):
-        """
-        Test sprawdzajacy poprawnosc wyswietlania pustej listy postow
-        """
 
-        response = self.client.get('/api/forum/posts/')
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    'content, status_code', [
+        pytest.param(
+            'Testowa tresc', 201
+        )
+    ]
+)
+def test_post_create_renders(
+        content, status_code, api_client_with_credentials, create_thread, create_user
+):
+    user = create_user()
+    thread = create_thread(author=user)
+    data = {
+        'content': 'Testowa tresc',
+        'thread': thread.pk
+    }
 
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['count'], 0)
+    response = api_client_with_credentials.post(reverse('api:forum-post-create'), data=data)
 
-    def test_post_detail_renders(self):
-        """
-        Test sprawdzajacy poprawnosc wyswietlania danych pojedynczego postu
-        """
-
-        # Tworzenie domyslnego postu
-        post = self._create_post()
-
-        response = self.client.get('/api/forum/posts/{}/'.format(post.id))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['thread'], post.thread.id)
-        self.assertEqual(response.data['content'], post.content)
-        self.assertEqual(response.data['author']['username'], post.author.username)
-
-    def test_post_create_renders(self):
-        """
-        Test sprawdzajacy poprawnosc tworzenia posta
-        """
-        # Tworzymy przykladowy temat
-        thread = self._create_thread()
-
-        new_post_data = {
-            'content': self.post_content,
-            'thread': thread.id
-        }
-
-        # Pobieramy token dla autora
-        token = RefreshToken.for_user(self.author)
-
-        # Ustawiwamy naglowek autoryzacyjny
-        self.client.credentials(HTTP_AUTHORIZATION="Bearer {}".format(token.access_token))
-
-        response = self.client.post('/api/forum/posts/create', data=new_post_data)
-
-        # Sprawdzamy czy poprawnie zostal zaaktualizowany ostatni autor posta w temacie
-        post = Post.objects.get(thread__pk=response.data['thread'])
-
-        self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.data['content'], new_post_data['content'])
-        self.assertEqual(response.data['thread'], thread.id)
-        self.assertEqual(post.thread.last_poster, self.author)
-
-    def test_post_create_renders_without_authenticate(self):
-        """
-        Test sprawdzajacy poprawnosc tworzenia posta,
-        gdy autor nie jest zalogowany
-        """
-
-        # Tworzymy przykladowy temat
-        thread = self._create_thread()
-
-        new_post_data = {
-            'content': self.post_content,
-            'thread': thread.id
-        }
-
-        response = self.client.post('/api/forum/posts/create', data=new_post_data)
-
-        self.assertEqual(response.status_code, 401)
-
-    def test_post_create_renders_without_data(self):
-        """
-        Test sprawdzajacy poprawnosc tworzenia posta,
-        gdy nie podano danych
-        """
-
-        # Pobieramy token dla autora
-        token = RefreshToken.for_user(self.author)
-
-        # Ustawiwamy naglowek autoryzacyjny
-        self.client.credentials(HTTP_AUTHORIZATION="Bearer {}".format(token.access_token))
-
-        response = self.client.post('/api/forum/posts/create')
-
-        self.assertEqual(response.status_code, 400)
+    assert response.status_code == status_code
+    assert response.data['content'] == content

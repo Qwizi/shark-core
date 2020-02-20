@@ -3,7 +3,7 @@ from .models import Bonus, Category, Offer
 from accounts.models import Wallet
 
 
-class CategorySerializer(serializers.ModelSerializer):
+class StoreCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ['pk', 'name', 'tag']

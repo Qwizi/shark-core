@@ -7,6 +7,11 @@ from ..models import (
     SMSNumber,
     PaymentMethod
 )
+from forum.models import (
+    Category,
+    Thread,
+    Post
+)
 
 from steambot.models import (
     Queue
@@ -46,9 +51,9 @@ def api_client():
 
 @fixture
 def api_client_with_credentials(
-        db, create_user, api_client, get_token_for_user
+        db, create_superuser, api_client, get_token_for_user
 ):
-    user = create_user()
+    user = create_superuser()
     token = get_token_for_user(user=user)
     api_client.force_authenticate(user=user, token=token)
     yield api_client
@@ -79,7 +84,10 @@ def create_user(db, django_user_model, qwizi_data):
         if "tradeurl" not in kwargs:
             kwargs['tradeurl'] = qwizi_data['tradeurl']
 
-        return django_user_model.objects.create_user_steam(**kwargs)
+        if django_user_model.objects.filter(steamid64=kwargs['steamid64']).exists():
+            return django_user_model.objects.filter(steamid64=kwargs['steamid64'])[0]
+        else:
+            return django_user_model.objects.create_user_steam(**kwargs)
 
     return make_user
 
@@ -178,3 +186,44 @@ def create_queue(db):
         return Queue.objects.create(**kwargs)
 
     return make_queue
+
+
+@fixture
+def create_category(db):
+    def make_category(**kwargs):
+        if "name" not in kwargs:
+            kwargs['name'] = 'Testowa kategoria'
+        return Category.objects.create(**kwargs)
+
+    return make_category
+
+
+@fixture
+def create_thread(db, create_category, create_user):
+    def make_thread(**kwargs):
+        if 'title' not in kwargs:
+            kwargs['title'] = 'Testowy temat'
+        if 'content' not in kwargs:
+            kwargs['content'] = 'Testowa tresc'
+        if 'category' not in kwargs:
+            kwargs['category'] = create_category()
+        if 'author' not in kwargs:
+            kwargs['author'] = create_user()
+
+        return Thread.objects.create(**kwargs)
+
+    return make_thread
+
+
+@fixture
+def create_post(db, create_thread, create_user):
+    def make_post(**kwargs):
+        if 'thread' not in kwargs:
+            kwargs['thread'] = create_thread()
+        if 'content' not in kwargs:
+            kwargs['content'] = 'Testowa tresc'
+        if 'author' not in kwargs:
+            kwargs['author'] = kwargs['thread'].author
+        return Post.objects.create(**kwargs)
+
+    return make_post

@@ -9,7 +9,7 @@ from .models import (
     Category
 )
 from .serializers import (
-    CategorySerializer,
+    StoreCategorySerializer,
     BonusSerializer,
     StoreOfferSerializer
 )
@@ -18,7 +18,7 @@ from .serializers import (
 class StoreCategoryViewSet(viewsets.ModelViewSet):
     permission_classes = (AllowAny, )
     queryset = Category.objects.all()
-    serializer_class = CategorySerializer
+    serializer_class = StoreCategorySerializer
 
 
 class StoreBonusViewSet(viewsets.ModelViewSet):

@@ -205,7 +205,7 @@ class Wallet(models.Model):
 
 
 class BonusCode(models.Model):
-    code = models.CharField(max_length=120)
+    code = models.CharField(max_length=16)
     money = MoneyField(max_digits=14, decimal_places=2, default_currency='PLN', default=0)
 
     def __str__(self):
@@ -219,7 +219,7 @@ class SMSNumber(models.Model):
     money = MoneyField(max_digits=14, decimal_places=2, default_currency='PLN', default=0)
 
     def __str__(self):
-        return '{}'.format(self.provider)
+        return '{} | '.format(self.provider, self.number)
 
 
 def on_create_account(sender, **kwargs):

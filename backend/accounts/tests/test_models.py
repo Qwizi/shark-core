@@ -193,4 +193,4 @@ def test_smsnumber_create(create_smsnumber):
         money=Money(2.50, 'PLN')
     )
 
-    assert SMSNumber.objects.all().count() == 1
+    assert SMSNumber.objects.get(provider="test").provider == 'test'
