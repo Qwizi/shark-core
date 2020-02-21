@@ -6,10 +6,8 @@ from ..views import (
     CategoryListView,
     CategoryDetailView,
     ThreadListView,
-    ThreadCreateView,
     ThreadDetailView,
     PostListView,
-    PostCreateView,
     PostDetailView
 )
 
@@ -19,7 +17,7 @@ def test_category_list_view(
         api_factory
 ):
     view = CategoryListView.as_view()
-    request = api_factory.get(reverse('api:forum-category-list'))
+    request = api_factory.get(reverse('api:forum:category-list'))
     response = view(request)
 
     assert response.status_code == 200
@@ -32,7 +30,7 @@ def test_category_detail_view(
     category = create_category()
 
     view = CategoryDetailView.as_view()
-    request = api_factory.get(reverse('api:forum-category-detail', kwargs={'pk': category.pk}))
+    request = api_factory.get(reverse('api:forum:category-detail', kwargs={'pk': category.pk}))
     response = view(request, pk=category.pk)
 
     assert response.status_code == 200
@@ -43,7 +41,7 @@ def test_thread_list_view(
         api_factory
 ):
     view = ThreadListView.as_view()
-    request = api_factory.get(reverse('api:forum-thread-list'))
+    request = api_factory.get(reverse('api:forum:thread-list'))
     response = view(request)
 
     assert response.status_code == 200
@@ -56,7 +54,7 @@ def test_thread_detail_view(
     thread = create_thread()
 
     view = ThreadDetailView.as_view()
-    request = api_factory.get(reverse('api:forum-thread-detail', kwargs={'pk': thread.pk}))
+    request = api_factory.get(reverse('api:forum:thread-detail', kwargs={'pk': thread.pk}))
     response = view(request, pk=thread.pk)
 
     assert response.status_code == 200
@@ -66,8 +64,8 @@ def test_thread_detail_view(
 def test_thread_create_view_without_authenticate(
         api_factory
 ):
-    view = ThreadCreateView.as_view()
-    request = api_factory.post(reverse('api:forum-thread-create'))
+    view = ThreadListView.as_view()
+    request = api_factory.post(reverse('api:forum:thread-list'))
     response = view(request)
 
     assert response.status_code == 401
@@ -93,8 +91,8 @@ def test_thread_create_view_with_authenticate(
         'category': category.pk
     }
 
-    view = ThreadCreateView.as_view()
-    request = api_factory.post(reverse('api:forum-thread-create'), data=data)
+    view = ThreadListView.as_view()
+    request = api_factory.post(reverse('api:forum:thread-list'), data=data)
     force_authenticate(request, user=user, token=get_token_for_user(user=user))
     response = view(request)
 
@@ -106,7 +104,7 @@ def test_post_list_view(
         api_factory
 ):
     view = PostListView.as_view()
-    request = api_factory.get(reverse('api:forum-post-list'))
+    request = api_factory.get(reverse('api:forum:post-list'))
     response = view(request)
 
     assert response.status_code == 200
@@ -119,7 +117,7 @@ def test_post_detail_view(
     post = create_post()
 
     view = PostDetailView.as_view()
-    request = api_factory.get(reverse('api:forum-post-detail', kwargs={'pk': post.pk}))
+    request = api_factory.get(reverse('api:forum:post-detail', kwargs={'pk': post.pk}))
     response = view(request, pk=post.pk)
 
     assert response.status_code == 200
@@ -129,8 +127,8 @@ def test_post_detail_view(
 def test_post_create_view_without_authenticate(
         api_factory
 ):
-    view = PostCreateView.as_view()
-    request = api_factory.post(reverse('api:forum-post-create'))
+    view = PostListView.as_view()
+    request = api_factory.post(reverse('api:forum:post-list'))
     response = view(request)
 
     assert response.status_code == 401
@@ -155,8 +153,8 @@ def test_post_create_view_with_authenticate(
         'thread': thread.pk
     }
 
-    view = PostCreateView.as_view()
-    request = api_factory.post(reverse('api:forum-post-create'), data=data)
+    view = PostListView.as_view()
+    request = api_factory.post(reverse('api:forum:post-list'), data=data)
     force_authenticate(request, user=user, token=get_token_for_user(user=user))
     response = view(request)
 
@@ -176,7 +174,7 @@ def test_category_list_renders(
 ):
     create_category()
 
-    response = api_client.get(reverse('api:forum-category-list'))
+    response = api_client.get(reverse('api:forum:category-list'))
 
     assert response.status_code == status_code
     assert response.data['count'] == count
@@ -196,7 +194,7 @@ def test_category_detail_renders(
 ):
     category = create_category()
 
-    response = api_client.get(reverse('api:forum-category-detail', kwargs={'pk': category.pk}))
+    response = api_client.get(reverse('api:forum:category-detail', kwargs={'pk': category.pk}))
 
     assert response.status_code == status_code
     assert response.data['name'] == name
@@ -234,7 +232,7 @@ def test_thread_list_renders(
 
     pinned_thread = create_thread(title='Przypiety temat', category=first_category, pinned=True)
 
-    url = reverse('api:forum-thread-list')
+    url = reverse('api:forum:thread-list')
     if category_id:
         if pinned:
             url_full = '{}?category={}&?pinned={}'.format(url, category_id, pinned)
@@ -267,7 +265,7 @@ def test_thread_detail_renders(
 ):
     thread = create_thread(title='Testowy temat')
 
-    response = api_client.get(reverse('api:forum-thread-detail', kwargs={'pk': thread.pk}))
+    response = api_client.get(reverse('api:forum:thread-detail', kwargs={'pk': thread.pk}))
 
     assert response.status_code == status_code
     assert response.data['title'] == title
@@ -291,7 +289,7 @@ def test_thread_create_renders(
         'content': content,
         'category': category.pk
     }
-    response = api_client_with_credentials.post(reverse('api:forum-thread-create'), data=data)
+    response = api_client_with_credentials.post(reverse('api:forum:thread-list'), data=data)
 
     assert response.status_code == 201
     assert response.data['title'] == title
@@ -311,7 +309,7 @@ def test_post_list_renders(
 ):
     create_post(content='Testowa tresc')
 
-    response = api_client.get(reverse('api:forum-post-list'))
+    response = api_client.get(reverse('api:forum:post-list'))
 
     assert response.status_code == status_code
     assert response.data['count'] == count
@@ -331,7 +329,7 @@ def test_post_detail_renders(
 ):
     post = create_post(content='Testowa tresc')
 
-    response = api_client.get(reverse('api:forum-post-detail', kwargs={'pk': post.pk}))
+    response = api_client.get(reverse('api:forum:post-detail', kwargs={'pk': post.pk}))
 
     assert response.status_code == status_code
     assert response.data['content'] == content
@@ -355,7 +353,7 @@ def test_post_create_renders(
         'thread': thread.pk
     }
 
-    response = api_client_with_credentials.post(reverse('api:forum-post-create'), data=data)
+    response = api_client_with_credentials.post(reverse('api:forum:post-list'), data=data)
 
     assert response.status_code == status_code
     assert response.data['content'] == content

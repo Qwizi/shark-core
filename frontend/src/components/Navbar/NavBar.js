@@ -8,15 +8,13 @@ class NavBar extends React.Component {
 
     render() {
         return (
-            <Navbar className="navbar-bg" variant="dark" expand="lg">
+            <Navbar className="navbar-bg" variant="dark" expand="lg" fixed="top">
                 <Navbar.Brand>
                     <NavLink className="navbar-brand" to="/">SharkCore</NavLink>
                 </Navbar.Brand>
                 <Navbar.Toggle aria-controls="basic-navbar-nav"/>
                 <Navbar.Collapse id="basic-navbar-nav">
                     <BoostrapNav className="mr-auto">
-                        <NavLink exact to="/forum/" className="nav-link">Forum</NavLink>
-                        <NavLink exact to="/shop/" className="nav-link">Shop</NavLink>
                     </BoostrapNav>
                     <Nav {...this.props}/>
                 </Navbar.Collapse>

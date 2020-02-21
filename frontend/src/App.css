@@ -3,9 +3,39 @@ body {
   margin: 0;
   color: #ffff;
 }
-
+a {
+  color: #8e969e;
+  text-decoration: none;
+  background-color: transparent;
+}
 .navbar-bg {
-  background: #1b1f26e0;
+  background: #1b1f26cc;
+}
+
+.navbar-bg2 {
+  background: #1b1f26;
+  border-top: 5px solid #262a33;
+  border-bottom: 5px solid #262a33;
+
+}
+
+.nav-link2 {
+  color: #FFF;
+  padding: 10px 40px;
+}
+
+.navbar-nav .nav-link2 {
+  text-transform: uppercase;
+  font-weight: bold;
+  line-height: 24px;
+  text-align: center;
+  display: block;
+  position: relative;
+}
+
+.navbar-bg2 .navbar-nav .nav-link2.active {
+  color: #fff;
+  background: #262a33;
 }
 
 .page-content {

@@ -79,14 +79,35 @@ def qwizi_data():
 @fixture
 def create_user(db, django_user_model, qwizi_data):
     def make_user(**kwargs):
+        force = None
+
+        """
+        Sprawdzamy czy force jest ustawiony jezeli tak usuwamy wartosc ze slownika
+        i wrzucamy wartosc do zmiennej
+        """
+        if "force" in kwargs:
+            force = kwargs.pop('force')
+
         if "steamid64" not in kwargs:
             kwargs['steamid64'] = qwizi_data['steamid64']
         if "tradeurl" not in kwargs:
             kwargs['tradeurl'] = qwizi_data['tradeurl']
 
+        # Sprawdzamy czy uzytkownik o takim steamid64 juz istnieje w bazie
         if django_user_model.objects.filter(steamid64=kwargs['steamid64']).exists():
-            return django_user_model.objects.filter(steamid64=kwargs['steamid64'])[0]
+            # Sprawdzamy czy force jest ustawiony
+            if force:
+                # Pobieramy uzytkownika
+                user = django_user_model.objects.get(steamid64=kwargs['steamid64'])
+                # Usuwamy go
+                user.delete()
+                # Tworzymy nowego
+                return django_user_model.objects.create_user_steam(**kwargs)
+            else:
+                # Zwracamy uzytkownika
+                return django_user_model.objects.filter(steamid64=kwargs['steamid64'])[0]
         else:
+            # Tworzymy uzytkownika
             return django_user_model.objects.create_user_steam(**kwargs)
 
     return make_user
@@ -132,12 +153,12 @@ def default_role_format():
 
 @fixture
 def default_user_role_format():
-    return '<span color="rgb(113,118,114)">{username}</span>'
+    return '<span style="color: rgba(113,118,114)">{username}</span>'
 
 
 @fixture
 def default_admin_role_format():
-    return '<span color="rgb(242,0,0)">{username}</span>'
+    return '<span style="color: rgba(242,0,0)">{username}</span>'
 
 
 @fixture

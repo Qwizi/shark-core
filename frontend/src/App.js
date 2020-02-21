@@ -19,13 +19,15 @@ class App extends React.Component {
             user: {
                 logged: !!localStorage.getItem('access_token'),
                 username: null,
+                formatted_username: null,
                 steamid64: null,
                 steamid32: null,
                 steamid3: null,
-                display_group: null,
+                display_role: null,
                 is_active: null,
                 is_staff: null,
-                date_joined: null
+                date_joined: null,
+                avatar: null
             },
             banner: {
                 name: 'Forum',
@@ -127,13 +129,15 @@ class App extends React.Component {
                 user: {
                     logged: logged === null ? state.user.logged : logged,
                     username: userData.username,
+                    formatted_username: userData.formatted_username,
                     steamid64: userData.steamid64,
                     steamid32: userData.steamid32,
                     steamid3: userData.steamid3,
-                    display_group: userData.display_group,
+                    display_role: userData.display_role,
                     is_active: userData.is_active,
                     is_staff: userData.is_staff,
-                    date_joined: userData.date_joined
+                    date_joined: userData.date_joined,
+                    avatar: userData.avatar
                 }
             }
         });

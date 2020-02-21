@@ -38,9 +38,9 @@ class Role(AbstractRole):
         return '#%02X%02X%02X' % (self._random_number(), self._random_number(), self._random_number())
 
     def create_random_color_format(self):
-        random_color_format = '<span color="{}">{}</a>'.format(
+        random_color_format = '<span style="color: {}">{}</a>'.format(
             self._random_color(),
-            self.format
+            '{username}'
         )
         self.format = random_color_format
         self.save()
@@ -57,7 +57,7 @@ class AccountManager(UserManager):
         role, created = Role.objects.get_or_create(
             pk=3,
             name="User",
-            format='<span color="rgb(113,118,114)">{username}</span>'
+            format='<span style="color: rgba(113,118,114)">{username}</span>'
         )
         return role
 
@@ -70,7 +70,7 @@ class AccountManager(UserManager):
         role, created = Role.objects.get_or_create(
             pk=1,
             name='Admin',
-            format='<span color="rgb(242,0,0)">{username}</span>'
+            format='<span style="color: rgba(242,0,0)">{username}</span>'
         )
         return role
 

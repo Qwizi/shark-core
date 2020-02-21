@@ -1,7 +1,6 @@
 from rest_framework import serializers
-from .models import Category, Thread, Post, Comment
+from .models import Category, Thread, Post
 from accounts.serializers import AccountSerializer
-from accounts.models import Account
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -14,7 +13,6 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class ThreadSerializer(serializers.ModelSerializer):
-    category = CategorySerializer(read_only=True)
     author = AccountSerializer(read_only=True)
     last_poster = AccountSerializer(read_only=True)
 
@@ -32,20 +30,7 @@ class ThreadSerializer(serializers.ModelSerializer):
             'last_poster',
             'category',
         ]
-
-
-class ThreadCreateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Thread
-        fields = [
-            'title',
-            'content',
-            'author',
-            'category',
-        ]
-        extra_kwargs = {
-            'author': {'required': False}
-        }
+        read_only_fields = ('status', 'pinned', 'created', 'updated')
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -61,23 +46,13 @@ class PostSerializer(serializers.ModelSerializer):
             'created',
             'updated'
         ]
+        read_only_fields = ('created', 'updated')
 
+    def create(self, validated_data):
+        thread = validated_data['thread']
 
-class PostCreateSerializer(serializers.ModelSerializer):
+        if not thread.status == Thread.ThreadStatusChoices.OPENED:
+            raise serializers.ValidationError(detail='Temat w którym próbujesz napisać post jest ukryty lub zamknięty',
+                                              code=400)
 
-    class Meta:
-        model = Post
-        fields = [
-            'thread',
-            'content',
-            'author'
-        ]
-        extra_kwargs = {
-            'author': {'required': False}
-        }
-
-
-class CommentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Comment
-        fields = '__all__'
+        return Post.objects.create(**validated_data)

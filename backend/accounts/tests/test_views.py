@@ -796,7 +796,7 @@ def test_admin_accounts_list_renders(
 @pytest.mark.parametrize(
     'account_id, status_code', [
         pytest.param(
-            1, 200
+            50, 200
         ),
         pytest.param(
             999, 404
@@ -806,10 +806,9 @@ def test_admin_accounts_list_renders(
 def test_admin_accounts_detail_renders(
         account_id, status_code, api_client_with_credentials, create_user
 ):
-    user = create_user(pk=1)
+    user = create_user(pk=50, force=True)
 
     response = api_client_with_credentials.get(reverse('api:adminapi:accounts:detail', kwargs={'pk': account_id}))
-
     assert response.status_code == status_code
 
 
@@ -817,7 +816,7 @@ def test_admin_accounts_detail_renders(
 @pytest.mark.parametrize(
     'account_id, status_code', [
         pytest.param(
-            1, 204
+            50, 204
         ),
         pytest.param(
             999, 404
@@ -827,7 +826,7 @@ def test_admin_accounts_detail_renders(
 def test_admin_accounts_delete_renders(
         account_id, status_code, api_client_with_credentials, create_user
 ):
-    user = create_user(pk=1)
+    user = create_user(pk=50, force=True)
 
     response = api_client_with_credentials.delete(reverse('api:adminapi:accounts:detail', kwargs={'pk': account_id}))
 

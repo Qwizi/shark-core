@@ -141,11 +141,9 @@ class Forum extends React.Component {
                                                         Dodaj wątek
                                                     </Button>
                                                 </Col>
-
                                             </Row>
                                             <Row>
-                                                <Col>
-                                                    <p>Kategorie</p>
+                                                <Col md={{margin: 5}}>
                                                     <Categories
                                                         getThreads={this.getThreads}
                                                         setCategoryName={this.setCategoryName}
@@ -163,7 +161,7 @@ class Forum extends React.Component {
                             <Col md={6}>
                                 <Row>
                                     <Col md={{offset: 1}}>
-                                        <p>Aktywność </p>
+                                        <p>Tematy </p>
                                     </Col>
                                 </Row>
                                 <Animated

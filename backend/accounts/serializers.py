@@ -73,7 +73,8 @@ class AccountMeSerializer(AccountSerializer):
             'is_staff',
             'date_joined',
             'threads',
-            'posts'
+            'posts',
+            'avatar'
         ]
 
 
