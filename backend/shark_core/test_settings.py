@@ -96,9 +96,8 @@ DATABASES = {
     #    'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     # }
     'default': {
-        #'ENGINE': 'django.db.backends.postgresql',
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ.get("POSTGRES_DB"),
+        'NAME': os.environ.get("POSTGRES_TEST_DB"),
         'USER': os.environ.get("POSTGRES_USER"),
         'HOST': os.environ.get("POSTGRES_HOST"),
         'PASSWORD': os.environ.get("POSTGRES_PASSWORD"),

@@ -114,8 +114,6 @@ def test_account_on_created_wallets_exist(create_user):
     account = create_user()
 
     assert account.wallet_set.all().count() == 2
-    assert account.wallet_set.all()[0].wtype == Wallet.WalletTypeChoices.PRIMARY
-    assert account.wallet_set.all()[1].wtype == Wallet.WalletTypeChoices.SECONDARY
 
 
 @pytest.mark.django_db

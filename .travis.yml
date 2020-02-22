@@ -1,0 +1,20 @@
+dist: xenial
+language: python
+jobs:
+  include:
+    - python:
+        - 3.8
+      addons:
+        postgresql: 9.6
+      env:
+        - POSTGRES_TEST_DB=travis_ci_test
+        - POSTGRES_HOST=localhost
+        - POSTGRES_USER=postgres
+      install:
+        - cd backend/
+        - pip install -r requirements.txt
+      before_script:
+        - psql -c "create database travis_ci_test;" -U postgres
+      script:
+        - python manage_test.py migrate
+        - pytest

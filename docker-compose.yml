@@ -1,17 +1,32 @@
 version: '3.7'
 
 services:
-  db:
-    image: postgres
+  postgres:
+    image: postgres:10
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=sharkcore
+      - POSTGRES_PASSWORD=sharkcore
+    ports:
+      - '127.0.0.1:5432:5432'
+
   backend:
     build: ./backend
-    command: python manage.py runserver 0.0.0.0:8000
+    environment:
+      # Postgres
+      - POSTGRES_USER=sharkcore
+      - POSTGRES_PASSWORD=sharkcore
+      - POSTGRES_DB=sharkcore
+      - POSTGRES_HOST=postgres
+      - POSTGRES_TEST_DB=sharkcore_test
     volumes:
       - ./backend:/code/backend/
     ports:
       - "8000:8000"
     depends_on:
-      - db
+      - postgres
+    command: ["./wait-for-it.sh", "postgres:5432", "--", "python", "manage.py", "runserver", "0.0.0.0:8000"]
+
   frontend:
     build: ./frontend
     command: npm start
