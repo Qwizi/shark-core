@@ -20,6 +20,7 @@ django-heroku = "*"
 django-filter = "*"
 pytest = "*"
 pytest-django = "*"
+pillow = "*"
 
 [requires]
 python_version = "3.8"

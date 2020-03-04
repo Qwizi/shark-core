@@ -2,6 +2,23 @@ from django.db import models
 from accounts.models import Account
 
 
+class ReactionItem(models.Model):
+    name = models.CharField(max_length=64, unique=True)
+    tag = models.CharField(max_length=64, unique=True)
+    image = models.ImageField(height_field=64, width_field=64)
+
+    def __str__(self):
+        return '{} | {}'.format(self.name, self.tag)
+
+
+class Reaction(models.Model):
+    item = models.ForeignKey(ReactionItem, on_delete=models.CASCADE)
+    user = models.ForeignKey(Account, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return '{} | {} | {}'.format(self.item.name, self.user.username, self.type)
+
+
 class Category(models.Model):
     name = models.CharField(max_length=64, unique=True)
 
@@ -24,6 +41,7 @@ class Thread(models.Model):
     pinned = models.BooleanField(default=False)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now_add=True)
+    reactions = models.ManyToManyField(Reaction)
 
     def __str__(self):
         return '{} | {} | {}'.format(self.title, self.author.username, self.status)
@@ -50,7 +68,6 @@ class Thread(models.Model):
 
 
 class Post(models.Model):
-
     class PostStatusChoices(models.IntegerChoices):
         VISIBLE = 1
         HIDDEN = 0
@@ -61,6 +78,7 @@ class Post(models.Model):
     status = models.IntegerField(choices=PostStatusChoices.choices, default=PostStatusChoices.VISIBLE)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now_add=True)
+    reactions = models.ManyToManyField(Reaction)
 
     def __str__(self):
         return '{} | {} | {}'.format(self.pk, self.thread.title, self.author.username)

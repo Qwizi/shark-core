@@ -15,12 +15,14 @@ from .serializers import (
     CategorySerializer,
     ThreadSerializer,
     PostSerializer,
+    ThreadReactionSerializer
 )
 
 from shark_core.permissions import (
     PERM_ALLOW_ANY,
     PERM_THREAD,
-    PERM_POST
+    PERM_POST,
+    PERM_IS_AUTHENTICATED
 )
 
 
@@ -79,6 +81,28 @@ class ThreadDetailView(generics.RetrieveAPIView):
 thread_detail = ThreadDetailView.as_view()
 
 
+class ThreadReactionAddView(generics.UpdateAPIView):
+    """
+    Widok dodawania reakcji do tematow
+    """
+    permission_classes = (PERM_IS_AUTHENTICATED,)
+    serializer_class = ThreadReactionSerializer
+
+    def get_object(self):
+        return Thread.objects.get(pk=self.kwargs['pk'])
+
+    def update(self, request, *args, **kwargs):
+        user = request.user
+        thread = self.get_object()
+        serializer = self.get_serializer(thread, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(user=user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+thread_reaction_add = ThreadReactionAddView.as_view()
+
+
 class PostListView(generics.ListCreateAPIView):
     """
     Widok listy postow
@@ -107,3 +131,20 @@ class PostDetailView(generics.RetrieveAPIView):
 
 
 post_detail = PostDetailView.as_view()
+
+
+class ThreadReactionListView(generics.CreateAPIView):
+    """
+    Widok tworzenia reakcji
+    """
+    permission_classes = (PERM_IS_AUTHENTICATED,)
+    serializer_class = ThreadReactionSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(user=request.user)
+        return Response(serializer.data)
+
+
+thread_reaction_list = ThreadReactionListView.as_view()

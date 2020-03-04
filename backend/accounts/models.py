@@ -17,7 +17,6 @@ from shark_core.helpers import check_banned_usernames
 
 import random
 
-
 class AbstractRole(Group):
     class Meta:
         abstract = True

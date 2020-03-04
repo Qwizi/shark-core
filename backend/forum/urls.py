@@ -7,7 +7,7 @@ from .views import (
     thread_detail,
     post_list,
     post_detail,
-
+    thread_reaction_add
 )
 
 app_name = 'forum'
@@ -19,7 +19,8 @@ categories_patterns = [
 
 threads_patterns = [
     path('', thread_list, name='thread-list'),
-    path('<int:pk>/', thread_detail, name='thread-detail')
+    path('<int:pk>/', thread_detail, name='thread-detail'),
+    path('<int:pk>/reactions/add', thread_reaction_add, name='thread-reaction-add')
 ]
 
 posts_patterns = [
@@ -30,18 +31,5 @@ posts_patterns = [
 urlpatterns = [
     path('categories/', include(categories_patterns)),
     path('threads/', include(threads_patterns)),
-    path('posts/', include(posts_patterns))
+    path('posts/', include(posts_patterns)),
 ]
-
-"""
-urlpatterns = [
-    path('categories/', forum_category_list, name='forum-category-list'),
-    path('categories/<int:pk>/', forum_category_detail, name='forum-category-detail'),
-    path('threads/', forum_thread_list, name='forum-thread-list'),
-    path('threads/create', forum_thread_create, name='forum-thread-create'),
-    path('threads/<int:pk>/', forum_thread_detail, name='forum-thread-detail'),
-    path('posts/', forum_post_list, name='forum-post-list'),
-    path('posts/<int:pk>/', forum_post_detail, name='forum-post-detail'),
-    path('posts/create', forum_post_create, name='forum-post-create')
-]
-"""

@@ -10,13 +10,23 @@ from ..models import (
 from forum.models import (
     Category,
     Thread,
-    Post
+    Post,
+    ReactionItem,
+    Reaction,
+
 )
 
 from steambot.models import (
     Queue
 )
 
+from store.models import (
+    Group,
+    Item,
+    History
+)
+
+from django.core.files import File
 from djmoney.money import Money
 
 from ..providers import payment_manager
@@ -248,3 +258,45 @@ def create_post(db, create_thread, create_user):
         return Post.objects.create(**kwargs)
 
     return make_post
+
+
+@fixture
+def create_reactionitem(db):
+    def make_reactionitem(**kwargs):
+        if 'image' not in kwargs:
+            kwargs['image'] = File('https://www.cdn.pecetowicz.pl/reactions/sad.png')
+        return ReactionItem.objects.create(**kwargs)
+
+    return make_reactionitem
+
+
+@fixture
+def create_reaction(db):
+    def make_reaction(**kwargs):
+        return Reaction.objects.create(**kwargs)
+
+    return make_reaction
+
+
+@fixture
+def create_group(db):
+    def make_group(**kwargs):
+        return Group.objects.create(**kwargs)
+
+    return make_group
+
+
+@fixture
+def create_item(db):
+    def make_item(**kwargs):
+        return Item.objects.create(**kwargs)
+
+    return make_item
+
+
+@fixture
+def create_history(db):
+    def make_history(**kwargs):
+        return History.objects.create(**kwargs)
+
+    return make_history

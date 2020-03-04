@@ -8,7 +8,8 @@ from ..views import (
     ThreadListView,
     ThreadDetailView,
     PostListView,
-    PostDetailView
+    PostDetailView,
+    ThreadReactionAddView,
 )
 
 
@@ -159,6 +160,30 @@ def test_post_create_view_with_authenticate(
     response = view(request)
 
     assert response.status_code == status_code
+
+
+# TODO
+@pytest.mark.skip
+@pytest.mark.django_db
+def test_thread_reactions_add_view(
+        api_factory, create_user, create_thread, create_reactionitem, get_token_for_user
+):
+    user = create_user()
+    thread = create_thread()
+    reaction_item = create_reactionitem()
+
+    data = {
+        'item': reaction_item
+    }
+
+    view = ThreadReactionAddView.as_view()
+    request = api_factory.put(reverse('api:forum:thread-reaction-add', kwargs={'pk': thread.pk}), data=data)
+    force_authenticate(request, user=user, token=get_token_for_user(user=user))
+    response = view(request, pk=thread.pk)
+
+
+    assert response.data == 1
+    assert response.status_code == 201
 
 
 @pytest.mark.django_db
