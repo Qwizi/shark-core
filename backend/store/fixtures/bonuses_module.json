@@ -1,9 +1,0 @@
-[
-  {
-    "model": "store.Module",
-    "pk": 1,
-    "fields":{
-      "tag": "premium_account"
-    }
-  }
-]

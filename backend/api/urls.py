@@ -31,7 +31,7 @@ urlpatterns = [
     path('auth/token/', AccountAuthSteamTokenView.as_view()),
     path('auth/server/token/', ServerAccountAuthSteamTokenView.as_view()),
     path('accounts/', include('accounts.urls', namespace='accounts')),
-    path('store/', include('store.urls')),
+    path('store/', include('store.urls', namespace='store')),
     path('forum/', include('forum.urls')),
     path('sourcemod/', include('smadmins.urls')),
     path('sourcemod/', include('servers.urls')),
