@@ -9,7 +9,6 @@ class Migration(migrations.Migration):
     dependencies = [
         ('auth', '0011_update_proxy_permissions'),
         ('smadmins', '0004_remove_admin_server'),
-        ('premium_account', '0001_initial'),
         ('accounts', '0005_auto_20200214_0658'),
     ]
 

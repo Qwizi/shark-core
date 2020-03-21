@@ -69,20 +69,16 @@ class OfferCreateView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(user=request.user)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        """
         if serializer.is_valid(raise_exception=True):
-            item = serializer.data['item']
+            item = serializer.validated_data['item']
             bonus_class = bonus_factory.get_bonus(item.group.tag)
             bonus_instance = bonus_class(item)
-            bonus_instance.after_bought(user=request.user, extra_fields=serializer.data['extra_fields'])
+            bonus_instance.after_bought(user=request.user,
+                                        extra_fields=serializer.validated_data.get('extra_fields', None))
 
             serializer.save(user=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        """
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 offer_create = OfferCreateView.as_view()

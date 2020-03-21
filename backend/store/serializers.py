@@ -20,16 +20,31 @@ class ItemSerializer(serializers.ModelSerializer):
         ]
 
 
+class OfferItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Item
+        fields = [
+            'id',
+            'name',
+            'description',
+            'price',
+            'options',
+            'group'
+        ]
+
+
 class OfferSerializer(serializers.Serializer):
     user = AccountSerializer(required=False)
-    item = serializers.IntegerField(write_only=True)
+    item = serializers.IntegerField(write_only=True, required=True)
     wallet_type = serializers.IntegerField(write_only=True)
     extra_fields = serializers.ListField(required=False)
 
+    def validate_item(self, value):
+        return Item.objects.get(pk=value)
+
     def create(self, validated_data):
         user = validated_data['user']
-        item_id = validated_data['item']
-        item = Item.objects.get(id=item_id)
+        item = validated_data['item']
         wallet_type = validated_data.pop('wallet_type')
         extra_fields = validated_data.pop('extra_fields', None)
 
@@ -41,7 +56,7 @@ class OfferSerializer(serializers.Serializer):
         wallet = user.wallet_set.get(wtype=wallet_type)
 
         # Jezeli w portfelu brak odpowiednich srodkow zwracamy wyjatek
-        if wallet.money < item.price or wallet.money != item.price:
+        if wallet.money < item.price:
             raise serializers.ValidationError(detail='Nie posiadasz środkow w portfelu', code=400)
 
         # Odjemjujemy pieniadze z porfela

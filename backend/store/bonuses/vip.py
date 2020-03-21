@@ -4,6 +4,7 @@ from ..models import Item, VipCache
 
 import datetime
 
+
 class VipBonus(BonusBase):
 
     def __init__(self, item_obj: Item, **kwargs):
@@ -28,17 +29,24 @@ class VipBonus(BonusBase):
     def after_bought(self, **kwargs):
         user = kwargs.get('user', None)
         extra_fields = kwargs.get('extra_fields', None)
-        server = extra_fields.get('server', None)
-        server_instance = Server.objects.get(pk=server)
-        flag = self.get_option('flag')
-        days = self.get_option('days')
 
-        days_to_add = datetime.timedelta(days=days)
+        if extra_fields:
+            server_instance_list = []
+            for field in extra_fields:
+                if "server" in field:
+                    server_instance_list.append(Server.objects.get(pk=field['server']))
 
-        return VipCache.objects.create(
-            user=user,
-            flag=flag,
-            server=server_instance,
-            end=days_to_add
-        )
+            flag = self.get_option('flag')
+            days = self.get_option('days')
+            server = server_instance_list[0]
+            days_to_add = datetime.datetime.now() + datetime.timedelta(days=days)
 
+            vip_cache = {
+                'user': user,
+                'flag': flag,
+                'server': server,
+                'end': days_to_add
+            }
+
+            return VipCache.objects.create(**vip_cache)
+        return None

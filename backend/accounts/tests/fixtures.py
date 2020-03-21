@@ -23,7 +23,13 @@ from steambot.models import (
 from store.models import (
     Group,
     Item,
-    History
+    History,
+    VipCache
+)
+
+from servers.models import (
+    Game,
+    Server,
 )
 
 from django.core.files import File
@@ -281,14 +287,31 @@ def create_reaction(db):
 @fixture
 def create_group(db):
     def make_group(**kwargs):
+        if "tag" not in kwargs:
+            kwargs['tag'] = 'vip'
+        if "name" not in kwargs:
+            kwargs['name'] = 'VIP'
+
         return Group.objects.create(**kwargs)
 
     return make_group
 
 
 @fixture
-def create_item(db):
+def create_item(db, create_group):
     def make_item(**kwargs):
+        if "name" not in kwargs:
+            kwargs['name'] = 'VIP 7 DNI'
+        if "description" not in kwargs:
+            kwargs['description'] = 'VIP NA 7 DNI'
+        if "price" not in kwargs:
+            kwargs['price'] = Money(5, 'PLN')
+        if "group" not in kwargs:
+            kwargs['group'] = create_group()
+        if "options" not in kwargs:
+            kwargs['options'] = {
+                'days': 7
+            }
         return Item.objects.create(**kwargs)
 
     return make_item
@@ -300,3 +323,37 @@ def create_history(db):
         return History.objects.create(**kwargs)
 
     return make_history
+
+
+@fixture
+def create_game(db):
+    def make_game(**kwargs):
+        if "tag" not in kwargs:
+            kwargs['tag'] = 'tf2'
+        if "name" not in kwargs:
+            kwargs['name'] = 'Team Fortress 2'
+        if "app_id" not in kwargs:
+            kwargs['app_id'] = 440
+
+        if Game.objects.filter(tag=kwargs['tag']).exists():
+            return Game.objects.get(tag=kwargs['tag'])
+
+        return Game.objects.create(**kwargs)
+
+    return make_game
+
+
+@fixture
+def create_server(db, create_game):
+    def make_server(**kwargs):
+        if "name" not in kwargs:
+            kwargs['name'] = '(PL) JailBreak | SharkServers.pl'
+        if "game" not in kwargs:
+            kwargs['game'] = create_game()
+        if "ip" not in kwargs:
+            kwargs['ip'] = '79.133.194.18'
+        if "port" not in kwargs:
+            kwargs['port'] = '25004'
+        return Server.objects.create(**kwargs)
+
+    return make_server

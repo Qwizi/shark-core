@@ -50,9 +50,7 @@ INSTALLED_APPS = [
     'adminapi',
     'servers',
     'forum',
-    'premium_account',
     'smadmins',
-    'roulette',
     'steambot'
 ]
 

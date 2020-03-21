@@ -10,7 +10,7 @@ from ..views import (
 
 
 @pytest.mark.django_db
-def test_store_item_list(
+def test_store_item_list_view(
         api_factory
 ):
     view = ItemListView.as_view()
@@ -21,7 +21,18 @@ def test_store_item_list(
 
 
 @pytest.mark.django_db
-def test_store_offer_create(
+def test_store_offer_create_without_authenticate_view(
+        api_factory
+):
+    view = OfferCreateView.as_view()
+    request = api_factory.post(reverse('api:store:offer-create'))
+    response = view(request)
+
+    assert response.status_code == 401
+
+
+@pytest.mark.django_db
+def test_store_offer_create_view(
         api_factory, create_user, get_token_for_user, create_group, create_item
 ):
     user = create_user()
@@ -53,7 +64,7 @@ def test_store_offer_create(
     force_authenticate(request, user=user, token=get_token_for_user(user=user))
     response = view(request)
 
-    assert response.data == 1
+    assert response.status_code == 201
 
 
 @pytest.mark.django_db
@@ -83,3 +94,34 @@ def test_store_item_list_renders(
     assert response.data['results'][0]['options']['days'] == 7
     assert response.data['results'][0]['options']['flag'] == "a"
     assert "fields" in response.data['results'][0]
+
+
+@pytest.mark.django_db
+def test_store_offer_create_renders(
+        api_client_with_credentials, create_item, create_server, create_user
+):
+    user = create_user()
+
+    wallet = user.wallet_set.get(wtype=Wallet.WalletTypeChoices.PRIMARY)
+    wallet.add_money(Money(90000, 'PLN'))
+
+    item = create_item(options={
+        'days': 7,
+        'flag': 'a'
+    })
+    server = create_server()
+    extra_fields = [{'server': server.pk}]
+
+    data = {
+        'item': item.id,
+        'extra_fields': extra_fields,
+        'wallet_type': Wallet.WalletTypeChoices.PRIMARY
+    }
+
+    response = api_client_with_credentials.post(reverse('api:store:offer-create'), data=data)
+
+    assert response.status_code == 201
+    assert History.objects.filter(user=user).count() == 1
+    assert VipCache.objects.filter(user=user).count() == 1
+    assert VipCache.objects.get(user=user).server == server
+    assert VipCache.objects.get(user=user).flag == 'a'

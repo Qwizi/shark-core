@@ -50,9 +50,7 @@ INSTALLED_APPS = [
     'adminapi',
     'servers',
     'forum',
-    'premium_account',
     'smadmins',
-    'roulette',
     'steambot'
 ]
 
@@ -171,21 +169,6 @@ REST_FRAMEWORK = {
 }
 
 SHARK_CORE = {
-    'STORE_BONUS_AFTER_BOUGH': True,
-    'STORE_BONUSES': (
-        'premium_account.bonuses.PremiumAccountBonus',
-    ),
-    'STORE': {
-        'BONUS_AFTER_BOUGHT': True,
-        'BONUS_AFTER_BOUGHT_TYPE': (
-            'BonusAccount',
-            'BonusWallet',
-        ),
-        'ACCOUNT_MAX_BONUS_PERCENT': 15,
-        'BONUS_TYPE_LIST': (
-            'premium_account.bonuses.PremiumAccountBonus',
-        ),
-    },
     'STEAM': {
         'API_KEY': '7F5343D3443D1E45A7ED0BC683C29E52',
         'CHECK_BANNED_USER_NAMES': True,
