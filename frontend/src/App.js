@@ -18,16 +18,6 @@ class App extends React.Component {
         this.state = {
             user: {
                 logged: !!localStorage.getItem('access_token'),
-                username: null,
-                formatted_username: null,
-                steamid64: null,
-                steamid32: null,
-                steamid3: null,
-                display_role: null,
-                is_active: null,
-                is_staff: null,
-                date_joined: null,
-                avatar: null
             },
             banner: {
                 name: 'Forum',
@@ -148,14 +138,7 @@ class App extends React.Component {
         this.setState({
             user: {
                 logged: false,
-                username: null,
-                steamid64: null,
-                steamid32: null,
-                steamid3: null,
-                display_group: null,
-                is_active: null,
-                is_staff: null,
-                date_joined: null
+
             }
         })
     }

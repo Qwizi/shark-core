@@ -63,7 +63,7 @@ class Threads extends React.Component {
         } else {
             return (
                 <Row>
-                    <Col md={{span: 11, offset: 1}}>
+                    <Col md={{span: 12}}>
                         <Card className="bonus-card">
                             <Card.Body className="bonus-card-bg">
                                 <Card.Text>

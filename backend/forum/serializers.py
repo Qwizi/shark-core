@@ -121,3 +121,9 @@ class PostSerializer(serializers.ModelSerializer):
                                               code=400)
 
         return Post.objects.create(**validated_data)
+
+
+
+class StatsSerializer(serializers.Serializer):
+    threads = serializers.IntegerField()
+    posts = serializers.IntegerField()

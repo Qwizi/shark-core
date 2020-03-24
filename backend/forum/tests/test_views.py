@@ -9,6 +9,7 @@ from ..views import (
     ThreadDetailView,
     PostListView,
     PostDetailView,
+    StatsView,
     ThreadReactionAddView,
 )
 
@@ -220,6 +221,17 @@ def test_thread_reactions_add_view(
 
 
 @pytest.mark.django_db
+def test_stats_view(
+        api_factory
+):
+    view = StatsView.as_view()
+    request = api_factory.get(reverse('api:forum:stats-list'))
+    response = view(request)
+
+    assert response.status_code == 200
+
+
+@pytest.mark.django_db
 @pytest.mark.parametrize(
     'name, count, status_code', [
         pytest.param(
@@ -356,6 +368,44 @@ def test_thread_create_renders(
 
 @pytest.mark.django_db
 @pytest.mark.parametrize(
+    'updated_content, updated_title, status_code', [
+        pytest.param(
+            'Zaaktualizowana tresc', 'Zaaktualizowy tytul', 200
+        )
+    ]
+)
+def test_thread_update_renders(
+        updated_content, updated_title, status_code, api_client_with_credentials, create_thread, create_user
+):
+    user = create_user()
+    thread = create_thread(title='Normalny tytul', content='Normanla tresc', author=user)
+
+    data = {
+        'title': 'Zaaktualizowy tytul',
+        'content': 'Zaaktualizowana tresc'
+    }
+
+    response = api_client_with_credentials.put(reverse('api:forum:thread-detail', kwargs={'pk': thread.pk}), data=data)
+
+    assert response.status_code == status_code
+    assert response.data['title'] == updated_title
+    assert response.data['content'] == updated_content
+
+
+@pytest.mark.django_dbd
+def test_thread_update_renders_when_user_is_not_author(
+        api_client_with_credentials, create_user, create_thread
+):
+    author = create_user(steamid64="76561199027497412")
+    thread = create_thread(title='Normalny tytul', content='Normanla tresc', author=author)
+
+    response = api_client_with_credentials.put(reverse('api:forum:thread-detail', kwargs={'pk': thread.pk}))
+
+    assert response.status_code == 403
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
     'content, count, status_code', [
         pytest.param(
             'Testowa tresc', 1, 200
@@ -418,6 +468,82 @@ def test_post_create_renders(
 
 
 @pytest.mark.django_db
+
+def test_post_create_renders_in_closed_thread(
+        api_client_with_credentials, create_thread, create_user
+):
+    user = create_user()
+    thread = create_thread(author=user, status=Thread.ThreadStatusChoices.CLOSED)
+    data = {
+        'content': 'Testowa tress',
+        'thread': thread.pk
+    }
+
+    response = api_client_with_credentials.post(reverse('api:forum:post-list'), data=data)
+
+    assert response.status_code == 400
+    assert 'Temat w którym próbujesz napisać post jest ukryty lub zamknięty' in response.data
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    'updated_content, status_code', [
+        pytest.param(
+            'Zaaktualizowana tresc', 200
+        )
+    ]
+)
+def test_post_update_renders(
+        updated_content, status_code, api_client_with_credentials, create_thread, create_post, create_user
+):
+    user = create_user()
+    thread = create_thread(author=user, status=Thread.ThreadStatusChoices.CLOSED)
+    post = create_post(content='Normalna tresc', thread=thread)
+
+    data = {
+        'content': 'Zaaktualizowana tresc',
+        'thread': thread.pk
+    }
+
+    response = api_client_with_credentials.put(reverse('api:forum:post-detail', kwargs={'pk': post.pk}), data=data)
+
+    assert response.status_code == status_code
+    assert response.data['content'] == updated_content
+
+
+@pytest.mark.django_dbd
+def test_post_update_renders_when_user_is_not_author(
+        api_client_with_credentials, create_user, create_thread, create_post
+):
+    author = create_user(steamid64="76561199027497412")
+    thread = create_thread(title='Normalny tytul', content='Normanla tresc', author=author)
+    post = create_post(thread=thread, author=author)
+
+    response = api_client_with_credentials.put(reverse('api:forum:thread-detail', kwargs={'pk': thread.pk}))
+
+    assert response.status_code == 403
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    'threads, posts, status_code', [
+        pytest.param(
+            1, 1, 200
+        )
+    ]
+)
+def test_stats_renders(
+        threads, posts, status_code, api_client, create_thread, create_post
+):
+    thread = create_thread()
+    create_post(thread=thread)
+
+    response = api_client.get(reverse('api:forum:stats-list'))
+
+    assert response.status_code == status_code
+    assert response.data['threads'] == threads
+    assert response.data['posts'] == posts
+    
 def test_thread_reaction_add_renders(
         api_client_with_credentials, create_thread, create_user, create_reactionitem
 ):
@@ -439,3 +565,4 @@ def test_thread_reaction_add_renders(
     assert thread.reactions.all().count() == 1
     assert thread.reactions.all()[0].user == user
     assert thread.reactions.all()[0].item == reaction_item
+

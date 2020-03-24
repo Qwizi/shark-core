@@ -111,7 +111,7 @@ a {
 .context {
   width: 100%;
   position: absolute;
-  top:15vh;
+  top:30vh;
   
 }
 
@@ -119,7 +119,7 @@ a {
   background: #4e54c8;  
   background: -webkit-linear-gradient(to left, #8f94fb, #4e54c8);  
   width: 100%;
-  height:30vh;
+  height:50vh;
   
  
 }
@@ -241,4 +241,14 @@ a {
 
 .ck.ck-editor {
   color: black
+}
+
+.affix {
+  padding-top: 0.1em !important;
+  padding-bottom: 0.1em !important;
+  background: #1b1f26e0 !important;
+  -webkit-transition:padding 0.2s linear;
+  -moz-transition:padding 0.2s linear;
+  -o-transition:padding 0.2s linear;
+  transition:padding 0.2s linear;
 }

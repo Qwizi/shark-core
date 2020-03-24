@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 import os
+from datetime import timedelta
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -93,8 +94,7 @@ DATABASES = {
     #    'ENGINE': 'django.db.backends.sqlite3',
     #    'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     # }
-    'default': {
-        #'ENGINE': 'django.db.backends.postgresql',
+    'default': 
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': os.environ.get("POSTGRES_DB"),
         'USER': os.environ.get("POSTGRES_USER"),
@@ -168,6 +168,11 @@ REST_FRAMEWORK = {
     ]
 }
 
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+}
+
 SHARK_CORE = {
     'STEAM': {
         'API_KEY': '7F5343D3443D1E45A7ED0BC683C29E52',
@@ -200,10 +205,10 @@ OAUTH2_PROVIDER = {
 SWAGGER_SETTINGS = {
     'DEFAULT_INFO': 'api.urls.api_info',
     'SECURITY_DEFINITIONS': {
-            'apiKey': {
-                'type': 'apiKey',
-                'name': 'Bearer',
-                'in': 'header',
-            }
-        },
+        'apiKey': {
+            'type': 'apiKey',
+            'name': 'Bearer',
+            'in': 'header',
+        }
+    },
 }

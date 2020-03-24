@@ -7,6 +7,7 @@ from .views import (
     thread_detail,
     post_list,
     post_detail,
+    stats_list,
     thread_reaction_add
 )
 
@@ -36,4 +37,5 @@ urlpatterns = [
     path('categories/', include(categories_patterns)),
     path('threads/', include(threads_patterns)),
     path('posts/', include(posts_patterns)),
+    path('stats/', stats_list, name='stats-list')
 ]

@@ -1,8 +1,6 @@
 import React from 'react';
-import Routes from './Routes';
-import Container from 'react-bootstrap/Container';
-import Navbar from 'react-bootstrap/Navbar';
-import Nav from 'react-bootstrap/Nav';
+import Routes from './routes';
+import {Container, Navbar, Nav} from 'react-bootstrap';
 import {NavLink} from 'react-router-dom';
 
 const PageName = (props) => {
@@ -18,6 +16,17 @@ const PageName = (props) => {
 }
 
 export default class PageContent extends React.Component {
+
+    circles() {
+        let circles = []
+
+        for (let i=0;i<=10;i++) {
+            circles.push(<li></li>)
+        }
+
+        return circles
+    }
+
     render() {
         const {banner} = this.props
         return (
@@ -28,16 +37,7 @@ export default class PageContent extends React.Component {
                     </div>
                     <div className="area">
                         <ul className="circles">
-                            <li></li>
-                            <li></li>
-                            <li></li>
-                            <li></li>
-                            <li></li>
-                            <li></li>
-                            <li></li>
-                            <li></li>
-                            <li></li>
-                            <li></li>
+                            {this.circles()}
                         </ul>
                     </div>
                     <Navbar className="navbar-bg2" variant="dark" expand="lg">

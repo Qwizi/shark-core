@@ -230,6 +230,10 @@ def create_category(db):
     def make_category(**kwargs):
         if "name" not in kwargs:
             kwargs['name'] = 'Testowa kategoria'
+
+            if Category.objects.filter(name=kwargs['name']).exists():
+                return Category.objects.get(name=kwargs['name'])
+
         return Category.objects.create(**kwargs)
 
     return make_category

@@ -49,7 +49,7 @@ INSTALLED_APPS = [
     'api',
     'adminapi',
     'servers',
-    'forum',
+    'forum'
     'smadmins',
     'steambot'
 ]

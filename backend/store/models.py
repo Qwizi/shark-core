@@ -10,6 +10,7 @@ class Group(models.Model):
     tag = models.CharField(max_length=32, unique=True, default='vip')
     name = models.CharField(max_length=64)
 
+
     def __str__(self):
         return f'{self.tag} | {self.name}'
 

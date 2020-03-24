@@ -15,6 +15,7 @@ from .serializers import (
     CategorySerializer,
     ThreadSerializer,
     PostSerializer,
+    StatsSerializer,
     ThreadReactionAddSerializer
 )
 
@@ -22,6 +23,7 @@ from shark_core.permissions import (
     PERM_ALLOW_ANY,
     PERM_THREAD,
     PERM_POST,
+    PERM_IS_AUTHOR,
     PERM_IS_AUTHENTICATED
 )
 
@@ -69,12 +71,12 @@ class ThreadListView(generics.ListCreateAPIView):
 thread_list = ThreadListView.as_view()
 
 
-class ThreadDetailView(generics.RetrieveAPIView):
+class ThreadDetailView(generics.RetrieveUpdateAPIView):
     """
     Widok pojedynczego tematu
     """
     queryset = Thread.objects.all()
-    permission_classes = (PERM_ALLOW_ANY,)
+    permission_classes = (PERM_IS_AUTHOR,)
     serializer_class = ThreadSerializer
 
 
@@ -117,13 +119,32 @@ class PostListView(generics.ListCreateAPIView):
 post_list = PostListView.as_view()
 
 
-class PostDetailView(generics.RetrieveAPIView):
+class PostDetailView(generics.RetrieveUpdateAPIView):
     """
     Widok pojedynczego postu
     """
     queryset = Post.objects.all()
-    permission_classes = (PERM_ALLOW_ANY,)
+    permission_classes = (PERM_IS_AUTHOR,)
     serializer_class = PostSerializer
 
 
 post_detail = PostDetailView.as_view()
+
+
+class StatsView(generics.ListAPIView):
+    """
+    Widok statystyk forum
+    """
+    permission_classes = (PERM_ALLOW_ANY,)
+    serializer_class = StatsSerializer
+
+    def list(self, request, *args, **kwargs):
+        queryset = {
+            'threads': Thread.objects.all().count(),
+            'posts': Post.objects.all().count()
+        }
+        serializer = self.get_serializer(queryset)
+        return Response(serializer.data)
+
+
+stats_list = StatsView.as_view()

@@ -1,5 +1,5 @@
 import React from 'react';
-import {Row, Col, Button, Card, ListGroup} from 'react-bootstrap';
+import {Row, Col, Button, Card, ListGroup, Media, Image} from 'react-bootstrap';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faStar} from '@fortawesome/free-solid-svg-icons';
 import {Switch, Route, Redirect, withRouter} from 'react-router-dom';
@@ -159,11 +159,7 @@ class Forum extends React.Component {
                                 </Card>
                             </Col>
                             <Col md={6}>
-                                <Row>
-                                    <Col md={{offset: 1}}>
-                                        <p>Tematy </p>
-                                    </Col>
-                                </Row>
+
                                 <Animated
                                     animationIn="fadeIn"
                                     isVisible={this.state.threads_is_loaded}
@@ -182,11 +178,15 @@ class Forum extends React.Component {
                                     <Card.Body className="bonus-card-bg">
                                         <Card.Title>Ostatnie tematy</Card.Title>
                                         <Card.Text>
-                                            <ListGroup>
-                                                {posts.map((post) =>
-                                                    <ListGroup.Item className="bonus-card bonus-card-bg">{post}</ListGroup.Item>
+                                            {posts.map((post) =>
+
+                                                <Media>
+                                                    <Image src={this.props.user.avatar} roundedCircle className="mr-3" />
+                                                    <Media.Body>
+                                                        <h5>{post}</h5>
+                                                    </Media.Body>
+                                                </Media>
                                                 )}
-                                            </ListGroup>
                                         </Card.Text>
                                     </Card.Body>
                                 </Card>
