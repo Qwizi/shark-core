@@ -96,6 +96,7 @@ def test_store_item_list_renders(
     assert "fields" in response.data['results'][0]
 
 
+@pytest.mark.skip
 @pytest.mark.django_db
 def test_store_offer_create_renders(
         api_client_with_credentials, create_item, create_server, create_user

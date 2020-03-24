@@ -17,10 +17,14 @@ categories_patterns = [
     path('<int:pk>/', category_detail, name='category-detail')
 ]
 
+thread_reactions_patterns = [
+    path('add/', thread_reaction_add, name='thread-reaction-add')
+]
+
 threads_patterns = [
     path('', thread_list, name='thread-list'),
     path('<int:pk>/', thread_detail, name='thread-detail'),
-    path('<int:pk>/reactions/add', thread_reaction_add, name='thread-reaction-add')
+    path('<int:thread_pk>/reactions/', include(thread_reactions_patterns))
 ]
 
 posts_patterns = [

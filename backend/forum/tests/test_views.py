@@ -101,6 +101,40 @@ def test_thread_create_view_with_authenticate(
 
 
 @pytest.mark.django_db
+def test_thread_reaction_add_view_without_authenticate(
+        api_factory
+):
+    view = ThreadReactionAddView.as_view()
+    request = api_factory.post(reverse('api:forum:thread-reaction-add', kwargs={'thread_pk': 1}))
+    response = view(request, thread_pk=1)
+
+    assert response.status_code == 401
+
+
+@pytest.mark.django_db
+def test_thread_reaction_add_view(
+        api_factory, create_thread, create_user, get_token_for_user, create_reactionitem,
+):
+    thread = create_thread()
+    user = create_user()
+    reaction_item = create_reactionitem(
+        name='Sad',
+        tag='sad'
+    )
+
+    data = {
+        'reaction_tag': reaction_item.tag
+    }
+
+    view = ThreadReactionAddView.as_view()
+    request = api_factory.post(reverse('api:forum:thread-reaction-add', kwargs={'thread_pk': thread.pk}), data=data)
+    force_authenticate(request, user=user, token=get_token_for_user(user=user))
+    response = view(request, thread_pk=thread.pk)
+
+    assert response.status_code == 201
+
+
+@pytest.mark.django_db
 def test_post_list_view(
         api_factory
 ):
@@ -180,7 +214,6 @@ def test_thread_reactions_add_view(
     request = api_factory.put(reverse('api:forum:thread-reaction-add', kwargs={'pk': thread.pk}), data=data)
     force_authenticate(request, user=user, token=get_token_for_user(user=user))
     response = view(request, pk=thread.pk)
-
 
     assert response.data == 1
     assert response.status_code == 201
@@ -382,3 +415,27 @@ def test_post_create_renders(
 
     assert response.status_code == status_code
     assert response.data['content'] == content
+
+
+@pytest.mark.django_db
+def test_thread_reaction_add_renders(
+        api_client_with_credentials, create_thread, create_user, create_reactionitem
+):
+    thread = create_thread()
+    user = create_user()
+    reaction_item = create_reactionitem(
+        name='Sad',
+        tag='sad',
+    )
+
+    data = {
+        'reaction_tag': reaction_item.tag
+    }
+
+    response = api_client_with_credentials.post(
+        reverse('api:forum:thread-reaction-add', kwargs={'thread_pk': thread.pk}), data=data)
+
+    assert response.status_code == 201
+    assert thread.reactions.all().count() == 1
+    assert thread.reactions.all()[0].user == user
+    assert thread.reactions.all()[0].item == reaction_item

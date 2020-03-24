@@ -1,6 +1,34 @@
 from rest_framework import serializers
-from .models import Category, Thread, Post, Reaction, ReactionItem
+
 from accounts.serializers import AccountSerializer
+from .models import (
+    ReactionItem,
+    Reaction,
+    Category,
+    Thread,
+    Post
+)
+
+
+class ReactionItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReactionItem
+        fields = [
+            'id',
+            'name',
+            'tag',
+            'image'
+        ]
+
+
+class ReactionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Reaction
+        fields = [
+            'id',
+            'user',
+            'reaction'
+        ]
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -15,6 +43,7 @@ class CategorySerializer(serializers.ModelSerializer):
 class ThreadSerializer(serializers.ModelSerializer):
     author = AccountSerializer(read_only=True)
     last_poster = AccountSerializer(read_only=True)
+    reactions = ReactionItemSerializer(many=True, read_only=True)
 
     class Meta:
         model = Thread
@@ -31,49 +60,45 @@ class ThreadSerializer(serializers.ModelSerializer):
             'category',
             'reactions'
         ]
-        read_only_fields = ('status', 'pinned', 'created', 'updated', 'reactions')
+        read_only_fields = ('status', 'pinned', 'created', 'updated')
 
 
-class ReactionItemSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ReactionItem
-        fields = [
-            'name',
-            'tag',
-            'image'
-        ]
+class ThreadReactionAddSerializer(serializers.Serializer):
+    reaction_tag = serializers.ModelField(ReactionItem()._meta.get_field('tag'), write_only=True)
+    thread = ThreadSerializer(read_only=True)
+    reactions = ReactionSerializer(many=True, read_only=True)
+    user = AccountSerializer(read_only=True)
 
+    def validate_reaction_tag(self, value):
+        # Sprawdzamy czy tag reakcji jest poprawny, jezli tak zwracany instancje reakcji
+        if not ReactionItem.objects.filter(tag=value).exists():
+            serializers.ValidationError('Podany tag reakcji jest niepoprawny')
+        return ReactionItem.objects.get(tag=value)
 
-class ReactionSerializer(serializers.ModelSerializer):
-    item = ReactionItemSerializer()
+    def create(self, validated_data):
+        # Pobieramy instancje thread
+        thread = validated_data['thread']
+        # Pobieramy instancje reaction item
+        reaction_item = validated_data['reaction_tag']
+        # Pobieramy instance usera
+        user = validated_data['user']
 
-    class Meta:
-        model = Reaction
-        fields = [
-            'item',
-            'user'
-        ]
+        # Tworzymy reakcje dla tematu
+        reaction_instance = Reaction.objects.create(
+            user=user,
+            item=reaction_item
+        )
 
+        # Dodajemy utworzoną reakcje do tematu
+        thread.reactions.add(reaction_instance)
 
-class ThreadReactionSerializer(serializers.ModelSerializer):
-    item = ReactionItemSerializer(write_only=True)
-
-    class Meta:
-        model = Thread
-        fields = [
-            'reactions',
-            'item'
-        ]
-        read_only_fields = ['reactions']
-
-    def update(self, instance, validated_data):
-        reaction = Reaction.objects.create(**validated_data)
-
-        return instance.reactions.add(reaction)
+        # Zwracamy instancje thread
+        return thread.reactions
 
 
 class PostSerializer(serializers.ModelSerializer):
     author = AccountSerializer(read_only=True)
+    reactions = ReactionItemSerializer(many=True, read_only=True)
 
     class Meta:
         model = Post
@@ -86,7 +111,7 @@ class PostSerializer(serializers.ModelSerializer):
             'updated',
             'reactions'
         ]
-        read_only_fields = ('created', 'updated', 'reactions')
+        read_only_fields = ('created', 'updated')
 
     def create(self, validated_data):
         thread = validated_data['thread']
@@ -96,37 +121,3 @@ class PostSerializer(serializers.ModelSerializer):
                                               code=400)
 
         return Post.objects.create(**validated_data)
-
-
-"""
-
-class ThreadReactionSerializer(serializers.Serializer):
-    type = serializers.IntegerField()
-    thread_pk = serializers.IntegerField()
-    item = serializers.IntegerField()
-    user = serializers.IntegerField()
-
-    def validate_type(self, value):
-        if not value == Reaction.ReactionType.THREAD:
-            raise serializers.ValidationError(detail='Bledny typ', code=400)
-
-        return value
-
-    def validate_item(self, value):
-        if not ReactionItem.objects.filter(pk=value).exists():
-            raise serializers.ValidationError(detail='Taka reakcja nie istnieje', code=400)
-
-        return value
-
-    def validate_thread_pk(self, value):
-        if not Thread.objects.filter(pk=value).exists():
-            raise serializers.ValidationError(detail='Niepoprawny temat', code=400)
-
-    def create(self, validated_data):
-        thread_pk = validated_data.pop('thread_pk')
-        thread = Thread.objects.get(thread_pk)
-
-        reaction = Reaction.objects.create(**validated_data)
-
-        return thread.reactions.add(reaction)
-"""

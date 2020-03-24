@@ -8,7 +8,7 @@ class ReactionItem(models.Model):
     image = models.ImageField(height_field=64, width_field=64)
 
     def __str__(self):
-        return '{} | {}'.format(self.name, self.tag)
+        return f'{self.name} | {self.tag}'
 
 
 class Reaction(models.Model):
@@ -16,14 +16,14 @@ class Reaction(models.Model):
     user = models.ForeignKey(Account, on_delete=models.CASCADE)
 
     def __str__(self):
-        return '{} | {} | {}'.format(self.item.name, self.user.username, self.type)
+        return f'{self.item.name} | {self.user.username}'
 
 
 class Category(models.Model):
     name = models.CharField(max_length=64, unique=True)
 
     def __str__(self):
-        return '{}'.format(self.name)
+        return f'{self.name}'
 
 
 class Thread(models.Model):
@@ -44,7 +44,7 @@ class Thread(models.Model):
     reactions = models.ManyToManyField(Reaction)
 
     def __str__(self):
-        return '{} | {} | {}'.format(self.title, self.author.username, self.status)
+        return f'{self.title} | {self.author.username} | {self.status}'
 
     def pin(self):
         self.pinned = True
@@ -81,7 +81,7 @@ class Post(models.Model):
     reactions = models.ManyToManyField(Reaction)
 
     def __str__(self):
-        return '{} | {} | {}'.format(self.pk, self.thread.title, self.author.username)
+        return f'{self.pk} | {self.thread.title} | {self.author.username}'
 
     def visible(self):
         self.status = self.PostStatusChoices.VISIBLE
@@ -98,11 +98,3 @@ class Post(models.Model):
     def save(self, *args, **kwargs):
         self.update_thread_last_poster()
         super(Post, self).save(*args, **kwargs)
-
-
-class Comment(models.Model):
-    post = models.ForeignKey(Post, on_delete=models.CASCADE)
-    author = models.ForeignKey(Account, on_delete=models.CASCADE)
-    content = models.TextField(null=True)
-    created = models.DateTimeField(auto_now_add=True)
-    updated = models.DateTimeField(auto_now_add=True)
