@@ -4,19 +4,25 @@ from rest_framework import (
     permissions
 )
 from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
 
 from .models import (
     Category,
     Thread,
     Post,
+    ReactionItem
 )
 
 from .serializers import (
     CategorySerializer,
     ThreadSerializer,
+    ThreadReactionsSerializer,
+    ThreadSetBestAnswerSerializer,
+    ThreadUnSetBestAnswerSerializer,
     PostSerializer,
     StatsSerializer,
-    ThreadReactionAddSerializer
+    ReactionSerializer,
+    ReactionItemSerializer
 )
 
 from shark_core.permissions import (
@@ -83,12 +89,27 @@ class ThreadDetailView(generics.RetrieveUpdateAPIView):
 thread_detail = ThreadDetailView.as_view()
 
 
-class ThreadReactionAddView(generics.CreateAPIView):
+class ThreadReactionsListView(generics.ListCreateAPIView):
     """
     Widok dodawania reakcji do tematu
     """
     permission_classes = (PERM_THREAD,)
-    serializer_class = ThreadReactionAddSerializer
+    serializer_class = ThreadReactionsSerializer
+
+    def get_queryset(self):
+        thread_pk = self.kwargs['thread_pk']
+        thread = get_object_or_404(Thread, pk=thread_pk)
+        return thread.reactions.all()
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset().order_by('id'))
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = ReactionSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = ReactionSerializer(queryset, many=True)
+        return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
         thread = Thread.objects.get(pk=kwargs['thread_pk'])
@@ -98,7 +119,29 @@ class ThreadReactionAddView(generics.CreateAPIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-thread_reaction_add = ThreadReactionAddView.as_view()
+thread_reactions_list = ThreadReactionsListView.as_view()
+
+
+class ThreadSetBestAnswerView(generics.UpdateAPIView):
+    """
+    Widok ustawiania dla tematu najlepszej odpowiedzi
+    """
+    queryset = Thread.objects.all().order_by('id')
+    permission_classes = (PERM_IS_AUTHENTICATED,)
+    serializer_class = ThreadSetBestAnswerSerializer
+
+
+thread_set_best_answer = ThreadSetBestAnswerView.as_view()
+
+
+class ThreadUnSetBestAnswerView(ThreadSetBestAnswerView):
+    """
+    Widok usuwania z postu najlepszej odpowiedzi
+    """
+    serializer_class = ThreadUnSetBestAnswerSerializer
+
+
+thread_unset_best_answer = ThreadUnSetBestAnswerView.as_view()
 
 
 class PostListView(generics.ListCreateAPIView):
@@ -148,3 +191,15 @@ class StatsView(generics.ListAPIView):
 
 
 stats_list = StatsView.as_view()
+
+
+class ReactionListView(generics.ListAPIView):
+    """
+    Widok reakcji
+    """
+    queryset = ReactionItem.objects.all().order_by('id')
+    permission_classes = (PERM_ALLOW_ANY,)
+    serializer_class = ReactionItemSerializer
+
+
+reaction_list = ReactionListView.as_view()

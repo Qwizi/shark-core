@@ -5,10 +5,13 @@ from .views import (
     category_detail,
     thread_list,
     thread_detail,
+    thread_reactions_list,
+    thread_set_best_answer,
+    thread_unset_best_answer,
     post_list,
     post_detail,
     stats_list,
-    thread_reaction_add
+    reaction_list
 )
 
 app_name = 'forum'
@@ -18,14 +21,12 @@ categories_patterns = [
     path('<int:pk>/', category_detail, name='category-detail')
 ]
 
-thread_reactions_patterns = [
-    path('add/', thread_reaction_add, name='thread-reaction-add')
-]
-
 threads_patterns = [
     path('', thread_list, name='thread-list'),
     path('<int:pk>/', thread_detail, name='thread-detail'),
-    path('<int:thread_pk>/reactions/', include(thread_reactions_patterns))
+    path('<int:thread_pk>/reactions/', thread_reactions_list, name='thread-reactions-list'),
+    path('<int:pk>/best-answer/set/', thread_set_best_answer, name='thread-set-best-answer'),
+    path('<int:pk>/best-answer/unset/', thread_unset_best_answer, name='thread-unset-best-answer')
 ]
 
 posts_patterns = [
@@ -37,5 +38,6 @@ urlpatterns = [
     path('categories/', include(categories_patterns)),
     path('threads/', include(threads_patterns)),
     path('posts/', include(posts_patterns)),
-    path('stats/', stats_list, name='stats-list')
+    path('stats/', stats_list, name='stats-list'),
+    path('reactions/', reaction_list, name='reactions-list')
 ]

@@ -201,10 +201,32 @@ def test_post_update_thread_last_poster(
 
 
 @pytest.mark.django_db
+def test_post_set_best_answer(
+        create_post
+):
+    post = create_post()
+
+    post.set_best_answer()
+
+    assert post.best_answer is True
+
+
+@pytest.mark.django_db
+def test_post_unset_best_answer(
+        create_post
+):
+    post = create_post()
+
+    post.unset_best_answer()
+
+    assert post.best_answer is False
+
+
+@pytest.mark.django_db
 @pytest.mark.parametrize(
     'count, name, tag, image', [
         pytest.param(
-            1, 'Sad', 'sad', 'https://www.cdn.pecetowicz.pl/reactions/sad.png'
+            1, 'Thanks', 'thx', 'http://localhost:3000/images/reactions/thx.png'
         )
     ]
 )
@@ -212,22 +234,22 @@ def test_reactionitem_create(
         count, name, tag, image, create_reactionitem
 ):
     reactionitem = create_reactionitem(
-        name="Sad",
-        tag='sad',
-        image=File('https://www.cdn.pecetowicz.pl/reactions/sad.png')
+        name="Thanks",
+        tag='thx',
+        image='http://localhost:3000/images/reactions/thx.png'
     )
 
     assert ReactionItem.objects.all().count() == count
     assert reactionitem.name == name
     assert reactionitem.tag == tag
-    assert reactionitem.image == File(image)
+    assert reactionitem.image == image
 
 
 @pytest.mark.django_db
 @pytest.mark.parametrize(
     'count, name, tag, image, username', [
         pytest.param(
-            1, 'Sad', 'sad', 'https://www.cdn.pecetowicz.pl/reactions/sad.png', 'Qwizi'
+            1, 'Thanks', 'thx', 'http://localhost:3000/images/reactions/thx.png', 'Qwizi'
         )
     ]
 )
@@ -235,9 +257,9 @@ def test_reaction_create(
         count, name, tag, image, username, create_reactionitem, create_user, create_reaction
 ):
     item = create_reactionitem(
-        name='Sad',
-        tag='sad',
-        image=File('https://www.cdn.pecetowicz.pl/reactions/sad.png')
+        name='Thanks',
+        tag='thx',
+        image='http://localhost:3000/images/reactions/thx.png'
     )
     user = create_user()
     reaction = create_reaction(
@@ -247,5 +269,5 @@ def test_reaction_create(
     assert Reaction.objects.all().count() == count
     assert reaction.item.name == name
     assert reaction.item.tag == tag
-    assert reaction.item.image == File(image)
+    assert reaction.item.image == image
     assert reaction.user.username == username

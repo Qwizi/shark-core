@@ -33,7 +33,10 @@ from servers.models import (
 )
 
 from django.core.files import File
+from django.core.files.temp import NamedTemporaryFile
 from djmoney.money import Money
+
+import requests
 
 from ..providers import payment_manager
 from ..steam_helpers import get_steam_user_info
@@ -273,8 +276,6 @@ def create_post(db, create_thread, create_user):
 @fixture
 def create_reactionitem(db):
     def make_reactionitem(**kwargs):
-        if 'image' not in kwargs:
-            kwargs['image'] = File('https://www.cdn.pecetowicz.pl/reactions/sad.png')
         return ReactionItem.objects.create(**kwargs)
 
     return make_reactionitem
