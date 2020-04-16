@@ -33,6 +33,8 @@ from servers.models import (
     Server,
 )
 
+from news.models import News
+
 from django.core.files import File
 from django.core.files.temp import NamedTemporaryFile
 from djmoney.money import Money
@@ -87,12 +89,7 @@ def qwizi_data():
         'steamid32': 'STEAM_1:0:115101861',
         'steamid3': '[U:1:230203722]',
         'username': 'Qwizi',
-        'avatar': 'https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/35/35f3a0e0d3f895f4ae608ccf68ae4e7b262a544d.jpg',
-        'avatarmedium': 'https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/35/35f3a0e0d3f895f4ae608ccf68ae4e7b262a544d_medium.jpg',
-        'avatarfull': 'https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/35/35f3a0e0d3f895f4ae608ccf68ae4e7b262a544d_full.jpg',
         'loccountrycode': 'PL',
-        'profileurl': 'https://steamcommunity.com/id/34534645645/',
-        'tradeurl': 'https://steamcommunity.com/tradeoffer/new/?partner=230203722&token=7HI_fhSK'
     }
 
 
@@ -110,8 +107,6 @@ def create_user(db, django_user_model, qwizi_data):
 
         if "steamid64" not in kwargs:
             kwargs['steamid64'] = qwizi_data['steamid64']
-        if "tradeurl" not in kwargs:
-            kwargs['tradeurl'] = qwizi_data['tradeurl']
 
         # Sprawdzamy czy uzytkownik o takim steamid64 juz istnieje w bazie
         if django_user_model.objects.filter(steamid64=kwargs['steamid64']).exists():
@@ -138,8 +133,6 @@ def create_superuser(db, django_user_model, qwizi_data):
     def make_user(**kwargs):
         if "steamid64" not in kwargs:
             kwargs['steamid64'] = qwizi_data['steamid64']
-        if "tradeurl" not in kwargs:
-            kwargs['tradeurl'] = qwizi_data['tradeurl']
 
         return django_user_model.objects.create_superuser_steam(**kwargs)
 
@@ -373,3 +366,16 @@ def create_subcategory(db):
         return SubCategory.objects.create(**kwargs)
 
     return make_subcategory
+
+@fixture
+def create_news(db, create_user):
+    def make_news(**kwargs):
+        if "title" not in kwargs:
+            kwargs['title'] = 'News'
+        if "content" not in kwargs:
+            kwargs['content'] = 'News content'
+        if "author" not in kwargs:
+            kwargs['author'] = create_user()
+        return News.objects.create(**kwargs)
+
+    return make_news

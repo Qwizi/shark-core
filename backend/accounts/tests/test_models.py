@@ -47,10 +47,6 @@ def test_account_create_user_steam_with_valid_steamid64(
     assert account.steamid32 == qwizi_data['steamid32']
     assert account.steamid3 == qwizi_data['steamid3']
     assert account.username == qwizi_data['username']
-    assert account.avatar == qwizi_data['avatar']
-    assert account.avatarmedium == qwizi_data['avatarmedium']
-    assert account.avatarfull == qwizi_data['avatarfull']
-    assert account.loccountrycode == qwizi_data['loccountrycode']
 
 
 @pytest.mark.django_db
