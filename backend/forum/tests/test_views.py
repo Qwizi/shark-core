@@ -7,10 +7,13 @@ from ..views import (
     CategoryDetailView,
     ThreadListView,
     ThreadDetailView,
+    ThreadReactionsListView,
+    ThreadSetBestAnswerView,
+    ThreadUnSetBestAnswerView,
     PostListView,
     PostDetailView,
     StatsView,
-    ThreadReactionAddView,
+    ReactionListView
 )
 
 
@@ -105,8 +108,8 @@ def test_thread_create_view_with_authenticate(
 def test_thread_reaction_add_view_without_authenticate(
         api_factory
 ):
-    view = ThreadReactionAddView.as_view()
-    request = api_factory.post(reverse('api:forum:thread-reaction-add', kwargs={'thread_pk': 1}))
+    view = ThreadReactionsListView.as_view()
+    request = api_factory.post(reverse('api:forum:thread-reactions-list', kwargs={'thread_pk': 1}))
     response = view(request, thread_pk=1)
 
     assert response.status_code == 401
@@ -124,15 +127,33 @@ def test_thread_reaction_add_view(
     )
 
     data = {
-        'reaction_tag': reaction_item.tag
+        'reaction_item': reaction_item.pk
     }
 
-    view = ThreadReactionAddView.as_view()
-    request = api_factory.post(reverse('api:forum:thread-reaction-add', kwargs={'thread_pk': thread.pk}), data=data)
+    view = ThreadReactionsListView.as_view()
+    request = api_factory.post(reverse('api:forum:thread-reactions-list', kwargs={'thread_pk': thread.pk}), data=data)
     force_authenticate(request, user=user, token=get_token_for_user(user=user))
     response = view(request, thread_pk=thread.pk)
 
     assert response.status_code == 201
+
+
+@pytest.mark.django_db
+def test_thread_reaction_list_view(
+        api_factory, create_thread, create_user, create_reactionitem
+):
+    thread = create_thread()
+    user = create_user()
+    reaction_item = create_reactionitem(
+        name='Sad',
+        tag='sad'
+    )
+
+    view = ThreadReactionsListView.as_view()
+    request = api_factory.get(reverse('api:forum:thread-reactions-list', kwargs={'thread_pk': thread.pk}))
+    response = view(request, thread_pk=thread.pk)
+
+    assert response.status_code == 200
 
 
 @pytest.mark.django_db
@@ -197,29 +218,6 @@ def test_post_create_view_with_authenticate(
     assert response.status_code == status_code
 
 
-# TODO
-@pytest.mark.skip
-@pytest.mark.django_db
-def test_thread_reactions_add_view(
-        api_factory, create_user, create_thread, create_reactionitem, get_token_for_user
-):
-    user = create_user()
-    thread = create_thread()
-    reaction_item = create_reactionitem()
-
-    data = {
-        'item': reaction_item
-    }
-
-    view = ThreadReactionAddView.as_view()
-    request = api_factory.put(reverse('api:forum:thread-reaction-add', kwargs={'pk': thread.pk}), data=data)
-    force_authenticate(request, user=user, token=get_token_for_user(user=user))
-    response = view(request, pk=thread.pk)
-
-    assert response.data == 1
-    assert response.status_code == 201
-
-
 @pytest.mark.django_db
 def test_stats_view(
         api_factory
@@ -249,6 +247,85 @@ def test_category_list_renders(
     assert response.status_code == status_code
     assert response.data['count'] == count
     assert response.data['results'][0]['name'] == name
+
+
+@pytest.mark.django_db
+def test_reaction_list_view(
+        api_factory, create_reactionitem
+):
+    reaction_item = create_reactionitem(
+        tag='thx',
+        name='Thanks',
+        image='http://localhost:8000/static/reactions/thx.png'
+    )
+
+    view = ReactionListView.as_view()
+    request = api_factory.get(reverse('api:forum:reactions-list'))
+    response = view(request)
+
+    assert response.status_code == 200
+
+
+@pytest.mark.django_db
+def test_thread_set_best_answer_without_authenticate_view(
+        api_factory
+):
+    view = ThreadSetBestAnswerView.as_view()
+    request = api_factory.put(reverse('api:forum:thread-set-best-answer', kwargs={'pk': 9999}))
+    response = view(request, pk=999)
+
+    assert response.status_code == 401
+
+
+@pytest.mark.django_db
+def test_thread_set_best_answer_view(
+        api_factory, create_user, get_token_for_user, create_thread, create_post
+):
+    user = create_user()
+    thread = create_thread(author=user)
+    post = create_post(thread=thread, author=user)
+
+    data = {
+        'post': post.pk
+    }
+
+    view = ThreadSetBestAnswerView.as_view()
+    request = api_factory.put(reverse('api:forum:thread-set-best-answer', kwargs={'pk': thread.pk}), data=data)
+    force_authenticate(request, user=user, token=get_token_for_user(user=user))
+    response = view(request, pk=thread.pk)
+
+    assert response.status_code == 200
+
+
+@pytest.mark.django
+def test_thread_unset_best_answer_without_authenticate_view(
+        api_factory
+):
+    view = ThreadUnSetBestAnswerView.as_view()
+    request = api_factory.put(reverse('api:forum:thread-unset-best-answer', kwargs={'pk': 999}))
+    response = view(request, pk=999)
+
+    assert response.status_code == 401
+
+
+@pytest.mark.django_db
+def test_thread_unset_best_answer_view(
+        api_factory, create_user, get_token_for_user, create_thread, create_post
+):
+    user = create_user()
+    thread = create_thread(author=user)
+    post = create_post(thread=thread, author=user)
+
+    data = {
+        'post': post.pk
+    }
+
+    view = ThreadUnSetBestAnswerView.as_view()
+    request = api_factory.put(reverse('api:forum:thread-unset-best-answer', kwargs={'pk': thread.pk}), data=data)
+    force_authenticate(request, user=user, token=get_token_for_user(user=user))
+    response = view(request, pk=thread.pk)
+
+    assert response.status_code == 200
 
 
 @pytest.mark.django_db
@@ -468,7 +545,6 @@ def test_post_create_renders(
 
 
 @pytest.mark.django_db
-
 def test_post_create_renders_in_closed_thread(
         api_client_with_credentials, create_thread, create_user
 ):
@@ -543,7 +619,9 @@ def test_stats_renders(
     assert response.status_code == status_code
     assert response.data['threads'] == threads
     assert response.data['posts'] == posts
-    
+
+
+@pytest.mark.django_db
 def test_thread_reaction_add_renders(
         api_client_with_credentials, create_thread, create_user, create_reactionitem
 ):
@@ -555,14 +633,131 @@ def test_thread_reaction_add_renders(
     )
 
     data = {
-        'reaction_tag': reaction_item.tag
+        'reaction_item': reaction_item.pk
     }
 
     response = api_client_with_credentials.post(
-        reverse('api:forum:thread-reaction-add', kwargs={'thread_pk': thread.pk}), data=data)
+        reverse('api:forum:thread-reactions-list', kwargs={'thread_pk': thread.pk}), data=data)
 
     assert response.status_code == 201
     assert thread.reactions.all().count() == 1
     assert thread.reactions.all()[0].user == user
     assert thread.reactions.all()[0].item == reaction_item
 
+
+@pytest.mark.django_db
+def test_thread_reaction_invalid_reaction_tag_renders(
+        api_client_with_credentials, create_thread
+):
+    thread = create_thread()
+
+    data = {
+        'reaction_item': 9999
+    }
+
+    response = api_client_with_credentials.post(
+        reverse('api:forum:thread-reactions-list', kwargs={'thread_pk': thread.pk}), data=data)
+
+    assert response.status_code == 400
+
+
+@pytest.mark.django_db
+def test_thread_reaction_user_already_give_reaction_renders(
+        api_client_with_credentials, create_thread, create_reactionitem
+):
+    thread = create_thread()
+    item = create_reactionitem(
+        name='Sad',
+        tag='sad'
+    )
+
+    data = {
+        'reaction_item': item.pk
+    }
+
+    first_response = api_client_with_credentials.post(
+        reverse('api:forum:thread-reactions-list', kwargs={'thread_pk': thread.pk}), data=data)
+    second_response = api_client_with_credentials.post(
+        reverse('api:forum:thread-reactions-list', kwargs={'thread_pk': thread.pk}), data=data)
+
+    assert first_response.status_code == 201
+    assert second_response.status_code == 400
+
+
+@pytest.mark.django_db
+def test_thread_reaction_list_renders(
+        api_client_with_credentials, create_thread, create_reactionitem
+):
+    thread = create_thread()
+    item = create_reactionitem(
+        name='Sad',
+        tag='sad',
+    )
+
+    data = {
+        'reaction_item': item.pk
+    }
+
+    add_reaction_response = api_client_with_credentials.post(
+        reverse('api:forum:thread-reactions-list', kwargs={'thread_pk': thread.pk}), data=data)
+
+    response = api_client_with_credentials.get(
+        reverse('api:forum:thread-reactions-list', kwargs={'thread_pk': thread.pk}))
+
+    assert add_reaction_response.status_code == 201
+    assert response.status_code == 200
+    assert response.data['count'] == 1
+
+
+@pytest.mark.django_db
+def test_reaction_list_renders(
+        api_client, create_reactionitem
+):
+    reaction_item = create_reactionitem(
+        name='Thanks',
+        tag='thx',
+        image='http://localhost:3000/images/reactions/thx.png'
+    )
+
+    response = api_client.get(reverse('api:forum:reactions-list'))
+
+    assert response.status_code == 200
+    assert response.data['results'][0]['image'] == reaction_item.image
+
+
+@pytest.mark.django_db
+def test_thread_set_best_answer_renders(
+        api_client_with_credentials, create_thread, create_post
+):
+    thread = create_thread()
+    post = create_post(thread=thread)
+    post2 = create_post(thread=thread)
+
+    data = {
+        'post': post.pk
+    }
+
+    response = api_client_with_credentials.put(reverse('api:forum:thread-set-best-answer', kwargs={'pk': thread.pk}),
+                                               data=data)
+
+    assert response.status_code == 200
+    assert thread.post_set.get(pk=post.pk).best_answer is True
+    assert thread.post_set.get(pk=post2.pk).best_answer is False
+
+
+@pytest.mark.django_db
+def test_thread_unset_best_answer_renders(
+        api_client_with_credentials, create_thread, create_post
+):
+    thread = create_thread()
+    post = create_post(thread=thread)
+    post.set_best_answer()
+
+    data = {
+        'post': post.pk
+    }
+
+    response = api_client_with_credentials.put(reverse('api:forum:thread-unset-best-answer', kwargs={'pk': thread.pk}),
+                                               data=data)
+    assert response.status_code == 200
+    assert thread.post_set.get(pk=post.pk).best_answer is False

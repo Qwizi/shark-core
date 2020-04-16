@@ -4,7 +4,7 @@ from django.conf.urls import url
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
-from accounts.views import AccountAuthSteamTokenView, ServerAccountAuthSteamTokenView
+from accounts.views import AccountAuthSteamTokenView, ServerAccountAuthSteamTokenView, AccountAuthSteamRefreshTokenView
 
 app_name = 'api'
 
@@ -29,6 +29,7 @@ urlpatterns = [
     path('admin/', include('adminapi.urls')),
     path('oauth/', include('oauth2_provider.urls', namespace='oauth2_provider')),
     path('auth/token/', AccountAuthSteamTokenView.as_view()),
+    path('auth/token/refresh/', AccountAuthSteamRefreshTokenView.as_view()),
     path('auth/server/token/', ServerAccountAuthSteamTokenView.as_view()),
     path('accounts/', include('accounts.urls', namespace='accounts')),
     path('store/', include('store.urls', namespace='store')),

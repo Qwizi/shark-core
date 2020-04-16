@@ -1,6 +1,5 @@
-export {default as Forum} from './Forum';
-export {default as SteamCallback} from './SteamCallback';
-export {default as Shop} from './Shop';
-export {default as NoMatch} from './NoMatch';
-export {default as Thread} from './Thread';
-export {default as NewThread} from './NewThread'
+export {default as News} from './news';
+export {default as NewsDetail} from './newsDetail';
+export {default as Forum} from './forum';
+export {default as SteamCallback} from './steamCallback';
+export {default as SteamLoginRedirect} from './steamLoginRedirect';

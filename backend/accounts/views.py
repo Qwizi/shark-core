@@ -4,7 +4,8 @@ from rest_framework.permissions import (
     AllowAny
 )
 from rest_framework.response import Response
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 
 from oauth2_provider.contrib.rest_framework import OAuth2Authentication, TokenHasReadWriteScope
 
@@ -160,6 +161,13 @@ class AccountAuthSteamTokenView(TokenObtainPairView):
     Tworzy uzytkownika / zwaraca token dostepu
     """
     serializer_class = SteamTokenObtainSerializer
+
+
+class AccountAuthSteamRefreshTokenView(TokenRefreshView):
+    """
+    Zwraca access token po podaniu refresh tokenu
+    """
+    serializer_class = TokenRefreshSerializer
 
 
 class ServerAccountAuthSteamTokenView(TokenObtainPairView):

@@ -8,6 +8,7 @@ from ..models import (
     PaymentMethod
 )
 from forum.models import (
+    SubCategory,
     Category,
     Thread,
     Post,
@@ -33,7 +34,10 @@ from servers.models import (
 )
 
 from django.core.files import File
+from django.core.files.temp import NamedTemporaryFile
 from djmoney.money import Money
+
+import requests
 
 from ..providers import payment_manager
 from ..steam_helpers import get_steam_user_info
@@ -273,8 +277,6 @@ def create_post(db, create_thread, create_user):
 @fixture
 def create_reactionitem(db):
     def make_reactionitem(**kwargs):
-        if 'image' not in kwargs:
-            kwargs['image'] = File('https://www.cdn.pecetowicz.pl/reactions/sad.png')
         return ReactionItem.objects.create(**kwargs)
 
     return make_reactionitem
@@ -361,3 +363,13 @@ def create_server(db, create_game):
         return Server.objects.create(**kwargs)
 
     return make_server
+
+
+@fixture
+def create_subcategory(db):
+    def make_subcategory(**kwargs):
+        if "name" not in kwargs:
+            kwargs['name'] = 'Subcategory'
+        return SubCategory.objects.create(**kwargs)
+
+    return make_subcategory

@@ -5,10 +5,7 @@ from accounts.models import Account
 class ReactionItem(models.Model):
     name = models.CharField(max_length=64, unique=True)
     tag = models.CharField(max_length=64, unique=True)
-    image = models.ImageField(height_field=64, width_field=64)
-
-    def __str__(self):
-        return f'{self.name} | {self.tag}'
+    image = models.URLField(default='http://localhost:3000/images/reactions/thx.png')
 
 
 class Reaction(models.Model):
@@ -19,8 +16,16 @@ class Reaction(models.Model):
         return f'{self.item.name} | {self.user.username}'
 
 
+class SubCategory(models.Model):
+    name = models.CharField(max_length=64, unique=True)
+
+    def __str__(self):
+        return f'{self.name}'
+
+
 class Category(models.Model):
     name = models.CharField(max_length=64, unique=True)
+    subcategories = models.ManyToManyField(SubCategory)
 
     def __str__(self):
         return f'{self.name}'
@@ -79,6 +84,8 @@ class Post(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now_add=True)
     reactions = models.ManyToManyField(Reaction)
+    best_answer = models.BooleanField(default=False)
+    promotion_answer = models.BooleanField(default=False)
 
     def __str__(self):
         return f'{self.pk} | {self.thread.title} | {self.author.username}'
@@ -94,6 +101,14 @@ class Post(models.Model):
     def update_thread_last_poster(self):
         self.thread.last_poster = self.author
         self.thread.save()
+
+    def set_best_answer(self):
+        self.best_answer = True
+        self.save()
+
+    def unset_best_answer(self):
+        self.best_answer = False
+        self.save()
 
     def save(self, *args, **kwargs):
         self.update_thread_last_poster()
