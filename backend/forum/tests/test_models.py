@@ -271,3 +271,14 @@ def test_reaction_create(
     assert reaction.item.tag == tag
     assert reaction.item.image == image
     assert reaction.user.username == username
+
+
+def test_subcategory_create(
+        create_subcategory
+):
+    subcategory = create_subcategory(
+        name='Subcategory'
+    )
+
+    assert SubCategory.objects.all().count() == 1
+    assert subcategory.name == 'Subcategory'

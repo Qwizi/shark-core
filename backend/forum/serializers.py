@@ -4,6 +4,7 @@ from accounts.serializers import AccountSerializer
 from .models import (
     ReactionItem,
     Reaction,
+    SubCategory,
     Category,
     Thread,
     Post
@@ -34,12 +35,24 @@ class ReactionSerializer(serializers.ModelSerializer):
         ]
 
 
+class SubCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubCategory
+        fields = [
+            'id',
+            'name'
+        ]
+
+
 class CategorySerializer(serializers.ModelSerializer):
+    subcategories = SubCategorySerializer(many=True, read_only=True)
+
     class Meta:
         model = Category
         fields = [
             'id',
-            'name'
+            'name',
+            'subcategories'
         ]
 
 

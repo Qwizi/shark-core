@@ -4,7 +4,7 @@ export const CONFIG = {
         ENDPOINTS: {
             TOKEN: {
                 AUTH: '/auth/token/',
-                REFRESH: '/token/refresh/'
+                REFRESH: '/auth/token/refresh/'
             },
             ACCOUNTS: {
                 ME: '/accounts/me/',
@@ -26,6 +26,7 @@ export const CONFIG = {
     },
     STEAM: {
         OPENID_URL: 'https://steamcommunity.com/openid/login?',
-        CALLBACK: '/auth/steam/callback/'
+        CALLBACK: '/auth/steam/callback/',
+        REDIRECT: '/auh/steam/redirect/'
     }
 };

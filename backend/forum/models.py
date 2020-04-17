@@ -16,8 +16,16 @@ class Reaction(models.Model):
         return f'{self.item.name} | {self.user.username}'
 
 
+class SubCategory(models.Model):
+    name = models.CharField(max_length=64, unique=True)
+
+    def __str__(self):
+        return f'{self.name}'
+
+
 class Category(models.Model):
     name = models.CharField(max_length=64, unique=True)
+    subcategories = models.ManyToManyField(SubCategory)
 
     def __str__(self):
         return f'{self.name}'
