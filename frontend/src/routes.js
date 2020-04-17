@@ -1,35 +1,47 @@
-import React from 'react';
+import React from "react";
+import PropTypes from 'prop-types';
 import {Switch, Route, Redirect} from 'react-router-dom';
-import {Forum, Shop, NoMatch, SteamCallback} from './views';
+import {Account, Forum, News, SteamCallback, SteamLoginRedirect} from "./views";
 import {CONFIG} from "./config";
 
-const STEAM_CALLBACK = CONFIG.STEAM.CALLBACK;
-
-class Main extends React.Component {
+class Routes extends React.Component
+{
     render() {
+        const steamCallbackEndpoint = CONFIG.STEAM.CALLBACK || '/auth/steam/callback/';
+        const steamRedirectEndpoint = CONFIG.STEAM.REDIRECT || '/auth/steam/redirect/';
         return (
-            <main>
-                <Switch>
-                    <Route exact strict path="/:url*" render={props => <Redirect to={`${props.location.pathname}/`}/>}/>
-                    <Route exact path='/'>
-                        <Redirect to='/forum/'/>
-                    </Route>
-                    <Route path='/forum/'>
-                        <Forum {...this.props} />
-                    </Route>
-                    <Route path={STEAM_CALLBACK}>
-                        <SteamCallback loginUser={this.props.loginUser}/>
-                    </Route>
-                    <Route path="/shop/">
-                        <Shop {...this.props} />
-                    </Route>
-                    <Route {...this.props}>
-                        <NoMatch/>
-                    </Route>
-                </Switch>
-            </main>
-        );
+            <Switch>
+                <Route exact path="/">
+                    <News />
+                </Route>
+
+                <Route path="/news">
+                    <News/>
+                </Route>
+
+                <Route path="/forum">
+                    <Forum />
+                </Route>
+
+                <Route path="/account">
+                    <Account user={this.props.user}/>
+                </Route>
+
+                <Route path={`${steamCallbackEndpoint}`}>
+                    <SteamCallback login={this.props.login}/>
+                </Route>
+
+                <Route path={`${steamRedirectEndpoint}`}>
+                    <SteamLoginRedirect/>
+                </Route>
+            </Switch>
+        )
     }
 }
 
-export default Main
+Routes.propTypes = {
+    logged: PropTypes.bool.isRequired,
+    user: PropTypes.object.isRequired,
+};
+
+export default Routes;

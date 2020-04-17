@@ -1,8 +1,7 @@
 import React from "react";
 import {Animated} from "react-animated-css";
 
-export default class Forum extends React.Component {
-
+class Forum extends React.Component {
     render() {
         return (
             <>
@@ -248,3 +247,5 @@ export default class Forum extends React.Component {
         )
     }
 }
+
+export default Forum;

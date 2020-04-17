@@ -21,7 +21,10 @@ export default class LoggedNav extends React.Component {
                         data-reference="parent"
                     />
                     <div className="dropdown-menu user-menu dropdown-menu-lg-right" aria-labelledby="user-menu">
-                        <button className="dropdown-item user-menu-item">Profil</button>
+                        <Link className="dropdown-item user-menu-item" to={'/account'}> Konto</Link>
+                        <button className="dropdown-item user-menu-item">
+                            Profil
+                        </button>
                         <div className="dropdown-divider"/>
                         <button className="dropdown-item user-menu-item" onClick={logout()}>Wyloguj</button>
                     </div>

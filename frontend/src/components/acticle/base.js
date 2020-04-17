@@ -12,7 +12,7 @@ export default class ArticleCard extends React.Component {
     render() {
         const {data} = this.props;
 
-        const formatedData = [];
+        const formattedData = [];
 
         data.map((data) => {
             if (data.content.length > 800) {
@@ -23,12 +23,13 @@ export default class ArticleCard extends React.Component {
                 data.title = this.substringContent(data.title, 40);
             }
 
-            formatedData.push(data);
+            formattedData.push(data);
+
         });
 
         return (
             <>
-                {formatedData.map((article) =>
+                {formattedData.map((article) =>
                     <div className="row">
                         <div className="col">
                             <Animated animationIn="fadeIn" animationOut="fadeOut" isVisible={true}>
