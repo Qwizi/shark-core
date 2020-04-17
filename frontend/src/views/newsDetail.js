@@ -1,10 +1,11 @@
 import React from "react";
 import PropTypes from 'prop-types';
 import {Animated} from "react-animated-css";
-import {Link} from "react-router-dom";
+
+import {withRouter} from "react-router-dom";
 
 
-export default class NewsDetail extends React.Component {
+class NewsDetail extends React.Component {
     constructor(props) {
         super(props);
 
@@ -65,3 +66,5 @@ export default class NewsDetail extends React.Component {
         )
     }
 }
+
+export default withRouter(NewsDetail)

@@ -37,7 +37,7 @@ export default withRouter (class SteamCallback extends React.Component {
                 'openid_response_nonce': params['openid.response_nonce'],
             };
 
-            login(steamParams);
+            this.props.login(steamParams);
 
             this.redirect();
         }
