@@ -144,8 +144,6 @@ class App extends React.Component {
     }
 
     render() {
-        const steamCallbackEndpoint = CONFIG.STEAM.CALLBACK || '/auth/steam/callback/';
-        const steamRedirectEndpoint = CONFIG.STEAM.REDIRECT || '/auth/steam/redirect/';
         return (
             <BrowserRouter>
                 <Navbar

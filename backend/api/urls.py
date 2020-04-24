@@ -37,5 +37,6 @@ urlpatterns = [
     path('sourcemod/', include('smadmins.urls')),
     path('sourcemod/', include('servers.urls')),
     path('steambot/', include('steambot.urls', namespace='steambot')),
-    path('news/', include('news.urls', namespace='news'))
+    path('news/', include('news.urls', namespace='news')),
+    path('events/', include('events.urls', namespace='events'))
 ]
