@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'smadmins',
     'steambot',
     'news',
+    'events'
 ]
 
 MIDDLEWARE = [

@@ -24,7 +24,7 @@ def test_payment_manager_bonuscodes_get_provider_class_without_valid_code():
 
     assert provider_instance.is_valid() is False
 
-
+@pytest.mark.skip
 @pytest.mark.django_db
 @pytest.mark.parametrize(
     'code, money, bool', [
