@@ -12,6 +12,7 @@ class NewsSerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'title',
+            'slug',
             'content',
             'author',
             'created',

@@ -5,9 +5,11 @@ import {NewsDetail} from "./index";
 import api from "../api";
 import {CONFIG} from "../config";
 import querystring from 'query-string';
+import Spinner from "../components/spinner";
+import Articles from "../components/articles";
 
 const initialState = {
-    newsData: []
+    newsData: [],
 };
 
 class News extends React.Component {
@@ -17,15 +19,20 @@ class News extends React.Component {
         this.state = initialState;
     }
 
+    componentWillUnmount(): void {
+        this.setState(initialState);
+    }
+
     componentDidMount(): void {
         this.fetchNews()
             .then((response) => {
-                if (response.status === 200) this.setState({newsData: response.data})
+                if (response.status === 200) {
+                    this.setState({newsData: response.data});
+                }
             })
     }
 
     handleClickLoadMore() {
-        //const updatedData = data.concat(data2);
         const {newsData} = this.state;
 
         if (newsData.next) {
@@ -37,7 +44,7 @@ class News extends React.Component {
             this.fetchNews({page: params['page']})
                 .then((response) => {
                     if (response.status === 200) {
-                        const newNewsResults =  response.data.results;
+                        const newNewsResults = response.data.results;
                         const newNewsNextUrl = response.data.next;
 
                         const updatedNewsResults = newsData.results.concat(newNewsResults);
@@ -46,13 +53,13 @@ class News extends React.Component {
                                     count: response.data.count,
                                     next: newNewsNextUrl,
                                     previous: newsData.next,
-                                    results: updatedNewsResults},
+                                    results: updatedNewsResults
+                                },
                             }
                         );
                     }
                 })
         }
-        //this.setState({data: updatedData});
     }
 
     fetchNews(params = null) {
@@ -63,10 +70,13 @@ class News extends React.Component {
 
     render() {
         const {match} = this.props;
+
+        const newsData = this.state.newsData ? <Articles data={this.state.newsData}/> : <Spinner />;
+
         return (
             <Switch>
                 <Route exact path={`${match.path}`}>
-                    <ArticleCard data={this.state.newsData.results}/>
+                    {newsData}
                     <div className="row">
                         <div className="col text-center">
                             {this.state.newsData.next && (
@@ -76,12 +86,12 @@ class News extends React.Component {
                                 >
                                     Show more
                                 </button>
-                                )
+                            )
                             }
                         </div>
                     </div>
                 </Route>
-                <Route path={`${match.path}/:id`}>
+                <Route path={`${match.path}/:id/:slug/`}>
                     <NewsDetail/>
                 </Route>
             </Switch>

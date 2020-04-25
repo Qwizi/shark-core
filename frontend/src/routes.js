@@ -12,7 +12,7 @@ class Routes extends React.Component
         return (
             <Switch>
                 <Route exact path="/">
-                    <News />
+                    <News/>
                 </Route>
 
                 <Route path="/news">
