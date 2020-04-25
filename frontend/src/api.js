@@ -6,7 +6,6 @@ const accessToken = tokenStorage.getAccessToken();
 console.log(`Access token -> ${accessToken}`);
 const API_URL = CONFIG.API.URL;
 let headers;
-let api;
 
 if (accessToken) {
     headers = {
@@ -14,14 +13,11 @@ if (accessToken) {
     }
 }
 
-if (headers) {
-    api = axios.create({
-        baseURL: API_URL,
-        headers: headers
-    });
-} else {
-    api = axios.create({
-        baseURL: API_URL
-    });
-}
+const api = headers ? axios.create({
+    baseURL: API_URL,
+    headers: headers
+}) : axios.create({
+    baseURL: API_URL
+});
+
 export default api

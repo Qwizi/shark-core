@@ -50,6 +50,10 @@ export default class ArticleCard extends React.Component {
     }
 }
 
+ArticleCard.defaultProps = {
+    data: []
+};
+
 ArticleCard.propTypes = {
     data: PropTypes.array.isRequired
 };

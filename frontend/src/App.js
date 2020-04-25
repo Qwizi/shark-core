@@ -11,6 +11,7 @@ import Routes from "./routes";
 import {tokenStorage} from "./TokenStorage";
 import {CONFIG} from "./config";
 import api from "./api";
+import ERROR_CODES from "./errorCodes";
 
 const userInitialState = {
     logged: false,
@@ -33,7 +34,7 @@ class App extends React.Component {
         this.loginUser = this.loginUser.bind(this);
         this.logoutUser = this.logoutUser.bind(this);
     };
-  
+
     componentDidMount() {
         // Jezeli nie istnieje access token w localStorage nic nie robimy
         if (!tokenStorage.getAccessToken()) return;
@@ -55,8 +56,8 @@ class App extends React.Component {
         return api.post(CONFIG.API.ENDPOINTS.TOKEN.AUTH, params);
     }
 
-    fetchAccessTokenByRefreshToken(accessToken) {
-        return api.post(CONFIG.API.ENDPOINTS.TOKEN.REFRESH, accessToken);
+    fetchAccessTokenByRefreshToken(refreshToken) {
+        return api.post(CONFIG.API.ENDPOINTS.TOKEN.REFRESH, {refresh: refreshToken});
     }
 
     setUserLoggedState(userData) {
@@ -79,6 +80,11 @@ class App extends React.Component {
                         this.fetchUserMeData(accessToken).then((response) => {
                             if (response.status === 200) this.setUserLoggedState(response.data);
                         })
+                            .catch((error) => {
+                                if (error.response) {
+                                    if (error.response.status === 401) console.log(ERROR_CODES.E001);
+                                }
+                            })
                     }
 
                 }
@@ -102,6 +108,7 @@ class App extends React.Component {
                 if (error.response) {
                     // Jezeli zwrocono status 401 wykorzystujemy do zapytania refresh token
                     if (error.response.status === 401) {
+                        console.log(ERROR_CODES.E002);
                         // Pobieramy refresh token z localStorage
                         const refreshToken = tokenStorage.getRefreshToken();
 
@@ -127,7 +134,10 @@ class App extends React.Component {
                                         .catch((error) => {
                                             if (error.response) {
                                                 // Jezeli zwrocno blad ze statusem 401 wylogowujemy uzytkownika
-                                                if (error.response.status === 401) this.logoutUser();
+                                                if (error.response.status === 401) {
+                                                    this.logoutUser();
+                                                    console.log(ERROR_CODES.E004)
+                                                }
                                             }
                                         })
                                 }
@@ -135,7 +145,10 @@ class App extends React.Component {
                             .catch((error) => {
                                 if (error.response) {
                                     // Jezeli zwrocno blad ze statusem 401 wylogowujemy uzytkownika
-                                    if (error.response.status === 401) this.logoutUser();
+                                    if (error.response.status === 401) {
+                                        this.logoutUser();
+                                        console.log(ERROR_CODES.E003);
+                                    }
                                 }
                             })
                     }

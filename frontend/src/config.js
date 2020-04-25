@@ -21,7 +21,8 @@ export const CONFIG = {
             STORE: {
                 CATEGORIES: '/store/categories/',
                 BONUSES: '/store/bonuses/'
-            }
+            },
+            NEWS: '/news/'
         },
     },
     STEAM: {
