@@ -12,7 +12,7 @@ export default class ArticleItem extends React.Component
         if (!article) return <Spinner />
 
         return (
-            <div className="row">
+            <div className="row" style={{minHeight: '100vh'}}>
                 <div className="col">
                     <Animated animationIn="fadeIn" animationOut="fadeOut" isVisible={true}>
                         <div className="jumbotron jumbotron-fluid jumbotron-bg">

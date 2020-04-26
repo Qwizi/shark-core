@@ -1,6 +1,7 @@
 import React from "react";
 import {Switch, Route, withRouter} from 'react-router-dom';
 
+
 import api from "../api";
 import {CONFIG} from "../config";
 
@@ -56,13 +57,13 @@ class ForumThreads extends React.Component {
         const threadsData = this.state.threadsData ? <Threads data={this.state.threadsData} /> : <Spinner/>;
 
         return (
-            <div className="row">
-                <div className="col-md-2 col-sm-12">
+            <div className="row" style={{minHeight: '100vh'}}>
+                <div className="col-md-1 offset-md-1 col-sm-12">
                     <ul className="nav flex-md-column">
                         {categoriesData}
                     </ul>
                 </div>
-                <div className="col-md-10 col-sm-12">
+                <div className="col-md-9 col-sm-12">
                     {threadsData}
                 </div>
             </div>

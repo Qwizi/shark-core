@@ -13,7 +13,17 @@ export default class Threads extends React.Component {
         return (
             <>
                 {data.results.map((thread) =>
-                    <ThreadItem title={thread.title} content={thread.content}/>
+                    <ThreadItem
+                        id={thread.id}
+                        created={thread.created}
+                        avatar={thread.author.avatar}
+                        username={thread.author.username}
+                        title={thread.title}
+                        content={thread.content}
+                        posts={thread.posts}
+                        reactions={thread.reactions}
+                        lastposter={thread.last_poster}
+                    />
                 )}
             </>
         )

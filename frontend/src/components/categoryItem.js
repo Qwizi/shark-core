@@ -11,7 +11,7 @@ export default class CategoryItem extends React.Component
                 <div className="btn-group btn-group-sm" style={{marginBottom: '10px', marginRight: '10px'}}>
                     <Link
                         to={`/forum/category/${id}/`}
-                        className="btn btn-primary btn-sm"
+                        className="nav-link"
                     >
                         {name}
                     </Link>

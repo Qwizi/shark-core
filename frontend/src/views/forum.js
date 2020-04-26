@@ -11,6 +11,7 @@ import Threads from "../components/threads";
 
 import ForumThreads from "./forumThreads";
 import Categories from "../components/categories";
+import ForumThreadDetail from "./forumThreadDetail";
 
 const initialState = {
     categoriesData: [],
@@ -50,19 +51,22 @@ class Forum extends React.Component {
         return (
             <Switch>
                 <Route exact path={`${match.path}`}>
-                    <div className="row">
-                        <div className="col-md-2 col-sm-12">
+                    <div className="row" style={{minHeight: '100vh'}}>
+                        <div className="col-lg-1 offset-lg-1 col-sm-12">
                             <ul className="nav flex-md-column">
                                 {categoriesData}
                             </ul>
                         </div>
-                        <div className="col-md-10 col-sm-12">
+                        <div className="col-md-9 col-sm-12">
                             {lastThreadsData}
                         </div>
                     </div>
                 </Route>
                 <Route path={`${match.path}/category/:categoryId/`}>
                     <ForumThreads timestamp={new Date().toString()} categoriesData={this.state.categoriesData}/>
+                </Route>
+                <Route path={`${match.path}/thread/:threadId/`}>
+                    <ForumThreadDetail user={this.props.user}/>
                 </Route>
             </Switch>
         )
