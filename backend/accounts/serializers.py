@@ -54,7 +54,10 @@ class AccountSerializer(serializers.ModelSerializer):
             'roles',
             'date_joined',
             'threads',
-            'posts'
+            'posts',
+            'avatar',
+            'avatarmedium',
+            'avatarfull'
         ]
 
 
@@ -62,6 +65,7 @@ class AccountMeSerializer(AccountSerializer):
     class Meta:
         model = Account
         fields = [
+            'id',
             'username',
             'formatted_username',
             'steamid64',

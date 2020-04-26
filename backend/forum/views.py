@@ -62,7 +62,7 @@ class ThreadListView(generics.ListCreateAPIView):
     """
     Widok tematów
     """
-    queryset = Thread.objects.get_queryset().order_by('id')
+    queryset = Thread.objects.get_queryset().order_by('-id')
     permission_classes = (PERM_THREAD,)
     serializer_class = ThreadSerializer
     filterset_fields = ['category', 'status', 'pinned']
@@ -151,6 +151,8 @@ class PostListView(generics.ListCreateAPIView):
     queryset = Post.objects.get_queryset().order_by('id')
     permission_classes = (PERM_POST,)
     serializer_class = PostSerializer
+    filterset_fields = ['thread']
+
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
