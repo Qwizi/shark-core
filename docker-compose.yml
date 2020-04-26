@@ -28,6 +28,7 @@ services:
     command: ["./wait-for-it.sh", "postgres:5432", "--", "python", "manage.py", "runserver", "0.0.0.0:8000"]
 
   frontend:
+    stdin_open: true
     build: ./frontend
     command: npm start
     volumes:

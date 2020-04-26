@@ -36,7 +36,7 @@ export default class ArticleCard extends React.Component {
                                 <div className="jumbotron jumbotron-fluid jumbotron-bg">
                                     <div className="container-fluid">
                                         <h1 className="display-6">
-                                            <Link to={`/news/${article.id}/`}>{article.title}</Link>
+                                            <Link to={`/news/${article.id}/${article.slug}/`}>{article.title}</Link>
                                         </h1>
                                         <p className="lead">{article.content}</p>
                                     </div>

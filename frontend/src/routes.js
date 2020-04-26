@@ -12,7 +12,7 @@ class Routes extends React.Component
         return (
             <Switch>
                 <Route exact path="/">
-                    <News />
+                    <News/>
                 </Route>
 
                 <Route path="/news">
@@ -20,7 +20,7 @@ class Routes extends React.Component
                 </Route>
 
                 <Route path="/forum">
-                    <Forum />
+                    <Forum user={this.props.user} />
                 </Route>
 
                 <Route path="/account">

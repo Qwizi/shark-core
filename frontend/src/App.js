@@ -12,6 +12,8 @@ import {tokenStorage} from "./TokenStorage";
 import {CONFIG} from "./config";
 import api from "./api";
 import ERROR_CODES from "./errorCodes";
+import Alert from "./components/alerts";
+import {Animated} from "react-animated-css";
 
 const userInitialState = {
     logged: false,
@@ -23,6 +25,7 @@ const userInitialState = {
 const initialState = {
     ...userInitialState,
     httpError: {show: false, detail: ''},
+    alerts: []
 };
 
 class App extends React.Component {
@@ -33,6 +36,8 @@ class App extends React.Component {
 
         this.loginUser = this.loginUser.bind(this);
         this.logoutUser = this.logoutUser.bind(this);
+        this.createAlert = this.createAlert.bind(this);
+        this.deleteAlert = this.deleteAlert.bind(this);
     };
 
     componentDidMount() {
@@ -102,7 +107,9 @@ class App extends React.Component {
         this.fetchUserMeData()
             .then((response) => {
                 // Jezeli zworocono status 200 ustawiamy stan zalogowanego uzytkownika
-                if (response.status === 200) this.setUserLoggedState(response.data);
+                if (response.status === 200) {
+                    this.setUserLoggedState(response.data);
+                }
             })
             .catch((error) => {
                 if (error.response) {
@@ -156,7 +163,36 @@ class App extends React.Component {
             });
     }
 
+    createAlert(type, content) {
+        const alerts = this.state.alerts;
+        const alert = alerts.length > 0 ? {
+                id: alerts[alerts.length - 1].id++,
+                type: type,
+                content: content
+            } :
+            {
+                id: 1,
+                type: type,
+                content: content
+            };
+
+        alerts.push(alert);
+
+        this.setState({alerts: alerts});
+
+        return alert.id;
+    }
+
+    deleteAlert(alertId) {
+        const alerts = this.state.alerts;
+        alerts.pop(alerts.find((alert) => alert.id === alertId));
+
+        this.setState({alerts: alerts});
+    }
+
     render() {
+        const {alerts} = this.state;
+
         return (
             <BrowserRouter>
                 <Navbar
@@ -165,10 +201,19 @@ class App extends React.Component {
                     user={this.state.user}
                 />
                 <main className="container-fluid wrapper">
+                    {alerts.length >= 1 && (
+                        alerts.map((alert) =>
+                            <Animated animationIn="zoomIn" animationOut="fadeOut" isVisible={true}>
+                                <Alert type={alert.type} content={alert.content}/>
+                            </Animated>
+                        )
+                    )}
                     <Routes
                         logged={this.state.logged}
                         user={this.state.user}
                         login={this.loginUser}
+                        createAlert={this.createAlert}
+                        deleteAlert={this.deleteAlert}
                     />
                 </main>
                 <Footer/>
